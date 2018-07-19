@@ -1,4 +1,4 @@
-# botan-sys
+# rust-botan
 
 This create wraps the C API exposed by the
 [Botan](https://botan.randombit.net/) cryptography library.
