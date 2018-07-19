@@ -8,4 +8,4 @@ license = "MIT"
 homepage = "https://botan.randombit.net/"
 
 [dependencies]
-botan-sys = { path = "../botan-sys" }
+botan-sys = { version = "0.1.0", path = "../botan-sys" }
