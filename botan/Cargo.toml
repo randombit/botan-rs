@@ -1,0 +1,7 @@
+[package]
+name = "botan"
+version = "0.1.0"
+authors = ["Jack Lloyd <jack@randombit.net>"]
+
+[dependencies]
+botan-sys = { path = "../botan-sys" }
