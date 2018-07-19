@@ -1,11 +1,19 @@
 extern crate botan_sys;
 
 use botan_sys::*;
-use std::ffi::CString;
 
 pub type Result<T> = ::std::result::Result<T, Error>;
 
-#[derive(Clone,Debug)]
+macro_rules! call_botan {
+    ($x:expr) => {
+        let rc = unsafe { $x };
+        if rc != 0 {
+            return Err(Error::from(rc));
+        }
+    }
+}
+
+#[derive(Clone,Debug,PartialEq)]
 pub enum Error {
     BadAuthCode,
     BadFlag,
@@ -39,36 +47,9 @@ impl From<i32> for Error {
     }
 }
 
-pub struct HashFunction {
-    obj: botan_hash_t
-}
+mod hash;
+mod version;
 
-impl Drop for HashFunction {
-    fn drop(&mut self) {
-        unsafe { botan_hash_destroy(self.obj); }
-    }
-}
+pub use hash::*;
+pub use version::*;
 
-impl HashFunction {
-    pub fn new(name: &str) -> Result<HashFunction> {
-
-        let mut obj = std::ptr::null_mut();
-
-        let rc = unsafe { botan_hash_init(&mut obj, CString::new(name).unwrap().as_ptr(), 0u32) };
-        if rc != 0 {
-            return Err(Error::from(rc));
-        }
-
-        Ok(HashFunction { obj })
-    }
-
-    pub fn output_length(&self) -> Result<usize> {
-        let mut output_len = 0;
-        let rc = unsafe { botan_hash_output_length(self.obj, &mut output_len) };
-        if rc != 0 {
-            return Err(Error::from(rc));
-        }
-
-        Ok(output_len)
-    }
-}
