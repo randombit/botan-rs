@@ -3,5 +3,9 @@ name = "botan"
 version = "0.1.0"
 authors = ["Jack Lloyd <jack@randombit.net>"]
 
+description = "Rust wrapper for Botan cryptography library"
+license = "MIT"
+homepage = "https://botan.randombit.net/"
+
 [dependencies]
 botan-sys = { path = "../botan-sys" }
