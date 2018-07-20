@@ -1,4 +1,4 @@
-use std::os::raw::c_int;
+use std::os::raw::{c_int, c_char};
 
 pub type BOTAN_FFI_ERROR = c_int;
 
@@ -15,4 +15,8 @@ pub const BOTAN_FFI_ERROR_BOTAN_FFI_ERROR_NOT_IMPLEMENTED: BOTAN_FFI_ERROR = -40
 pub const BOTAN_FFI_ERROR_BOTAN_FFI_ERROR_INVALID_OBJECT: BOTAN_FFI_ERROR = -50;
 pub const BOTAN_FFI_ERROR_BOTAN_FFI_ERROR_UNKNOWN_ERROR: BOTAN_FFI_ERROR = -100;
 
+extern "C" {
 
+    pub fn botan_error_description(err: BOTAN_FFI_ERROR) -> *const c_char;
+
+}
