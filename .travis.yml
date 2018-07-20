@@ -1,0 +1,18 @@
+sudo: required
+language: rust
+
+install:
+  - ./.ci/install_botan.sh
+
+rust:
+  - stable
+  - beta
+  - nightly
+matrix:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+
+cache:
+  directories:
+    - $HOME/.ccache
