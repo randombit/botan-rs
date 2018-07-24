@@ -48,10 +48,12 @@ impl From<i32> for Error {
 }
 
 mod hash;
+mod mac;
 mod rng;
 mod version;
 
 pub use hash::*;
+pub use mac::*;
 pub use rng::*;
 pub use version::*;
 

@@ -42,3 +42,23 @@ fn test_hash() {
     assert_eq!(*bad_hash.as_ref().unwrap_err(), botan::Error::NotImplemented);
 }
 
+
+#[test]
+fn test_mac() {
+    let mac = botan::MsgAuthCode::new("HMAC(SHA-384)").unwrap();
+
+    mac.set_key(&vec![0xAA; 20]).unwrap();
+
+    mac.update(&vec![0xDD; 1]).unwrap();
+    mac.update(&vec![0xDD; 29]).unwrap();
+    mac.update(&vec![0xDD; 20]).unwrap();
+
+    let r = mac.finish().unwrap();
+
+    println!("{:?}", r);
+
+    assert_eq!(r[0], 0x88);
+    assert_eq!(r[1], 0x06);
+    assert_eq!(r[47], 0x27);
+
+}
