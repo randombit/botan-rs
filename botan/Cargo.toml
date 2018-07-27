@@ -2,10 +2,16 @@
 name = "botan"
 version = "0.1.1"
 authors = ["Jack Lloyd <jack@randombit.net>"]
-
 description = "Rust wrapper for Botan cryptography library"
 license = "MIT"
 homepage = "https://botan.randombit.net/"
+categories = [ "cryptography" ]
+
+[badges]
+travis-ci = { repository = "randombit/botan-rs" }
+
+[badges.maintenance]
+status = "experimental"
 
 [dependencies]
 botan-sys = { version = "0.1.1", path = "../botan-sys" }

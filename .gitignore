@@ -1,5 +1,6 @@
 botan-sys/target
 botan/target
+target
 **/*.rs.bk
 Cargo.lock
 raw.rs
