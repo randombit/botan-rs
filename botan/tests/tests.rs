@@ -62,3 +62,22 @@ fn test_mac() {
     assert_eq!(r[47], 0x27);
 
 }
+
+#[test]
+fn test_block_cipher() {
+    let bc = botan::BlockCipher::new("AES-128").unwrap();
+
+    bc.set_key(&vec![0; 16]).unwrap();
+
+    let input = vec![0; 16];
+
+    let ctext = bc.encrypt_blocks(&input).unwrap();
+
+    let expected = vec![0x66, 0xe9, 0x4b, 0xd4, 0xef, 0x8a, 0x2c, 0x3b, 0x88, 0x4c, 0xfa, 0x59, 0xca, 0x34, 0x2b, 0x2e];
+    assert_eq!(ctext, expected);
+
+    let ptext = bc.decrypt_blocks(&ctext).unwrap();
+
+    assert_eq!(ptext, input);
+
+}

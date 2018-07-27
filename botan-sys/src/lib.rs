@@ -1,5 +1,6 @@
 #![allow(non_camel_case_types)]
 
+mod block;
 mod cipher;
 mod errors;
 mod hash;
@@ -14,6 +15,7 @@ mod utils;
 mod version;
 mod x509;
 
+pub use block::*;
 pub use cipher::*;
 pub use errors::*;
 pub use hash::*;
