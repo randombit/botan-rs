@@ -9,9 +9,6 @@ license = "MIT"
 homepage = "https://botan.randombit.net/"
 categories = [ "cryptography" ]
 
-[badges]
-travis-ci = { repository = "randombit/botan-rs" }
-
 [badges.maintenance]
 status = "experimental"
 
