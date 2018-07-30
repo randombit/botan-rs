@@ -79,5 +79,35 @@ fn test_block_cipher() {
     let ptext = bc.decrypt_blocks(&ctext).unwrap();
 
     assert_eq!(ptext, input);
+}
 
+#[test]
+fn test_rng() {
+    let rng = botan::RandomNumberGenerator::new_system().unwrap();
+
+    let read1 = rng.read(10).unwrap();
+    let read2 = rng.read(10).unwrap();
+
+    assert!(read1 != read2);
+}
+
+#[test]
+fn test_bcrypt() {
+    let pass = "password";
+    let rng = botan::RandomNumberGenerator::new_system().unwrap();
+
+    let bcrypt1 = botan::bcrypt_hash(pass, &rng, 10).unwrap();
+
+    assert_eq!(bcrypt1.len(), 60);
+
+    let bcrypt2 = botan::bcrypt_hash(pass, &rng, 10).unwrap();
+
+    assert_eq!(bcrypt2.len(), 60);
+
+    assert!(bcrypt1 != bcrypt2);
+
+    assert!(botan::bcrypt_verify(pass, &bcrypt1).unwrap());
+    assert!(botan::bcrypt_verify(pass, &bcrypt2).unwrap());
+
+    assert_eq!(botan::bcrypt_verify("passwurd", &bcrypt2).unwrap(), false);
 }

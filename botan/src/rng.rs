@@ -1,6 +1,7 @@
 use botan_sys::*;
 use super::{Error, Result};
 use std::ptr;
+use std::ffi::CString;
 
 #[derive(Debug)]
 pub struct RandomNumberGenerator {
@@ -17,9 +18,11 @@ impl RandomNumberGenerator {
 
     fn new_of_type(typ: &str) -> Result<RandomNumberGenerator> {
         let mut obj = ptr::null_mut();
-        call_botan! { botan_rng_init(&mut obj, typ.as_ptr() as *const i8) }
+        call_botan! { botan_rng_init(&mut obj, CString::new(typ).unwrap().as_ptr()) }
         Ok(RandomNumberGenerator { obj })
     }
+
+    pub(crate) fn handle(&self) -> botan_rng_t { self.obj }
 
     pub fn new_userspace() -> Result<RandomNumberGenerator> {
         RandomNumberGenerator::new_of_type("user")
