@@ -1,6 +1,6 @@
 [package]
 name = "botan"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Jack Lloyd <jack@randombit.net>"]
 description = "Rust wrapper for Botan cryptography library"
 license = "MIT"
@@ -15,4 +15,4 @@ travis-ci = { repository = "randombit/botan-rs" }
 status = "experimental"
 
 [dependencies]
-botan-sys = { version = "0.1.1", path = "../botan-sys" }
+botan-sys = { version = "0.1.3", path = "../botan-sys" }
