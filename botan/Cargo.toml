@@ -5,7 +5,8 @@ authors = ["Jack Lloyd <jack@randombit.net>"]
 description = "Rust wrapper for Botan cryptography library"
 license = "MIT"
 homepage = "https://botan.randombit.net/"
-categories = [ "cryptography" ]
+keywords = [ "crypto" ]
+categories = [ "cryptography", "api-bindings" ]
 
 [badges]
 travis-ci = { repository = "randombit/botan-rs" }

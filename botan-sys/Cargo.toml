@@ -7,7 +7,7 @@ build = "build.rs"
 description = "FFI wrapper for Botan cryptography library"
 license = "MIT"
 homepage = "https://botan.randombit.net/"
-categories = [ "cryptography" ]
+categories = [ "cryptography", "external-ffi-bindings" ]
 
 [badges]
 travis-ci = { repository = "randombit/botan-rs" }
