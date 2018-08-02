@@ -184,6 +184,8 @@ impl Privkey {
 
 impl Pubkey {
 
+    pub(crate) fn from_handle(obj: botan_pubkey_t) -> Pubkey { Pubkey { obj } }
+
     pub(crate) fn handle(&self) -> botan_pubkey_t { self.obj }
 
     pub fn load_der(der: &[u8]) -> Result<Pubkey> {

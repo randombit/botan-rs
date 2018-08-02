@@ -95,6 +95,7 @@ mod pbkdf;
 mod pk_ops;
 mod pubkey;
 mod rng;
+mod x509;
 mod version;
 
 pub use bcrypt::*;
@@ -108,5 +109,6 @@ pub use pbkdf::*;
 pub use pk_ops::*;
 pub use pubkey::*;
 pub use rng::*;
+pub use x509::*;
 pub use version::*;
 
