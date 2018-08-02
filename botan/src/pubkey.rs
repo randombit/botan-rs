@@ -1,4 +1,5 @@
 use super::{Error, Result};
+use super::{call_botan_ffi_returning_vec_u8, call_botan_ffi_returning_string};
 
 use botan_sys::*;
 
@@ -79,23 +80,34 @@ impl Privkey {
     }
 
     pub fn der_encode(&self) -> Result<Vec<u8>> {
-        let mut output = vec![0; 4096];
-        let mut out_len = output.len();
-
-        let rc = unsafe { botan_privkey_export(self.obj, output.as_mut_ptr(), &mut out_len, 0u32) };
-        if rc == 0 {
-            assert!(out_len <= output.len());
-            output.resize(out_len, 0);
-            return Ok(output);
-        }
-
-        output.resize(out_len, 0);
-        call_botan! { botan_privkey_export(self.obj, output.as_mut_ptr(), &mut out_len, 0u32) }
-        output.resize(out_len, 0);
-        Ok(output)
+        call_botan_ffi_returning_vec_u8(&|out_buf, out_len| {
+            unsafe { botan_privkey_export(self.obj, out_buf, out_len, 0u32) }
+        })
     }
 
     pub fn pem_encode(&self) -> Result<String> {
         Ok("TODO".to_owned())
     }
+}
+
+impl Pubkey {
+
+    pub fn load_der(der: &[u8]) -> Result<Pubkey> {
+        let mut obj = ptr::null_mut();
+        call_botan! { botan_pubkey_load(&mut obj, der.as_ptr(), der.len()) }
+        Ok(Pubkey { obj })
+    }
+
+    pub fn der_encode(&self) -> Result<Vec<u8>> {
+        call_botan_ffi_returning_vec_u8(&|out_buf, out_len| {
+            unsafe { botan_pubkey_export(self.obj, out_buf, out_len, 0u32) }
+        })
+    }
+
+    pub fn algo_name(&self) -> Result<String> {
+        call_botan_ffi_returning_string(&|out_buf, out_len| {
+            unsafe { botan_pubkey_algo_name(self.obj, out_buf, out_len) }
+        })
+    }
+
 }
