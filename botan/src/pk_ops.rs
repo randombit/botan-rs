@@ -22,9 +22,9 @@ impl Drop for Signer {
 impl Signer {
 
     pub fn new(key: &Privkey, padding: &str) -> Result<Signer> {
-        let padding_cstr = CString::new(padding).unwrap();
+        let padding = CString::new(padding).unwrap();
         let mut obj = ptr::null_mut();
-        call_botan! { botan_pk_op_sign_create(&mut obj, key.handle(), padding_cstr.as_ptr(), 0u32) }
+        call_botan! { botan_pk_op_sign_create(&mut obj, key.handle(), padding.as_ptr(), 0u32) }
         Ok(Signer { obj })
     }
 
@@ -38,9 +38,34 @@ impl Signer {
             unsafe { botan_pk_op_sign_finish(self.obj, rng.handle(), out_buf, out_len) }
         })
     }
-
 }
 
+#[derive(Debug)]
+pub struct Decryptor {
+    obj: botan_pk_op_decrypt_t
+}
+
+impl Drop for Decryptor {
+    fn drop(&mut self) {
+        unsafe { botan_pk_op_decrypt_destroy(self.obj) };
+    }
+}
+
+impl Decryptor {
+
+    pub fn new(key: &Privkey, padding: &str) -> Result<Decryptor> {
+        let padding = CString::new(padding).unwrap();
+        let mut obj = ptr::null_mut();
+        call_botan! { botan_pk_op_decrypt_create(&mut obj, key.handle(), padding.as_ptr(), 0u32) }
+        Ok(Decryptor { obj })
+    }
+
+    pub fn decrypt(&self, ctext: &[u8]) -> Result<Vec<u8>> {
+        call_botan_ffi_returning_vec_u8(&|out_buf, out_len| {
+            unsafe { botan_pk_op_decrypt(self.obj, out_buf, out_len, ctext.as_ptr(), ctext.len()) }
+        })
+    }
+}
 
 #[derive(Debug)]
 pub struct Verifier {
@@ -56,9 +81,9 @@ impl Drop for Verifier {
 impl Verifier {
 
     pub fn new(key: &Pubkey, padding: &str) -> Result<Verifier> {
-        let padding_cstr = CString::new(padding).unwrap();
+        let padding = CString::new(padding).unwrap();
         let mut obj = ptr::null_mut();
-        call_botan! { botan_pk_op_verify_create(&mut obj, key.handle(), padding_cstr.as_ptr(), 0u32) }
+        call_botan! { botan_pk_op_verify_create(&mut obj, key.handle(), padding.as_ptr(), 0u32) }
         Ok(Verifier { obj })
     }
 
@@ -82,5 +107,32 @@ impl Verifier {
         }
     }
 
+}
+
+#[derive(Debug)]
+pub struct Encryptor {
+    obj: botan_pk_op_encrypt_t
+}
+
+impl Drop for Encryptor {
+    fn drop(&mut self) {
+        unsafe { botan_pk_op_encrypt_destroy(self.obj) };
+    }
+}
+
+impl Encryptor {
+
+    pub fn new(key: &Pubkey, padding: &str) -> Result<Encryptor> {
+        let padding = CString::new(padding).unwrap();
+        let mut obj = ptr::null_mut();
+        call_botan! { botan_pk_op_encrypt_create(&mut obj, key.handle(), padding.as_ptr(), 0u32) }
+        Ok(Encryptor { obj })
+    }
+
+    pub fn encrypt(&self, ptext: &[u8], rng: &RandomNumberGenerator) -> Result<Vec<u8>> {
+        call_botan_ffi_returning_vec_u8(&|out_buf, out_len| {
+            unsafe { botan_pk_op_encrypt(self.obj, rng.handle(), out_buf, out_len, ptext.as_ptr(), ptext.len()) }
+        })
+    }
 }
 

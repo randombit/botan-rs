@@ -213,6 +213,27 @@ fn test_pubkey_sign() {
 }
 
 #[test]
+fn test_pubkey_encrypt() {
+    let msg = vec![1,23,42];
+
+    let rng = botan::RandomNumberGenerator::new_system().unwrap();
+
+    let priv_key = botan::Privkey::create("RSA", "2048", &rng).unwrap();
+    let pub_key = priv_key.pubkey().unwrap();
+
+    let encryptor = botan::Encryptor::new(&pub_key, "OAEP(SHA-256)").unwrap();
+
+    let ctext = encryptor.encrypt(&msg, &rng).unwrap();
+    assert_eq!(ctext.len(), 2048/8);
+
+    let decryptor = botan::Decryptor::new(&priv_key, "OAEP(SHA-256)").unwrap();
+
+    let ptext = decryptor.decrypt(&ctext).unwrap();
+
+    assert_eq!(ptext, msg);
+}
+
+#[test]
 fn test_ct_compare() {
     let a = vec![1,2,3];
 
