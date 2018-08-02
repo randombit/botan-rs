@@ -53,6 +53,7 @@ mod hash;
 mod kdf;
 mod mac;
 mod memutils;
+mod pbkdf;
 mod rng;
 mod version;
 
@@ -62,6 +63,7 @@ pub use hash::*;
 pub use kdf::*;
 pub use mac::*;
 pub use memutils::*;
+pub use pbkdf::*;
 pub use rng::*;
 pub use version::*;
 

@@ -95,6 +95,19 @@ fn test_kdf() {
 }
 
 #[test]
+fn test_pbkdf() {
+
+    let salt = botan::hex_decode("0001020304050607").unwrap();
+    let iterations = 10000;
+    let passphrase = "xyz";
+    let expected_output = botan::hex_decode("DEFD2987FA26A4672F4D16D98398432AD95E896BF619F6A6B8D4ED").unwrap();
+
+    let output = botan::pbkdf("PBKDF2(SHA-256)", expected_output.len(), passphrase, &salt, iterations).unwrap();
+
+    assert_eq!(output, expected_output);
+}
+
+#[test]
 fn test_hex() {
     let raw = vec![1,2,3,255,42,23];
     assert_eq!(botan::hex_encode(&raw).unwrap(), "010203FF2A17");
