@@ -50,6 +50,7 @@ impl From<i32> for Error {
 mod bcrypt;
 mod block;
 mod hash;
+mod kdf;
 mod mac;
 mod memutils;
 mod rng;
@@ -58,6 +59,7 @@ mod version;
 pub use bcrypt::*;
 pub use block::*;
 pub use hash::*;
+pub use kdf::*;
 pub use mac::*;
 pub use memutils::*;
 pub use rng::*;

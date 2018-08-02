@@ -82,6 +82,26 @@ fn test_block_cipher() {
 }
 
 #[test]
+fn test_kdf() {
+
+    let salt = botan::hex_decode("000102030405060708090A0B0C").unwrap();
+    let label = botan::hex_decode("F0F1F2F3F4F5F6F7F8F9").unwrap();
+    let secret = botan::hex_decode("0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B").unwrap();
+    let expected_output = botan::hex_decode("3CB25F25FAACD57A90434F64D0362F2A2D2D0A90CF1A5A4C5DB02D56ECC4C5BF34007208D5B887185865").unwrap();
+
+    let output = botan::kdf("HKDF(SHA-256)", expected_output.len(), &secret, &salt, &label).unwrap();
+
+    assert_eq!(output, expected_output);
+}
+
+#[test]
+fn test_hex() {
+    let raw = vec![1,2,3,255,42,23];
+    assert_eq!(botan::hex_encode(&raw).unwrap(), "010203FF2A17");
+    assert_eq!(botan::hex_decode("010203FF2A17").unwrap(), raw);
+}
+
+#[test]
 fn test_rng() {
     let rng = botan::RandomNumberGenerator::new_system().unwrap();
 
