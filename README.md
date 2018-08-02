@@ -6,5 +6,6 @@
 This crate wraps the C API exposed by the
 [Botan](https://botan.randombit.net/) cryptography library.
 
-This is an early work in progress. Some functionality like hashes,
-MACs, KDFs, PBKDF2, and random number generators are available now.
+This is an early work in progress. Some functionality like hashes, MACs, KDFs,
+PBKDF2, random number generators, and public key operations (sign, verify,
+encrypt, decrypt, key agreement) are available now.
