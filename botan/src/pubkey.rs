@@ -56,6 +56,40 @@ impl Privkey {
         Ok(Privkey { obj })
     }
 
+    pub fn load_pem(pem: &str) -> Result<Privkey> {
+        let mut obj = ptr::null_mut();
+
+        // Don't need this with 2.8
+        let rng = RandomNumberGenerator::new_system()?;
+        let cpem = CString::new(pem).unwrap();
+        call_botan! { botan_privkey_load(&mut obj, rng.handle(), cpem.as_ptr() as *const u8, pem.len(), ptr::null()) }
+
+        Ok(Privkey { obj })
+    }
+
+    pub fn load_encrypted_der(der: &[u8], passphrase: &str) -> Result<Privkey> {
+        let mut obj = ptr::null_mut();
+
+        // Don't need this with 2.8
+        let rng = RandomNumberGenerator::new_system()?;
+        let passphrase = CString::new(passphrase).unwrap();
+        call_botan! { botan_privkey_load(&mut obj, rng.handle(), der.as_ptr(), der.len(), passphrase.as_ptr()) }
+
+        Ok(Privkey { obj })
+    }
+
+    pub fn load_encrypted_pem(pem: &str, passphrase: &str) -> Result<Privkey> {
+        let mut obj = ptr::null_mut();
+
+        // Don't need this with 2.8
+        let rng = RandomNumberGenerator::new_system()?;
+        let passphrase = CString::new(passphrase).unwrap();
+        let cpem = CString::new(pem).unwrap();
+        call_botan! { botan_privkey_load(&mut obj, rng.handle(), cpem.as_ptr() as *const u8, pem.len(), passphrase.as_ptr()) }
+
+        Ok(Privkey { obj })
+    }
+
     pub fn check_key(&self, rng: &RandomNumberGenerator) -> Result<bool> {
 
         let flags = 1u32;
@@ -86,6 +120,52 @@ impl Privkey {
     pub fn der_encode(&self) -> Result<Vec<u8>> {
         call_botan_ffi_returning_vec_u8(&|out_buf, out_len| {
             unsafe { botan_privkey_export(self.obj, out_buf, out_len, 0u32) }
+        })
+    }
+
+    pub fn der_encode_encrypted(&self, passphrase: &str, rng: &RandomNumberGenerator) -> Result<Vec<u8>> {
+        self.der_encode_encrypted_with_options(passphrase, "AES-256/CBC", "SHA-512", 150000, rng)
+    }
+
+    pub fn der_encode_encrypted_with_options(&self,
+                                             passphrase: &str,
+                                             cipher: &str,
+                                             pbkdf: &str,
+                                             pbkdf_iter: usize,
+                                             rng: &RandomNumberGenerator) -> Result<Vec<u8>> {
+        call_botan_ffi_returning_vec_u8(&|out_buf, out_len| {
+            unsafe {
+                botan_privkey_export_encrypted_pbkdf_iter(
+                    self.obj, out_buf, out_len, rng.handle(),
+                    CString::new(passphrase).unwrap().as_ptr(),
+                    pbkdf_iter,
+                    CString::new(cipher).unwrap().as_ptr(),
+                    CString::new(pbkdf).unwrap().as_ptr(),
+                    0u32)
+            }
+        })
+    }
+
+    pub fn pem_encode_encrypted(&self, passphrase: &str, rng: &RandomNumberGenerator) -> Result<String> {
+        self.pem_encode_encrypted_with_options(passphrase, "AES-256/CBC", "SHA-512", 150000, rng)
+    }
+
+    pub fn pem_encode_encrypted_with_options(&self,
+                                             passphrase: &str,
+                                             cipher: &str,
+                                             pbkdf: &str,
+                                             pbkdf_iter: usize,
+                                             rng: &RandomNumberGenerator) -> Result<String> {
+        call_botan_ffi_returning_string(&|out_buf, out_len| {
+            unsafe {
+                botan_privkey_export_encrypted_pbkdf_iter(
+                    self.obj, out_buf, out_len, rng.handle(),
+                    CString::new(passphrase).unwrap().as_ptr(),
+                    pbkdf_iter,
+                    CString::new(cipher).unwrap().as_ptr(),
+                    CString::new(pbkdf).unwrap().as_ptr(),
+                    1u32)
+            }
         })
     }
 

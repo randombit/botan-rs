@@ -205,6 +205,43 @@ fn test_pubkey() {
 }
 
 #[test]
+fn test_pubkey_encryption() {
+
+    let padding = "EMSA-PKCS1-v1_5(SHA-256)";
+    let msg = [1,2,3];
+
+    let rng = botan::RandomNumberGenerator::new_system().unwrap();
+    let key = botan::Privkey::create("RSA", "3072", &rng).unwrap();
+    let der = key.der_encode_encrypted("passphrase", &rng).unwrap();
+    let pem = key.pem_encode_encrypted("pemword", &rng).unwrap();
+
+    assert!(pem.starts_with("-----BEGIN ENCRYPTED PRIVATE KEY-----\n"));
+    assert!(pem.ends_with("-----END ENCRYPTED PRIVATE KEY-----\n"));
+
+    let signer = botan::Signer::new(&key, padding).unwrap();
+
+    signer.update(&msg).unwrap();
+    let sig1 = signer.finish(&rng).unwrap();
+
+    //assert!(botan::Privkey::load_encrypted_der(&der, "i forget").is_err());
+
+    let load = botan::Privkey::load_encrypted_der(&der, "passphrase").unwrap();
+    let signer = botan::Signer::new(&load, padding).unwrap();
+    signer.update(&msg).unwrap();
+    let sig2 = signer.finish(&rng).unwrap();
+
+    assert_eq!(sig1, sig2);
+
+    let load = botan::Privkey::load_encrypted_pem(&pem, "pemword").unwrap();
+    let signer = botan::Signer::new(&load, padding).unwrap();
+    signer.update(&msg).unwrap();
+    let sig3 = signer.finish(&rng).unwrap();
+
+    assert_eq!(sig1, sig3);
+}
+
+
+#[test]
 fn test_pubkey_sign() {
     let msg = vec![1,23,42];
 
