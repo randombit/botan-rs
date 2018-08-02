@@ -158,7 +158,14 @@ fn test_pubkey() {
     assert_eq!(pub_key.algo_name().unwrap(), "ECDSA");
 
     let bits = ecdsa_key.der_encode().unwrap();
+    let pem = ecdsa_key.pem_encode().unwrap();
+    assert!(pem.starts_with("-----BEGIN PRIVATE KEY-----\n"));
+    assert!(pem.ends_with("-----END PRIVATE KEY-----\n"));
+
     let pub_bits = pub_key.der_encode().unwrap();
+    let pub_pem = pub_key.pem_encode().unwrap();
+    assert!(pub_pem.starts_with("-----BEGIN PUBLIC KEY-----\n"));
+    assert!(pub_pem.ends_with("-----END PUBLIC KEY-----\n"));
 
     let loaded_key = botan::Privkey::load_der(&bits).unwrap();
     assert!(loaded_key.check_key(&rng).unwrap(), true);
@@ -170,8 +177,6 @@ fn test_pubkey() {
 
     assert_eq!(bits, loaded_bits);
     assert_eq!(pub_bits, loaded_pub_bits);
-
-
 }
 
 #[test]

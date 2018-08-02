@@ -4,6 +4,7 @@ use super::{call_botan_ffi_returning_vec_u8, call_botan_ffi_returning_string};
 use botan_sys::*;
 
 use rng::RandomNumberGenerator;
+use std::os::raw::{c_char};
 use std::ffi::CString;
 use std::ptr;
 
@@ -86,7 +87,9 @@ impl Privkey {
     }
 
     pub fn pem_encode(&self) -> Result<String> {
-        Ok("TODO".to_owned())
+        call_botan_ffi_returning_string(&|out_buf, out_len| {
+            unsafe { botan_privkey_export(self.obj, out_buf, out_len, 1u32) }
+        })
     }
 }
 
@@ -104,9 +107,15 @@ impl Pubkey {
         })
     }
 
+    pub fn pem_encode(&self) -> Result<String> {
+        call_botan_ffi_returning_string(&|out_buf, out_len| {
+            unsafe { botan_pubkey_export(self.obj, out_buf, out_len, 1u32) }
+        })
+    }
+
     pub fn algo_name(&self) -> Result<String> {
         call_botan_ffi_returning_string(&|out_buf, out_len| {
-            unsafe { botan_pubkey_algo_name(self.obj, out_buf, out_len) }
+            unsafe { botan_pubkey_algo_name(self.obj, out_buf as *mut c_char, out_len) }
         })
     }
 

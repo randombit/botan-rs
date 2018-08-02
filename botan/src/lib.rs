@@ -3,7 +3,7 @@ extern crate botan_sys;
 use botan_sys::*;
 
 pub type Result<T> = ::std::result::Result<T, Error>;
-use std::os::raw::{c_char, c_int};
+use std::os::raw::{c_int};
 use std::ffi::CStr;
 
 macro_rules! call_botan {
@@ -41,36 +41,13 @@ fn call_botan_ffi_returning_vec_u8(cb: &Fn(*mut u8, *mut usize) -> c_int) -> Res
     Ok(output)
 }
 
-fn c_chars_to_str(c: &[u8]) -> Result<String> {
-    Ok(CStr::from_bytes_with_nul(c).unwrap().to_str().unwrap().to_owned())
+fn call_botan_ffi_returning_string(cb: &Fn(*mut u8, *mut usize) -> c_int) -> Result<String> {
+    let v = call_botan_ffi_returning_vec_u8(cb)?;
+
+    let cstr = CStr::from_bytes_with_nul(&v).map_err(|_| Error::ConversionError)?;
+    let ostr = cstr.to_str().map_err(|_| Error::ConversionError)?.to_owned();
+    Ok(ostr)
 }
-
-fn call_botan_ffi_returning_string(cb: &Fn(*mut c_char, *mut usize) -> c_int) -> Result<String> {
-
-    let mut output = vec![0; 4096]; // make this initial size configurable?
-    let mut out_len = output.len();
-
-    let rc = cb(output.as_mut_ptr() as *mut c_char, &mut out_len);
-    if rc == 0 {
-        assert!(out_len <= output.len());
-        output.resize(out_len, 0);
-        return c_chars_to_str(&output);
-    }
-    else if rc != BOTAN_FFI_ERROR_BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE {
-        return Err(Error::from(rc));
-    }
-
-    output.resize(out_len, 0);
-    let rc = cb(output.as_mut_ptr() as *mut c_char, &mut out_len);
-
-    if rc != 0 {
-        return Err(Error::from(rc));
-    }
-
-    output.resize(out_len, 0);
-    c_chars_to_str(&output)
-}
-
 
 #[derive(Clone,Debug,PartialEq)]
 pub enum Error {
@@ -85,6 +62,7 @@ pub enum Error {
     NotImplemented,
     NullPointer,
     UnknownError,
+    ConversionError
 }
 
 impl From<i32> for Error {
