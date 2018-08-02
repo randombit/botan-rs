@@ -1,6 +1,6 @@
 [package]
 name = "botan-sys"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Jack Lloyd <jack@randombit.net>"]
 links = "botan-2"
 build = "build.rs"
@@ -13,6 +13,6 @@ categories = [ "cryptography", "external-ffi-bindings" ]
 travis-ci = { repository = "randombit/botan-rs" }
 
 [badges.maintenance]
-status = "experimental"
+status = "actively-developed"
 
 [dependencies]
