@@ -34,6 +34,8 @@ impl HashFunction {
         Ok(HashFunction { obj, output_length })
     }
 
+    // FIXME(2.8) need name getters
+
     pub fn duplicate(&self) -> Result<HashFunction> {
         let mut obj = ptr::null_mut();
         call_botan! { botan_hash_copy_state(&mut obj, self.obj) };

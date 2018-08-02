@@ -28,6 +28,8 @@ impl MsgAuthCode {
         Ok(MsgAuthCode { obj, output_length })
     }
 
+    // FIXME(2.8) need name and key length info getters
+
     pub fn output_length(&self) -> usize { self.output_length }
 
     pub fn set_key(&self, key: &[u8]) -> Result<()> {

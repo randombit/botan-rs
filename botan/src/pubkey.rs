@@ -77,7 +77,8 @@ impl Privkey {
     }
 
     pub fn algo_name(&self) -> Result<String> {
-        Ok("Need botan_privkey_get_name".to_string())
+        // FIXME(2.8) need botan_privkey_get_name
+        self.pubkey()?.algo_name()
     }
 
     pub fn der_encode(&self) -> Result<Vec<u8>> {

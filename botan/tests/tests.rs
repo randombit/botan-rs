@@ -152,6 +152,7 @@ fn test_pubkey() {
     let ecdsa_key = botan::Privkey::create("ECDSA", "secp256r1", &rng).unwrap();
 
     assert!(ecdsa_key.check_key(&rng).unwrap(), true);
+    assert_eq!(ecdsa_key.algo_name().unwrap(), "ECDSA");
 
     let pub_key = ecdsa_key.pubkey().unwrap();
 

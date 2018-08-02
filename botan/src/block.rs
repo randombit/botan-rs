@@ -33,6 +33,8 @@ impl BlockCipher {
 
     pub fn block_size(&self) -> usize { self.block_size }
 
+    // FIXME(2.8) need name and key length info getters
+
     pub fn set_key(&self, key: &[u8]) -> Result<()> {
         call_botan! { botan_block_cipher_set_key(self.obj, key.as_ptr(), key.len()) };
         Ok(())
