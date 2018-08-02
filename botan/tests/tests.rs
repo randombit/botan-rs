@@ -146,6 +146,26 @@ fn test_bcrypt() {
 }
 
 #[test]
+fn test_pubkey() {
+    let rng = botan::RandomNumberGenerator::new_system().unwrap();
+
+    let ecdsa_key = botan::Privkey::create("ECDSA", "secp256r1", &rng).unwrap();
+
+    assert!(ecdsa_key.check_key(&rng).unwrap(), true);
+
+    let bits = ecdsa_key.der_encode().unwrap();
+
+    let loaded_key = botan::Privkey::load_der(&bits).unwrap();
+    assert!(loaded_key.check_key(&rng).unwrap(), true);
+
+    let loaded_bits = loaded_key.der_encode().unwrap();
+
+    assert_eq!(bits, loaded_bits);
+
+
+}
+
+#[test]
 fn test_ct_compare() {
     let a = vec![1,2,3];
 

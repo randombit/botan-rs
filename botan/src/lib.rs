@@ -54,6 +54,7 @@ mod kdf;
 mod mac;
 mod memutils;
 mod pbkdf;
+mod pubkey;
 mod rng;
 mod version;
 
@@ -64,6 +65,7 @@ pub use kdf::*;
 pub use mac::*;
 pub use memutils::*;
 pub use pbkdf::*;
+pub use pubkey::*;
 pub use rng::*;
 pub use version::*;
 
