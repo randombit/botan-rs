@@ -94,6 +94,12 @@ impl Privkey {
             unsafe { botan_privkey_export(self.obj, out_buf, out_len, 1u32) }
         })
     }
+
+    pub fn key_agreement_key(&self) -> Result<Vec<u8>> {
+        call_botan_ffi_returning_vec_u8(&|out_buf, out_len| {
+            unsafe { botan_pk_op_key_agreement_export_public(self.obj, out_buf, out_len) }
+        })
+    }
 }
 
 impl Pubkey {

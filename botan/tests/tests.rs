@@ -187,6 +187,7 @@ fn test_pubkey_sign() {
     let rng = botan::RandomNumberGenerator::new_system().unwrap();
 
     let ecdsa_key = botan::Privkey::create("ECDSA", "secp256r1", &rng).unwrap();
+    assert!(ecdsa_key.key_agreement_key().is_err());
 
     let signer = botan::Signer::new(&ecdsa_key, "EMSA1(SHA-256)").unwrap();
 
@@ -219,6 +220,7 @@ fn test_pubkey_encrypt() {
     let rng = botan::RandomNumberGenerator::new_system().unwrap();
 
     let priv_key = botan::Privkey::create("RSA", "2048", &rng).unwrap();
+    assert!(priv_key.key_agreement_key().is_err());
     let pub_key = priv_key.pubkey().unwrap();
 
     let encryptor = botan::Encryptor::new(&pub_key, "OAEP(SHA-256)").unwrap();
@@ -231,6 +233,28 @@ fn test_pubkey_encrypt() {
     let ptext = decryptor.decrypt(&ctext).unwrap();
 
     assert_eq!(ptext, msg);
+}
+
+#[test]
+fn test_pubkey_key_agreement() {
+
+    let rng = botan::RandomNumberGenerator::new_system().unwrap();
+
+    let a_priv = botan::Privkey::create("ECDH", "secp384r1", &rng).unwrap();
+    let b_priv = botan::Privkey::create("ECDH", "secp384r1", &rng).unwrap();
+
+    let a_pub = a_priv.key_agreement_key().unwrap();
+    let b_pub = b_priv.key_agreement_key().unwrap();
+
+    let a_ka = botan::KeyAgreement::new(&a_priv, "KDF2(SHA-384)").unwrap();
+    let b_ka = botan::KeyAgreement::new(&b_priv, "KDF2(SHA-384)").unwrap();
+
+    let salt = rng.read(16).unwrap();
+
+    let a_key = a_ka.agree(&b_pub, &salt).unwrap();
+    let b_key = b_ka.agree(&a_pub, &salt).unwrap();
+
+    assert_eq!(a_key, b_key);
 }
 
 #[test]

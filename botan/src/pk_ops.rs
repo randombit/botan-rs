@@ -136,3 +136,32 @@ impl Encryptor {
     }
 }
 
+#[derive(Debug)]
+pub struct KeyAgreement {
+    obj: botan_pk_op_ka_t
+}
+
+impl Drop for KeyAgreement {
+    fn drop(&mut self) {
+        unsafe { botan_pk_op_key_agreement_destroy(self.obj) };
+    }
+}
+
+impl KeyAgreement {
+
+    pub fn new(key: &Privkey, kdf: &str) -> Result<KeyAgreement> {
+        let kdf = CString::new(kdf).unwrap();
+        let mut obj = ptr::null_mut();
+        call_botan! { botan_pk_op_key_agreement_create(&mut obj, key.handle(), kdf.as_ptr(), 0u32) }
+        Ok(KeyAgreement { obj })
+    }
+
+    pub fn agree(&self, counterparty_key: &[u8], salt: &[u8]) -> Result<Vec<u8>> {
+        call_botan_ffi_returning_vec_u8(&|out_buf, out_len| {
+            unsafe { botan_pk_op_key_agreement(self.obj, out_buf, out_len,
+                                               counterparty_key.as_ptr(), counterparty_key.len(),
+                                               salt.as_ptr(), salt.len()) }
+        })
+    }
+}
+
