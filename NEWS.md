@@ -1,5 +1,5 @@
 
-## 0.1.4 Not Yet Released
+## 0.1.4 2018-8-2
 
 Add cipher modes, encrypted PEM keys, X509 certificates
 
