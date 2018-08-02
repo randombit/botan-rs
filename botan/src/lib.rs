@@ -47,17 +47,19 @@ impl From<i32> for Error {
     }
 }
 
-mod block;
 mod bcrypt;
+mod block;
 mod hash;
 mod mac;
+mod memutils;
 mod rng;
 mod version;
 
-pub use block::*;
 pub use bcrypt::*;
+pub use block::*;
 pub use hash::*;
 pub use mac::*;
+pub use memutils::*;
 pub use rng::*;
 pub use version::*;
 

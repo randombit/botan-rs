@@ -4,7 +4,7 @@ extern "C" {
 
     pub fn botan_constant_time_compare(x: *const u8, y: *const u8, len: usize) -> c_int;
 
-    pub fn botan_scrub_mem(mem: *mut c_void, bytes: usize)-> c_int;
+    pub fn botan_scrub_mem(mem: *mut c_void, bytes: usize) -> c_int;
 
     pub fn botan_hex_encode(
         x: *const u8,

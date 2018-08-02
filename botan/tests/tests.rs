@@ -111,3 +111,25 @@ fn test_bcrypt() {
 
     assert_eq!(botan::bcrypt_verify("passwurd", &bcrypt2).unwrap(), false);
 }
+
+#[test]
+fn test_ct_compare() {
+    let a = vec![1,2,3];
+
+    assert_eq!(botan::const_time_compare(&a, &[1,2,3]), true);
+    assert_eq!(botan::const_time_compare(&a, &[1,2,3,4]), false);
+    assert_eq!(botan::const_time_compare(&a, &[1,2,4]), false);
+    assert_eq!(botan::const_time_compare(&a, &a), true);
+    assert_eq!(botan::const_time_compare(&a, &vec![1,2,3]), true);
+}
+
+#[test]
+fn test_scrub_mem() {
+    let mut v = vec![1,2,3];
+    botan::scrub_mem(&mut v);
+    assert_eq!(v, vec![0,0,0]);
+
+    let mut a = [1u32, 2u32, 3u32, 2049903u32];
+    botan::scrub_mem(&mut a);
+    assert_eq!(a, [0,0,0,0]);
+}
