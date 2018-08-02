@@ -1,4 +1,8 @@
 
+## 0.1.4 Not Yet Released
+
+Add cipher modes
+
 ## 0.1.3 2018-8-2
 
 Adds bcrypt, KDF, PBKDF, public key operations

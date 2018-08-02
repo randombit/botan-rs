@@ -82,6 +82,30 @@ fn test_block_cipher() {
 }
 
 #[test]
+fn test_cipher() {
+    let cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+
+    assert_eq!(cipher.tag_length(), 16);
+
+    let zero16 = vec![0; 16];
+    let zero12 = vec![0; 12];
+
+    cipher.set_key(&zero16).unwrap();
+
+    let ctext = cipher.process(&zero12, &zero16).unwrap();
+
+    assert_eq!(ctext, botan::hex_decode("0388DACE60B6A392F328C2B971B2FE78AB6E47D42CEC13BDF53A67B21257BDDF").unwrap());
+
+    let cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Decrypt).unwrap();
+    cipher.set_key(&zero16).unwrap();
+
+    let ptext = cipher.process(&zero12, &ctext).unwrap();
+
+    assert_eq!(ptext, zero16);
+}
+
+
+#[test]
 fn test_kdf() {
 
     let salt = botan::hex_decode("000102030405060708090A0B0C").unwrap();

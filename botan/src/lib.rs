@@ -86,6 +86,7 @@ impl From<i32> for Error {
 
 mod bcrypt;
 mod block;
+mod cipher;
 mod hash;
 mod kdf;
 mod mac;
@@ -98,6 +99,7 @@ mod version;
 
 pub use bcrypt::*;
 pub use block::*;
+pub use cipher::*;
 pub use hash::*;
 pub use kdf::*;
 pub use mac::*;
