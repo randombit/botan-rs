@@ -32,6 +32,8 @@ impl Drop for Pubkey {
 
 impl Privkey {
 
+    pub(crate) fn handle(&self) -> botan_privkey_t { self.obj }
+
     pub fn create(alg: &str, params: &str, rng: &RandomNumberGenerator) -> Result<Privkey> {
 
         let mut obj = ptr::null_mut();
@@ -95,6 +97,8 @@ impl Privkey {
 }
 
 impl Pubkey {
+
+    pub(crate) fn handle(&self) -> botan_pubkey_t { self.obj }
 
     pub fn load_der(der: &[u8]) -> Result<Pubkey> {
         let mut obj = ptr::null_mut();

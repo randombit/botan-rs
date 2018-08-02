@@ -181,6 +181,38 @@ fn test_pubkey() {
 }
 
 #[test]
+fn test_pubkey_sign() {
+    let msg = vec![1,23,42];
+
+    let rng = botan::RandomNumberGenerator::new_system().unwrap();
+
+    let ecdsa_key = botan::Privkey::create("ECDSA", "secp256r1", &rng).unwrap();
+
+    let signer = botan::Signer::new(&ecdsa_key, "EMSA1(SHA-256)").unwrap();
+
+    signer.update(&msg).unwrap();
+    let signature = signer.finish(&rng).unwrap();
+
+    let pub_key = ecdsa_key.pubkey().unwrap();
+
+    let verifier = botan::Verifier::new(&pub_key, "EMSA1(SHA-256)").unwrap();
+
+    verifier.update(&[1]).unwrap();
+    verifier.update(&[23, 42]).unwrap();
+
+    assert_eq!(verifier.finish(&signature).unwrap(), true);
+
+    verifier.update(&[1]).unwrap();
+    assert_eq!(verifier.finish(&signature).unwrap(), false);
+
+    verifier.update(&[1]).unwrap();
+    verifier.update(&[23, 42]).unwrap();
+
+    assert_eq!(verifier.finish(&signature).unwrap(), true);
+
+}
+
+#[test]
 fn test_ct_compare() {
     let a = vec![1,2,3];
 
