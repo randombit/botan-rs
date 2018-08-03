@@ -1,12 +1,14 @@
 [package]
 name = "botan-sys"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Jack Lloyd <jack@randombit.net>"]
 links = "botan-2"
 build = "build.rs"
 description = "FFI wrapper for Botan cryptography library"
 license = "MIT"
 homepage = "https://botan.randombit.net/"
+repository = "https://github.com/randombit/botan-rs"
+documentation = "https://docs.rs/botan-sys"
 categories = [ "cryptography", "external-ffi-bindings" ]
 
 [badges]
