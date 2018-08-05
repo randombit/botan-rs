@@ -9,11 +9,13 @@ use std::ffi::CString;
 use std::ptr;
 
 #[derive(Debug)]
+/// A public key object
 pub struct Pubkey {
     obj: botan_pubkey_t
 }
 
 #[derive(Debug)]
+/// A private key object
 pub struct Privkey {
     obj: botan_privkey_t
 }
@@ -34,6 +36,8 @@ impl Privkey {
 
     pub(crate) fn handle(&self) -> botan_privkey_t { self.obj }
 
+    /// Create a new private key
+    ///
     pub fn create(alg: &str, params: &str, rng: &RandomNumberGenerator) -> Result<Privkey> {
 
         let mut obj = ptr::null_mut();

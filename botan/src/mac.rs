@@ -6,7 +6,7 @@ use std::ffi::CString;
 use std::ptr;
 
 #[derive(Debug)]
-// Message authentication code
+/// Message authentication code
 pub struct MsgAuthCode {
     obj: botan_mac_t,
     output_length: usize

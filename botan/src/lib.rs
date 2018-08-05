@@ -1,10 +1,15 @@
+#![warn(missing_docs)]
+
+//! A wrapper for the Botan cryptography library
+
 extern crate botan_sys;
 
 use botan_sys::*;
-
-pub type Result<T> = ::std::result::Result<T, Error>;
 use std::os::raw::{c_int};
 use std::ffi::CStr;
+
+/// The result of calling an operation on the library
+pub type Result<T> = ::std::result::Result<T, Error>;
 
 macro_rules! call_botan {
     ($x:expr) => {
@@ -50,18 +55,31 @@ fn call_botan_ffi_returning_string(cb: &Fn(*mut u8, *mut usize) -> c_int) -> Res
 }
 
 #[derive(Clone,Debug,PartialEq)]
+/// Possible errors
 pub enum Error {
+    /// A provided authentication code was incorrect
     BadAuthCode,
+    /// A bad flag was passed to the library
     BadFlag,
+    /// An invalid parameter was provided to the library
     BadParameter,
+    /// An exception was thrown will processing this request
     ExceptionThrown,
+    /// There was insufficient buffer space to write the output
     InsufficientBufferSpace,
+    /// Something about the input was invalid
     InvalidInput,
+    /// An invalid object was provided to the library
     InvalidObject,
+    /// A verifier was incorrect
     InvalidVerifier,
+    /// Some functionality is not implemented in the current library version
     NotImplemented,
+    /// A null pointer was incorrectly provided
     NullPointer,
+    /// Some unknown error occurred
     UnknownError,
+    /// An error occured while converting data to C
     ConversionError
 }
 

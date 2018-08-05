@@ -1,4 +1,3 @@
-
 use botan_sys::*;
 
 use std::ffi::CStr;

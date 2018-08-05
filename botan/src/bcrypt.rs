@@ -7,6 +7,16 @@ use std::ffi::CString;
 
 const BCRYPT_SIZE : usize = 60;
 
+/// Produce a bcrypt password hash
+///
+/// # Examples
+///
+/// ```
+/// let rng = botan::RandomNumberGenerator::new().unwrap();
+/// let bcrypt1 = botan::bcrypt_hash("password", &rng, 10).unwrap();
+/// let bcrypt2 = botan::bcrypt_hash("password", &rng, 10).unwrap();
+/// assert_ne!(bcrypt1, bcrypt2); // different salt each time
+/// ```
 pub fn bcrypt_hash(pass: &str, rng : &RandomNumberGenerator, workfactor: usize) -> Result<String> {
 
     let mut out = vec![0; BCRYPT_SIZE + 1];
@@ -23,6 +33,16 @@ pub fn bcrypt_hash(pass: &str, rng : &RandomNumberGenerator, workfactor: usize) 
     Ok(String::from_utf8(out).unwrap())
 }
 
+/// Verify a bcrypt password hash
+///
+/// # Examples
+///
+/// ```
+/// let rng = botan::RandomNumberGenerator::new().unwrap();
+/// let bcrypt = botan::bcrypt_hash("password", &rng, 10).unwrap();
+/// assert_eq!(botan::bcrypt_verify("not even close", &bcrypt), Ok(false));
+/// assert_eq!(botan::bcrypt_verify("password", &bcrypt), Ok(true));
+/// ```
 pub fn bcrypt_verify(pass: &str, hash: &str) -> Result<bool> {
 
     let rc = unsafe {

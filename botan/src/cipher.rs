@@ -6,6 +6,7 @@ use std::ffi::CString;
 use std::ptr;
 
 #[derive(Debug)]
+/// A symmetric cipher
 pub struct Cipher {
     obj: botan_cipher_t,
     tag_length: usize,
@@ -15,8 +16,11 @@ pub struct Cipher {
 }
 
 #[derive(PartialEq)]
+/// Which direction the cipher processes in
 pub enum CipherDirection {
+    /// Encrypt
     Encrypt,
+    /// Decrypt
     Decrypt
 }
 
@@ -27,6 +31,12 @@ impl Drop for Cipher {
 }
 
 impl Cipher {
+    /// Create a new cipher object in the specified direction
+    ///
+    /// # Examples
+    /// ```
+    /// let aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// ```
     pub fn new(name: &str, dir: CipherDirection) -> Result<Cipher> {
         let mut obj = ptr::null_mut();
         let flag = if dir == CipherDirection::Encrypt { 0u32 } else { 1u32 };
@@ -51,6 +61,14 @@ impl Cipher {
         })
     }
 
+    /// Query if a particular nonce size is valid for this cipher
+    ///
+    /// # Examples
+    /// ```
+    /// let aes_cbc = botan::Cipher::new("AES-128/CBC", botan::CipherDirection::Encrypt).unwrap();
+    /// assert_eq!(aes_cbc.valid_nonce_length(16), Ok(true));
+    /// assert_eq!(aes_cbc.valid_nonce_length(1), Ok(false));
+    /// ```
     pub fn valid_nonce_length(&self, l: usize) -> Result<bool> {
         let rc = unsafe { botan_cipher_valid_nonce_length(self.obj, l) };
 
@@ -65,28 +83,80 @@ impl Cipher {
         }
     }
 
+    /// For an AEAD, return the tag length of the cipher
+    ///
+    /// # Examples
+    /// ```
+    /// let aes_cbc = botan::Cipher::new("AES-128/CBC", botan::CipherDirection::Encrypt).unwrap();
+    /// assert_eq!(aes_cbc.tag_length(), 0);
+    /// let aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// assert_eq!(aes_gcm.tag_length(), 16);
+    /// ```
     pub fn tag_length(&self) -> usize {
         self.tag_length
     }
 
+    /// Return the default nonce length for the cipher. Some ciphers only
+    /// support a single nonce size. Others support variable sizes, but some
+    /// particular size (typically 96 bits) is handled particularly efficiently.
+    ///
+    /// # Examples
+    /// ```
+    /// let aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// assert_eq!(aes_gcm.default_nonce_length(), 12);
+    /// ```
     pub fn default_nonce_length(&self) -> usize {
         self.default_nonce_length
     }
 
+    /// Return the minimum and maximum keylength for the cipher, in bytes
+    ///
+    /// # Examples
+    /// ```
+    /// let serpent_gcm = botan::Cipher::new("Serpent/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// assert_eq!(serpent_gcm.query_keylength(), (16, 32));
+    /// ```
     pub fn query_keylength(&self) -> (usize, usize) {
         (self.min_keylen, self.max_keylen)
     }
 
+    /// Set the key for the cipher
+    ///
+    /// # Examples
+    /// ```
+    /// let aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// aes_gcm.set_key(&vec![0; 16]).unwrap();
+    /// ```
     pub fn set_key(&self, key: &[u8]) -> Result<()> {
         call_botan! { botan_cipher_set_key(self.obj, key.as_ptr(), key.len()) };
         Ok(())
     }
 
+    /// Set the associated data for the cipher. This only works for AEAD modes.
+    /// The key must already be set to set the AD.
+    ///
+    /// # Examples
+    /// ```
+    /// let aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// aes_gcm.set_key(&vec![0; 16]).unwrap();
+    /// aes_gcm.set_associated_data(&[1,2,3]).unwrap();
+    /// ```
     pub fn set_associated_data(&self, ad: &[u8]) -> Result<()> {
         call_botan! { botan_cipher_set_associated_data(self.obj, ad.as_ptr(), ad.len()) };
         Ok(())
     }
 
+    /// Encrypt or decrypt a message with the provided nonce. The key must
+    /// already have been set.
+    ///
+    /// # Examples
+    /// ```
+    /// let aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// aes_gcm.set_key(&vec![0; 16]).unwrap();
+    /// let nonce = vec![0; aes_gcm.default_nonce_length()];
+    /// let msg = vec![0; 48];
+    /// let ctext = aes_gcm.process(&nonce, &msg);
+    /// ```
     pub fn process(&self, nonce: &[u8], msg: &[u8]) -> Result<Vec<u8>> {
         call_botan! { botan_cipher_start(self.obj, nonce.as_ptr(), nonce.len()) };
 
@@ -116,6 +186,7 @@ impl Cipher {
         Ok(output)
     }
 
+    /// Clear all state associated with the key
     pub fn clear(&self) -> Result<()> {
         call_botan! { botan_cipher_clear(self.obj) };
         Ok(())

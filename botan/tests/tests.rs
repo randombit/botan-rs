@@ -90,7 +90,13 @@ fn test_cipher() {
     let zero16 = vec![0; 16];
     let zero12 = vec![0; 12];
 
+    //assert!(cipher.set_associated_data(&[1,2,3]).is_err());
+
     cipher.set_key(&zero16).unwrap();
+
+    cipher.set_associated_data(&[1,2,3]).unwrap();
+    cipher.set_associated_data(&[]).unwrap();
+
 
     let ctext = cipher.process(&zero12, &zero16).unwrap();
 
