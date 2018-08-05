@@ -5,6 +5,8 @@ use std::mem;
 use std::os::raw::{c_void, c_char};
 use std::ffi::CString;
 
+/// Const time comparison
+/// Compare two arrays without leaking side channel information
 pub fn const_time_compare<T: Copy>(a: &[T], b: &[T]) -> bool {
     if a.len() != b.len() {
         return false;
@@ -16,11 +18,15 @@ pub fn const_time_compare<T: Copy>(a: &[T], b: &[T]) -> bool {
     return rc == 0;
 }
 
+/// Securely zeroize memory
+/// Write zeros to the array (eg to clear out a key) in a way that is
+/// unlikely to be removed by the compiler.
 pub fn scrub_mem<T: Copy>(a: &mut [T]) {
     let bytes = mem::size_of::<T>() * a.len();
     unsafe { botan_scrub_mem(a.as_mut_ptr() as *mut c_void, bytes) };
 }
 
+/// Hex encode some data
 pub fn hex_encode(x: &[u8]) -> Result<String> {
     let flags = 0u32;
 
@@ -29,6 +35,7 @@ pub fn hex_encode(x: &[u8]) -> Result<String> {
     Ok(CString::new(output).unwrap().into_string().unwrap())
 }
 
+/// Hex decode some data
 pub fn hex_decode(x: &str) -> Result<Vec<u8>> {
 
     let mut output = vec![0u8; x.len()/2];

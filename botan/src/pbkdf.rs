@@ -4,6 +4,18 @@ use botan_sys::*;
 
 use std::ffi::CString;
 
+/// Password based key derivation function
+/// Note currently only PBKDF2 is supported by this interface.
+/// For PBKDF2, iterations >= 100000 is recommended.
+
+/// # Examples
+/// ```
+/// let rng = botan::RandomNumberGenerator::new().unwrap();
+/// let salt = rng.read(10).unwrap();
+/// let key = botan::pbkdf("PBKDF2(SHA-256)", 32, "passphrase", &salt, 10000).unwrap();
+/// assert_eq!(key.len(), 32);
+/// ```
+
 pub fn pbkdf(algo: &str,
              out_len: usize,
              passphrase: &str,
