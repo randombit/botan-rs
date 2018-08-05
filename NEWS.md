@@ -1,4 +1,8 @@
 
+## 0.1.5 2018-8-5
+
+Add documentation for most interfaces. No code changes.
+
 ## 0.1.4 2018-8-2
 
 Add cipher modes, encrypted PEM keys, X509 certificates
