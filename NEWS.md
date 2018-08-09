@@ -4,6 +4,7 @@
 Due to using several APIs only recently added, 0.2.0 onwards requires current
 `master` branch of botan (upcoming 2.8, to be released in early October).
 
+- Adds MPI type.
 - Adds scrypt.
 - Add NIST key wrapping.
 - Adds various util functions to existing types.

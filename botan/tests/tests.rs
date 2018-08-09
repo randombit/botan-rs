@@ -465,3 +465,30 @@ fn test_scrub_mem() {
     botan::scrub_mem(&mut a);
     assert_eq!(a, [0,0,0,0]);
 }
+
+#[test]
+fn test_mp() {
+    let mut a = botan::MPI::new().unwrap();
+    let mut b = botan::MPI::new().unwrap();
+
+    assert_eq!(a.to_u32().unwrap(), 0);
+    assert_eq!(b.to_u32().unwrap(), 0);
+
+    a.set_i32(9).unwrap();
+    b.set_i32(81).unwrap();
+
+    assert_eq!(a.to_u32().unwrap(), 9);
+    assert_eq!(b.to_u32().unwrap(), 81);
+
+    let mut c = a.add(&b).unwrap();
+    assert_eq!(c.to_u32().unwrap(), 90);
+
+    let d = botan::MPI::new_from_str("0x5A").unwrap();
+    assert_eq!(c, d);
+
+    c.mul_assign(&botan::MPI::new_from_str("1030").unwrap()).unwrap();
+
+    assert_eq!(c.to_string().unwrap(), "92700");
+
+
+}

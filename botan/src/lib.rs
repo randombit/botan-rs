@@ -1,6 +1,6 @@
-#![warn(missing_docs)]
+//#![warn(missing_docs)]
 //#![deny(warnings)]
-#![deny(missing_docs)]
+//#![deny(missing_docs)]
 
 //! A wrapper for the Botan cryptography library
 
@@ -23,6 +23,7 @@ mod keywrap;
 mod kdf;
 mod mac;
 mod memutils;
+mod mp;
 mod pbkdf;
 mod pk_ops;
 mod pubkey;
@@ -39,6 +40,7 @@ pub use kdf::*;
 pub use keywrap::*;
 pub use mac::*;
 pub use memutils::*;
+pub use mp::*;
 pub use pbkdf::*;
 pub use pk_ops::*;
 pub use pubkey::*;
