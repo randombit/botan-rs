@@ -47,6 +47,10 @@ fn test_hash() {
 fn test_mac() {
     let mac = botan::MsgAuthCode::new("HMAC(SHA-384)").unwrap();
 
+    let key_spec = mac.key_spec();
+
+    assert!(key_spec.is_valid_keylength(20));
+
     mac.set_key(&vec![0xAA; 20]).unwrap();
 
     mac.update(&vec![0xDD; 1]).unwrap();
@@ -68,6 +72,11 @@ fn test_block_cipher() {
     let bc = botan::BlockCipher::new("AES-128").unwrap();
 
     assert_eq!(bc.algo_name().unwrap(), "AES-128");
+
+    let key_spec = bc.key_spec();
+
+    assert!(key_spec.is_valid_keylength(20) == false);
+    assert!(key_spec.is_valid_keylength(16));
 
     bc.set_key(&vec![0; 16]).unwrap();
 
@@ -110,6 +119,29 @@ fn test_cipher() {
     let ptext = cipher.process(&zero12, &ctext).unwrap();
 
     assert_eq!(ptext, zero16);
+}
+
+#[test]
+fn test_chacha() {
+    let cipher = botan::Cipher::new("ChaCha20", botan::CipherDirection::Encrypt).unwrap();
+
+    assert_eq!(cipher.tag_length(), 0);
+
+    let key = vec![0; 32];
+
+    let expected = botan::hex_decode("76B8E0ADA0F13D90405D6AE55386BD28BDD219B8A08DED1AA836EFCC8B770DC7DA41597C5157488D7724E03FB8D84A376A43B8F41518A11CC387B669").unwrap();
+
+    cipher.set_key(&key).unwrap();
+
+    assert!(cipher.set_associated_data(&[1,2,3]).is_err()); // not an AEAD
+    assert!(cipher.set_associated_data(&[]).is_err());
+
+    let iv = vec![];
+    let input = vec![0; expected.len()];
+
+    let ctext = cipher.process(&iv, &input).unwrap();
+
+    assert_eq!(ctext, expected);
 }
 
 
