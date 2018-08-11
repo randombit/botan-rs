@@ -5,6 +5,8 @@ pub(crate) use std::ffi::{CStr, CString};
 pub(crate) use std::ptr;
 pub(crate) use std::mem;
 
+use std::fmt;
+
 /// The result of calling an operation on the library
 pub type Result<T> = ::std::result::Result<T, Error>;
 
@@ -21,7 +23,7 @@ pub(crate) fn call_botan_ffi_returning_vec_u8(
         output.resize(out_len, 0);
         return Ok(output);
     }
-    else if rc != BOTAN_FFI_ERROR_BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE {
+    else if rc != BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE {
         return Err(Error::from(rc));
     }
 
@@ -66,10 +68,14 @@ pub enum Error {
     InvalidObject,
     /// A verifier was incorrect
     InvalidVerifier,
+    /// An object was invoked without the key being set
+    KeyNotSet,
     /// Some functionality is not implemented in the current library version
     NotImplemented,
     /// A null pointer was incorrectly provided
     NullPointer,
+    /// Memory exhaustion
+    OutOfMemory,
     /// Some unknown error occurred
     UnknownError,
     /// An error occured while converting data to C
@@ -79,17 +85,19 @@ pub enum Error {
 impl From<i32> for Error {
     fn from(err: i32) -> Error {
         match err {
-            BOTAN_FFI_ERROR_BOTAN_FFI_INVALID_VERIFIER => Error::InvalidVerifier,
-            BOTAN_FFI_ERROR_BOTAN_FFI_ERROR_INVALID_INPUT => Error::InvalidInput,
-            BOTAN_FFI_ERROR_BOTAN_FFI_ERROR_BAD_MAC => Error::BadAuthCode,
-            BOTAN_FFI_ERROR_BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE => Error::InsufficientBufferSpace,
-            BOTAN_FFI_ERROR_BOTAN_FFI_ERROR_EXCEPTION_THROWN => Error::ExceptionThrown,
-            BOTAN_FFI_ERROR_BOTAN_FFI_ERROR_BAD_FLAG => Error::BadFlag,
-            BOTAN_FFI_ERROR_BOTAN_FFI_ERROR_NULL_POINTER => Error::NullPointer,
-            BOTAN_FFI_ERROR_BOTAN_FFI_ERROR_BAD_PARAMETER => Error::BadParameter,
-            BOTAN_FFI_ERROR_BOTAN_FFI_ERROR_NOT_IMPLEMENTED => Error::NotImplemented,
-            BOTAN_FFI_ERROR_BOTAN_FFI_ERROR_INVALID_OBJECT => Error::InvalidObject,
-            BOTAN_FFI_ERROR_BOTAN_FFI_ERROR_UNKNOWN_ERROR => Error::UnknownError,
+            BOTAN_FFI_ERROR_BAD_FLAG => Error::BadFlag,
+            BOTAN_FFI_ERROR_BAD_MAC => Error::BadAuthCode,
+            BOTAN_FFI_ERROR_BAD_PARAMETER => Error::BadParameter,
+            BOTAN_FFI_ERROR_EXCEPTION_THROWN => Error::ExceptionThrown,
+            BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE => Error::InsufficientBufferSpace,
+            BOTAN_FFI_ERROR_INVALID_INPUT => Error::InvalidInput,
+            BOTAN_FFI_ERROR_INVALID_OBJECT => Error::InvalidObject,
+            BOTAN_FFI_ERROR_KEY_NOT_SET => Error::KeyNotSet,
+            BOTAN_FFI_ERROR_NOT_IMPLEMENTED => Error::NotImplemented,
+            BOTAN_FFI_ERROR_NULL_POINTER => Error::NullPointer,
+            BOTAN_FFI_ERROR_OUT_OF_MEMORY => Error::OutOfMemory,
+            BOTAN_FFI_ERROR_UNKNOWN_ERROR => Error::UnknownError,
+            BOTAN_FFI_INVALID_VERIFIER => Error::InvalidVerifier,
             _ => Error::UnknownError,
         }
     }

@@ -52,7 +52,7 @@ pub fn bcrypt_verify(pass: &str, hash: &str) -> Result<bool> {
     if rc == 0 {
         Ok(true)
     }
-    else if rc == BOTAN_FFI_ERROR_BOTAN_FFI_INVALID_VERIFIER {
+    else if rc == BOTAN_FFI_INVALID_VERIFIER {
         Ok(false)
     }
     else {

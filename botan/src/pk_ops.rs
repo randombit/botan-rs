@@ -103,7 +103,7 @@ impl Verifier {
         if rc == 0 {
             Ok(true)
         }
-        else if rc == BOTAN_FFI_ERROR_BOTAN_FFI_INVALID_VERIFIER {
+        else if rc == BOTAN_FFI_INVALID_VERIFIER {
             Ok(false)
         }
         else {
@@ -165,7 +165,7 @@ impl KeyAgreement {
     }
 
     pub fn agree(&self, counterparty_key: &[u8], salt: &[u8]) -> Result<Vec<u8>> {
-        let ka_len = 128; // FIXME!!
+        let ka_len = 128; // (2.8)FIXME!!
         call_botan_ffi_returning_vec_u8(ka_len, &|out_buf, out_len| {
             unsafe { botan_pk_op_key_agreement(self.obj, out_buf, out_len,
                                                counterparty_key.as_ptr(), counterparty_key.len(),
