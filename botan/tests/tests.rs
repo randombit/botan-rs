@@ -140,6 +140,21 @@ fn test_pbkdf() {
 }
 
 #[test]
+fn test_scrypt() {
+
+    let salt = botan::hex_decode("4E61436C").unwrap();
+    let n = 1024;
+    let r = 8;
+    let p = 16;
+    let passphrase = "password";
+    let expected_output = botan::hex_decode("fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622e").unwrap();
+
+    let output = botan::scrypt(expected_output.len(), passphrase, &salt, n, r, p).unwrap();
+
+    assert_eq!(output, expected_output);
+}
+
+#[test]
 fn test_hex() {
     let raw = vec![1,2,3,255,42,23];
     assert_eq!(botan::hex_encode(&raw).unwrap(), "010203FF2A17");

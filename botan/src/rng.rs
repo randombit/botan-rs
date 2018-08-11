@@ -79,4 +79,30 @@ impl RandomNumberGenerator {
         Ok(())
     }
 
+    /// Attempt to reseed the RNG by getting data from source RNG
+    ///
+    /// # Examples
+    /// ```
+    /// let system_rng = botan::RandomNumberGenerator::new_system().unwrap();
+    /// let rng = botan::RandomNumberGenerator::new_userspace().unwrap();
+    /// rng.reseed_from_rng(&system_rng, 256).unwrap();
+    /// ```
+    pub fn reseed_from_rng(&self, source: &RandomNumberGenerator, bits: usize) -> Result<()> {
+        call_botan! { botan_rng_reseed_from_rng(self.obj, source.handle(), bits) }
+        Ok(())
+    }
+
+    /// Add some seed material to the RNG
+    ///
+    /// # Examples
+    /// ```
+    /// let rng = botan::RandomNumberGenerator::new_userspace().unwrap();
+    /// let my_seed = vec![0x42, 0x6F, 0x62];
+    /// rng.add_entropy(&my_seed);
+    /// ```
+    pub fn add_entropy(&self, seed: &[u8]) -> Result<()> {
+        call_botan! { botan_rng_add_entropy(self.obj, seed.as_ptr(), seed.len()) }
+        Ok(())
+    }
+
 }

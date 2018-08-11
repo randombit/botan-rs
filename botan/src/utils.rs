@@ -5,8 +5,6 @@ pub(crate) use std::ffi::{CStr, CString};
 pub(crate) use std::ptr;
 pub(crate) use std::mem;
 
-use std::fmt;
-
 /// The result of calling an operation on the library
 pub type Result<T> = ::std::result::Result<T, Error>;
 
