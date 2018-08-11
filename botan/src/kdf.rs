@@ -1,8 +1,6 @@
-use super::{Error, Result};
 
 use botan_sys::*;
-
-use std::ffi::CString;
+use utils::*;
 
 /// Key derivation function
 /// Produces a KDF output of the specified size when run over the

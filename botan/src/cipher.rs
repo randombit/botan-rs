@@ -1,9 +1,6 @@
-use super::{Error, Result};
 
 use botan_sys::*;
-
-use std::ffi::CString;
-use std::ptr;
+use utils::*;
 
 #[derive(Debug)]
 /// A symmetric cipher

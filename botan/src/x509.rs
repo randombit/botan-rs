@@ -1,12 +1,8 @@
-use super::{Error, Result};
-use super::{call_botan_ffi_returning_vec_u8, call_botan_ffi_returning_string};
 
 use botan_sys::*;
+use utils::*;
 
 use pubkey::Pubkey;
-use std::ffi::CString;
-use std::ptr;
-use std::os::raw::c_char;
 
 #[derive(Debug)]
 pub struct Certificate {

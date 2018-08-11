@@ -67,6 +67,8 @@ fn test_mac() {
 fn test_block_cipher() {
     let bc = botan::BlockCipher::new("AES-128").unwrap();
 
+    assert_eq!(bc.algo_name().unwrap(), "AES-128");
+
     bc.set_key(&vec![0; 16]).unwrap();
 
     let input = vec![0; 16];

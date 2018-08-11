@@ -1,7 +1,5 @@
 use botan_sys::*;
-use super::{Error, Result};
-use std::ptr;
-use std::ffi::CString;
+use utils::*;
 
 #[derive(Debug)]
 /// A cryptographic random number generator

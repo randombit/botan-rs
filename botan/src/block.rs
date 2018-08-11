@@ -1,9 +1,6 @@
-use super::{Error, Result};
 
 use botan_sys::*;
-
-use std::ffi::CString;
-use std::ptr;
+use utils::*;
 
 #[derive(Debug)]
 /// A raw block cipher interface (ie ECB mode)
@@ -53,7 +50,11 @@ impl BlockCipher {
     /// ```
     pub fn block_size(&self) -> usize { self.block_size }
 
-    // FIXME(2.8) need name and key length info getters
+    pub fn algo_name(&self) -> Result<String> {
+        call_botan_ffi_returning_string(&|out_buf, out_len| {
+            unsafe { botan_block_cipher_name(self.obj, out_buf as *mut c_char, out_len) }
+        })
+    }
 
     /// Set the key for the cipher.
     ///

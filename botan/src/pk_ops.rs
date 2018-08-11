@@ -1,12 +1,9 @@
-use super::{Error, Result};
-use super::{call_botan_ffi_returning_vec_u8};
 
 use botan_sys::*;
+use utils::*;
 
 use pubkey::{Privkey, Pubkey};
 use rng::RandomNumberGenerator;
-use std::ffi::CString;
-use std::ptr;
 
 #[derive(Debug)]
 pub struct Signer {

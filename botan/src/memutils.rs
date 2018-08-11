@@ -1,9 +1,6 @@
-use super::{Error, Result};
 
 use botan_sys::*;
-use std::mem;
-use std::os::raw::{c_void, c_char};
-use std::ffi::CString;
+use utils::*;
 
 /// Const time comparison
 /// Compare two arrays without leaking side channel information

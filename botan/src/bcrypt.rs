@@ -1,9 +1,8 @@
-use super::{Error, Result};
 
 use botan_sys::*;
+use utils::*;
 
 use rng::RandomNumberGenerator;
-use std::ffi::CString;
 
 const BCRYPT_SIZE : usize = 60;
 

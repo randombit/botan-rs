@@ -1,8 +1,6 @@
-use super::{Error, Result};
 
 use botan_sys::*;
-
-use std::ffi::CString;
+use utils::*;
 
 /// Password based key derivation function
 /// Note currently only PBKDF2 is supported by this interface.

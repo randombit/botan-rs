@@ -1,6 +1,5 @@
 use botan_sys::*;
-
-use std::ffi::CStr;
+use utils::*;
 
 #[derive(Debug)]
 /// Information about the library version
