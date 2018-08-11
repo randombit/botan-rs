@@ -5,6 +5,7 @@ use utils::*;
 use pubkey::Pubkey;
 
 #[derive(Debug)]
+/// X.509 certificate
 pub struct Certificate {
     obj: botan_x509_cert_t
 }
@@ -17,12 +18,14 @@ impl Drop for Certificate {
 
 impl Certificate {
 
+    /// Load a X.509 certificate from DER or PEM representation
     pub fn load(data: &[u8]) -> Result<Certificate> {
         let mut obj = ptr::null_mut();
         call_botan! { botan_x509_cert_load(&mut obj, data.as_ptr(), data.len()) };
         Ok(Certificate { obj })
     }
 
+    /// Read an X.509 certificate from a file
     pub fn from_file(fsname: &str) -> Result<Certificate> {
         let fsname = CString::new(fsname).unwrap();
 
@@ -31,6 +34,7 @@ impl Certificate {
         Ok(Certificate { obj })
     }
 
+    /// Return the serial number of this certificate
     pub fn serial_number(&self) -> Result<Vec<u8>> {
         let sn_len = 32; // PKIX upper bound is 20
         call_botan_ffi_returning_vec_u8(sn_len, &|out_buf, out_len| {
@@ -38,6 +42,7 @@ impl Certificate {
         })
     }
 
+    /// Return the fingerprint of this certificate
     pub fn fingerprint(&self, hash: &str) -> Result<Vec<u8>> {
         let fprint_len = 128;
         let hash = CString::new(hash).unwrap();
@@ -46,6 +51,7 @@ impl Certificate {
         })
     }
 
+    /// Return the authority key id, if set
     pub fn authority_key_id(&self) -> Result<Vec<u8>> {
         let akid_len = 32;
         call_botan_ffi_returning_vec_u8(akid_len, &|out_buf, out_len| {
@@ -53,6 +59,7 @@ impl Certificate {
         })
     }
 
+    /// Return the subject key id, if set
     pub fn subject_key_id(&self) -> Result<Vec<u8>> {
         let skid_len = 32;
         call_botan_ffi_returning_vec_u8(skid_len, &|out_buf, out_len| {
@@ -60,6 +67,7 @@ impl Certificate {
         })
     }
 
+    /// Return the byte representation of the public key
     pub fn public_key_bits(&self) -> Result<Vec<u8>> {
         let pk_len = 4096; // fixme
         call_botan_ffi_returning_vec_u8(pk_len, &|out_buf, out_len| {
@@ -67,12 +75,14 @@ impl Certificate {
         })
     }
 
+    /// Return the public key included in this certificate
     pub fn public_key(&self) -> Result<Pubkey> {
         let mut key = ptr::null_mut();
         call_botan! { botan_x509_cert_get_public_key(self.obj, &mut key) };
         Ok(Pubkey::from_handle(key))
     }
 
+    /// Return a free-form string representation of this certificate
     pub fn to_string(&self) -> Result<String> {
         let as_str_len = 4096;
         call_botan_ffi_returning_string(as_str_len, &|out_buf, out_len| {
@@ -80,6 +90,7 @@ impl Certificate {
         })
     }
 
+    /// Return true if the provided hostname is valid for this certificate
     pub fn matches_hostname(&self, hostname: &str) -> Result<bool> {
         let hostname = CString::new(hostname).unwrap();
         let rc = unsafe { botan_x509_cert_hostname_match(self.obj, hostname.as_ptr()) };

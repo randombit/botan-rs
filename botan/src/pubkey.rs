@@ -46,6 +46,7 @@ impl Privkey {
         Ok(Privkey { obj })
     }
 
+    /// Load DER bytes as an unencrypted PKCS#8 private key
     pub fn load_der(der: &[u8]) -> Result<Privkey> {
         let mut obj = ptr::null_mut();
 
@@ -54,6 +55,7 @@ impl Privkey {
         Ok(Privkey { obj })
     }
 
+    /// Load PEM string as an unencrypted PKCS#8 private key
     pub fn load_pem(pem: &str) -> Result<Privkey> {
         let mut obj = ptr::null_mut();
 
@@ -63,6 +65,7 @@ impl Privkey {
         Ok(Privkey { obj })
     }
 
+    /// Load DER bytes as an encrypted PKCS#8 private key
     pub fn load_encrypted_der(der: &[u8], passphrase: &str) -> Result<Privkey> {
         let mut obj = ptr::null_mut();
 
@@ -72,6 +75,7 @@ impl Privkey {
         Ok(Privkey { obj })
     }
 
+    /// Load PEM string as an encrypted PKCS#8 private key
     pub fn load_encrypted_pem(pem: &str, passphrase: &str) -> Result<Privkey> {
         let mut obj = ptr::null_mut();
 
@@ -82,6 +86,7 @@ impl Privkey {
         Ok(Privkey { obj })
     }
 
+    /// Check if the key seems to be valid
     pub fn check_key(&self, rng: &RandomNumberGenerator) -> Result<bool> {
 
         let flags = 1u32;
@@ -98,12 +103,14 @@ impl Privkey {
         }
     }
 
+    /// Return the public key associated with this private key
     pub fn pubkey(&self) -> Result<Pubkey> {
         let mut obj = ptr::null_mut();
         call_botan! { botan_privkey_export_pubkey(&mut obj, self.obj) }
         Ok(Pubkey { obj })
     }
 
+    /// Return the name of the algorithm
     pub fn algo_name(&self) -> Result<String> {
         let name_len = 32;
         call_botan_ffi_returning_string(name_len, &|out_buf, out_len| {
@@ -111,6 +118,7 @@ impl Privkey {
         })
     }
 
+    /// DER encode the key (unencrypted)
     pub fn der_encode(&self) -> Result<Vec<u8>> {
         let der_len = 4096; // fixme
         call_botan_ffi_returning_vec_u8(der_len, &|out_buf, out_len| {
@@ -118,10 +126,12 @@ impl Privkey {
         })
     }
 
+    /// DER encode the key (encrypted)
     pub fn der_encode_encrypted(&self, passphrase: &str, rng: &RandomNumberGenerator) -> Result<Vec<u8>> {
         self.der_encode_encrypted_with_options(passphrase, "AES-256/CBC", "SHA-512", 150000, rng)
     }
 
+    /// DER encode the key (encrypted), specifying cipher/hash options
     pub fn der_encode_encrypted_with_options(&self,
                                              passphrase: &str,
                                              cipher: &str,
@@ -142,10 +152,12 @@ impl Privkey {
         })
     }
 
+    /// PEM encode the key (encrypted)
     pub fn pem_encode_encrypted(&self, passphrase: &str, rng: &RandomNumberGenerator) -> Result<String> {
         self.pem_encode_encrypted_with_options(passphrase, "AES-256/CBC", "SHA-512", 150000, rng)
     }
 
+    /// PEM encode the key (encrypted), specifying cipher/hash options
     pub fn pem_encode_encrypted_with_options(&self,
                                              passphrase: &str,
                                              cipher: &str,
@@ -166,6 +178,7 @@ impl Privkey {
         })
     }
 
+    /// PEM encode the private key (unencrypted)
     pub fn pem_encode(&self) -> Result<String> {
         let pem_len = 4096; // fixme
         call_botan_ffi_returning_string(pem_len, &|out_buf, out_len| {
@@ -173,6 +186,7 @@ impl Privkey {
         })
     }
 
+    /// Return the key agrement key, only valid for DH/ECDH
     pub fn key_agreement_key(&self) -> Result<Vec<u8>> {
         let ka_key_len = 512; // fixme
         call_botan_ffi_returning_vec_u8(ka_key_len, &|out_buf, out_len| {
@@ -187,12 +201,20 @@ impl Pubkey {
 
     pub(crate) fn handle(&self) -> botan_pubkey_t { self.obj }
 
+    /// Load a DER encoded public key
     pub fn load_der(der: &[u8]) -> Result<Pubkey> {
         let mut obj = ptr::null_mut();
         call_botan! { botan_pubkey_load(&mut obj, der.as_ptr(), der.len()) }
         Ok(Pubkey { obj })
     }
 
+    // TODO load_pem
+    // TODO estimated_strength
+    // TODO check_key
+    // TODO fingerprint
+    // TODO get_field (needs mp)
+
+    /// DER encode this public key
     pub fn der_encode(&self) -> Result<Vec<u8>> {
         let der_len = 4096; // fixme
         call_botan_ffi_returning_vec_u8(der_len, &|out_buf, out_len| {
@@ -200,6 +222,7 @@ impl Pubkey {
         })
     }
 
+    /// PEM encode this public key
     pub fn pem_encode(&self) -> Result<String> {
         let pem_len = 4096; // fixme
         call_botan_ffi_returning_string(pem_len, &|out_buf, out_len| {
@@ -207,6 +230,7 @@ impl Pubkey {
         })
     }
 
+    /// Return the name of the algorithm
     pub fn algo_name(&self) -> Result<String> {
         let name_len = 32;
         call_botan_ffi_returning_string(name_len, &|out_buf, out_len| {

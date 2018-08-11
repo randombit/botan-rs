@@ -40,7 +40,7 @@ pub fn pbkdf(algo: &str,
 pub fn scrypt(out_len: usize,
               passphrase: &str,
               salt: &[u8],
-              N: usize,
+              n: usize,
               r: usize,
               p: usize) -> Result<Vec<u8>> {
 
@@ -52,7 +52,7 @@ pub fn scrypt(out_len: usize,
         botan_scrypt(output.as_mut_ptr(), output.len(),
                      passphrase.as_ptr(),
                      salt.as_ptr(), salt.len(),
-                     N, r, p)
+                     n, r, p)
     }
 
     Ok(output)
