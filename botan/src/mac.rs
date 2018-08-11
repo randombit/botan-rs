@@ -35,7 +35,20 @@ impl MsgAuthCode {
         Ok(MsgAuthCode { obj, output_length })
     }
 
-    // FIXME(2.8) need name and key length info getters
+    /// Return the name of this algorithm which may or may not exactly
+    /// match what was provided to new()
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mac = botan::MsgAuthCode::new("HMAC(SHA-384)").unwrap();
+    /// assert_eq!(mac.algo_name().unwrap(), "HMAC(SHA-384)");
+    /// ```
+    pub fn algo_name(&self) -> Result<String> {
+        call_botan_ffi_returning_string(32, &|out_buf, out_len| {
+            unsafe { botan_mac_name(self.obj, out_buf as *mut c_char, out_len) }
+        })
+    }
 
     /// Return the output length of the authentication code, in bytes
     /// # Examples

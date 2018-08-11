@@ -40,7 +40,20 @@ impl HashFunction {
         Ok(HashFunction { obj, output_length })
     }
 
-    // FIXME(2.8) need name getters
+    /// Return the name of this algorithm which may or may not exactly
+    /// match what was provided to new()
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let hash = botan::HashFunction::new("SHA-384").unwrap();
+    /// assert_eq!(hash.algo_name().unwrap(), "SHA-384");
+    /// ```
+    pub fn algo_name(&self) -> Result<String> {
+        call_botan_ffi_returning_string(32, &|out_buf, out_len| {
+            unsafe { botan_hash_name(self.obj, out_buf as *mut c_char, out_len) }
+        })
+    }
 
     /// Return the output length of the hash function, in bytes
     ///

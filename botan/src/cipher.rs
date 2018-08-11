@@ -58,6 +58,21 @@ impl Cipher {
         })
     }
 
+    /// Return the name of this algorithm which may or may not exactly
+    /// match what was provided to new()
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// assert_eq!(cipher.algo_name().unwrap(), "AES-128/GCM(16)");
+    /// ```
+    pub fn algo_name(&self) -> Result<String> {
+        call_botan_ffi_returning_string(32, &|out_buf, out_len| {
+            unsafe { botan_cipher_name(self.obj, out_buf as *mut c_char, out_len) }
+        })
+    }
+
     /// Query if a particular nonce size is valid for this cipher
     ///
     /// # Examples
