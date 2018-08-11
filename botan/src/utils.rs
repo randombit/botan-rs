@@ -101,3 +101,43 @@ impl From<i32> for Error {
     }
 }
 
+/// Specifies valid keylengths for symmetric ciphers/MACs
+pub struct KeySpec {
+    min_keylen: usize,
+    max_keylen: usize,
+    mod_keylen: usize,
+}
+
+impl KeySpec {
+
+    pub(crate) fn new(min_keylen: usize, max_keylen: usize, mod_keylen: usize) -> KeySpec {
+        assert!(min_keylen <= max_keylen);
+        assert!(mod_keylen > 0);
+        KeySpec { min_keylen, max_keylen, mod_keylen }
+    }
+
+    /// Return true if the specified key length is valid for this object
+    pub fn is_valid_keylength(&self, keylen: usize) -> bool {
+        (keylen >= self.min_keylen &&
+         keylen <= self.max_keylen &&
+         keylen % self.mod_keylen == 0)
+    }
+
+    /// Return the minimum supported keylength
+    pub fn minimum_keylength(&self) -> usize {
+        self.min_keylen
+    }
+
+    /// Return the maximum supported keylength
+    pub fn maximum_keylength(&self) -> usize {
+        self.max_keylen
+    }
+
+    /// Return the required multiple of the keylength
+    ///
+    /// That is each key must be N*keylength_multiple() for some N
+    pub fn keylength_multiple(&self) -> usize {
+        self.mod_keylen
+    }
+
+}

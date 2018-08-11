@@ -10,6 +10,7 @@ pub struct Cipher {
     default_nonce_length: usize,
     min_keylen: usize,
     max_keylen: usize,
+    mod_keylen: usize
 }
 
 #[derive(PartialEq)]
@@ -47,14 +48,16 @@ impl Cipher {
 
         let mut min_keylen = 0;
         let mut max_keylen = 0;
-        call_botan! { botan_cipher_query_keylen(obj, &mut min_keylen, &mut max_keylen) };
+        let mut mod_keylen = 0;
+        call_botan! { botan_cipher_get_keyspec(obj, &mut min_keylen, &mut max_keylen, &mut mod_keylen) };
 
         Ok(Cipher {
             obj,
             tag_length,
             default_nonce_length,
             min_keylen,
-            max_keylen
+            max_keylen,
+            mod_keylen,
         })
     }
 
@@ -121,15 +124,9 @@ impl Cipher {
         self.default_nonce_length
     }
 
-    /// Return the minimum and maximum keylength for the cipher, in bytes
-    ///
-    /// # Examples
-    /// ```
-    /// let serpent_gcm = botan::Cipher::new("Serpent/GCM", botan::CipherDirection::Encrypt).unwrap();
-    /// assert_eq!(serpent_gcm.query_keylength(), (16, 32));
-    /// ```
-    pub fn query_keylength(&self) -> (usize, usize) {
-        (self.min_keylen, self.max_keylen)
+    /// Return information about the key lengths supported by this object
+    pub fn key_spec(&self) -> KeySpec {
+        KeySpec::new(self.min_keylen, self.max_keylen, self.mod_keylen)
     }
 
     /// Set the key for the cipher

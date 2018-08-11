@@ -127,6 +127,13 @@ fn test_chacha() {
 
     assert_eq!(cipher.tag_length(), 0);
 
+    let key_spec = cipher.key_spec();
+
+    assert!(key_spec.is_valid_keylength(0) == false);
+    assert!(key_spec.is_valid_keylength(16));
+    assert!(key_spec.is_valid_keylength(32));
+    assert!(key_spec.is_valid_keylength(48) == false);
+
     let key = vec![0; 32];
 
     let expected = botan::hex_decode("76B8E0ADA0F13D90405D6AE55386BD28BDD219B8A08DED1AA836EFCC8B770DC7DA41597C5157488D7724E03FB8D84A376A43B8F41518A11CC387B669").unwrap();

@@ -26,10 +26,16 @@ extern "C" {
         ug: *mut usize,
     ) -> c_int;
     pub fn botan_cipher_query_keylen(
-        arg1: botan_cipher_t,
+        cipher: botan_cipher_t,
         out_minimum_keylength: *mut usize,
         out_maximum_keylength: *mut usize,
     ) -> c_int;
+
+    pub fn botan_cipher_get_keyspec(cipher: botan_cipher_t,
+                                    min_keylen: *mut usize,
+                                    max_keylen: *mut usize,
+                                    mod_keylen: *mut usize) -> c_int;
+
     pub fn botan_cipher_set_key(
         cipher: botan_cipher_t,
         key: *const u8,

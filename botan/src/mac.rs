@@ -6,7 +6,10 @@ use utils::*;
 /// Message authentication code
 pub struct MsgAuthCode {
     obj: botan_mac_t,
-    output_length: usize
+    output_length: usize,
+    min_keylen: usize,
+    max_keylen: usize,
+    mod_keylen: usize,
 }
 
 impl Drop for MsgAuthCode {
@@ -32,7 +35,12 @@ impl MsgAuthCode {
         let mut output_length = 0;
         call_botan! { botan_mac_output_length(obj, &mut output_length) };
 
-        Ok(MsgAuthCode { obj, output_length })
+        let mut min_keylen = 0;
+        let mut max_keylen = 0;
+        let mut mod_keylen = 0;
+        call_botan! { botan_mac_get_keyspec(obj, &mut min_keylen, &mut max_keylen, &mut mod_keylen) };
+
+        Ok(MsgAuthCode { obj, output_length, min_keylen, max_keylen, mod_keylen })
     }
 
     /// Return the name of this algorithm which may or may not exactly
@@ -48,6 +56,11 @@ impl MsgAuthCode {
         call_botan_ffi_returning_string(32, &|out_buf, out_len| {
             unsafe { botan_mac_name(self.obj, out_buf as *mut c_char, out_len) }
         })
+    }
+
+    /// Return information about the key lengths supported by this object
+    pub fn key_spec(&self) -> KeySpec {
+        KeySpec::new(self.min_keylen, self.max_keylen, self.mod_keylen)
     }
 
     /// Return the output length of the authentication code, in bytes

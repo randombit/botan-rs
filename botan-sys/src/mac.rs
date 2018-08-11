@@ -24,10 +24,10 @@ extern "C" {
 
     pub fn botan_mac_name(mac: botan_mac_t, name: *mut c_char, name_len: *mut usize) -> c_int;
 
-    pub fn botan_mac_query_keylen(mac: botan_mac_t,
-                                  min_keylen: *mut usize,
-                                  max_keylen: *mut usize,
-                                  mod_keylen: *mut usize) -> c_int;
+    pub fn botan_mac_get_keyspec(mac: botan_mac_t,
+                                 min_keylen: *mut usize,
+                                 max_keylen: *mut usize,
+                                 mod_keylen: *mut usize) -> c_int;
 
     pub fn botan_mac_update(mac: botan_mac_t, buf: *const u8, len: usize) -> c_int;
     pub fn botan_mac_final(mac: botan_mac_t, out: *mut u8) -> c_int;

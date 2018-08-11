@@ -7,7 +7,10 @@ use utils::*;
 /// Warning: you almost certainly want an AEAD cipher mode instead
 pub struct BlockCipher {
     obj: botan_block_cipher_t,
-    block_size: usize
+    block_size: usize,
+    min_keylen: usize,
+    max_keylen: usize,
+    mod_keylen: usize,
 }
 
 impl Drop for BlockCipher {
@@ -37,7 +40,12 @@ impl BlockCipher {
             return Err(Error::from(block_size));
         }
 
-        Ok(BlockCipher { obj, block_size: block_size as usize })
+        let mut min_keylen = 0;
+        let mut max_keylen = 0;
+        let mut mod_keylen = 0;
+        call_botan! { botan_block_cipher_get_keyspec(obj, &mut min_keylen, &mut max_keylen, &mut mod_keylen) };
+
+        Ok(BlockCipher { obj, block_size: block_size as usize, min_keylen, max_keylen, mod_keylen })
     }
 
     /// Return the block size of the cipher, in bytes
@@ -63,6 +71,11 @@ impl BlockCipher {
         call_botan_ffi_returning_string(32, &|out_buf, out_len| {
             unsafe { botan_block_cipher_name(self.obj, out_buf as *mut c_char, out_len) }
         })
+    }
+
+    /// Return information about the key lengths supported by this object
+    pub fn key_spec(&self) -> KeySpec {
+        KeySpec::new(self.min_keylen, self.max_keylen, self.mod_keylen)
     }
 
     /// Set the key for the cipher.
