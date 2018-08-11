@@ -10,6 +10,13 @@ extern "C" {
 
     pub fn botan_block_cipher_destroy(bc: botan_block_cipher_t) -> c_int;
 
+    pub fn botan_block_cipher_name(bc: botan_block_cipher_t, name: *mut c_char, name_len: *mut usize) -> c_int;
+
+    pub fn botan_block_cipher_query_keylen(bc: botan_block_cipher_t,
+                                           min_keylen: *mut usize,
+                                           max_keylen: *mut usize,
+                                           mod_keylen: *mut usize) -> c_int;
+
     pub fn botan_block_cipher_clear(bc: botan_block_cipher_t) -> c_int;
 
     pub fn botan_block_cipher_set_key(bc: botan_block_cipher_t,

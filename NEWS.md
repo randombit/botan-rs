@@ -1,4 +1,9 @@
 
+## 0.2.0 2018-8-11
+
+Due to using several APIs only recently added, 0.2.0 onwards
+requires current `master` branch of botan (upcoming 2.8)
+
 ## 0.1.5 2018-8-5
 
 Add documentation for most interfaces. No code changes.

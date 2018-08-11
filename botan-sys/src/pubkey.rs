@@ -121,6 +121,11 @@ extern "C" {
         out_len: *mut usize,
         flags: u32,
     ) -> c_int;
+    pub fn botan_privkey_algo_name(
+        key: botan_privkey_t,
+        out: *mut c_char,
+        out_len: *mut usize,
+    ) -> c_int;
     pub fn botan_pubkey_algo_name(
         key: botan_pubkey_t,
         out: *mut c_char,

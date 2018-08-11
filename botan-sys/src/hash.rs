@@ -11,6 +11,8 @@ extern "C" {
 
     pub fn botan_hash_copy_state(dest: *mut botan_hash_t, source: botan_hash_t) -> c_int;
 
+    pub fn botan_hash_name(hash: botan_hash_t, name: *mut c_char, name_len: *mut usize) -> c_int;
+
     pub fn botan_hash_output_length(hash: botan_hash_t, output_length: *mut usize) -> c_int;
     pub fn botan_hash_block_size(hash: botan_hash_t, block_size: *mut usize) -> c_int;
 

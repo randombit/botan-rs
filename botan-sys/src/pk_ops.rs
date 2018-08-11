@@ -26,6 +26,9 @@ extern "C" {
         flags: u32,
     ) -> c_int;
     pub fn botan_pk_op_encrypt_destroy(op: botan_pk_op_encrypt_t) -> c_int;
+
+    pub fn botan_pk_op_encrypt_output_length(op: botan_pk_op_encrypt_t, inlen: usize, outlen: *mut usize) -> c_int;
+
     pub fn botan_pk_op_encrypt(
         op: botan_pk_op_encrypt_t,
         rng: botan_rng_t,
@@ -41,6 +44,7 @@ extern "C" {
         padding: *const c_char,
         flags: u32,
     ) -> c_int;
+    pub fn botan_pk_op_decrypt_output_length(op: botan_pk_op_decrypt_t, inlen: usize, outlen: *mut usize) -> c_int;
     pub fn botan_pk_op_decrypt_destroy(op: botan_pk_op_decrypt_t) -> c_int;
     pub fn botan_pk_op_decrypt(
         op: botan_pk_op_decrypt_t,
@@ -56,6 +60,7 @@ extern "C" {
         hash_and_padding: *const c_char,
         flags: u32,
     ) -> c_int;
+    pub fn botan_pk_op_sign_output_length(op: botan_pk_op_sign_t, siglen: *mut usize) -> c_int;
     pub fn botan_pk_op_sign_destroy(op: botan_pk_op_sign_t) -> c_int;
     pub fn botan_pk_op_sign_update(
         op: botan_pk_op_sign_t,

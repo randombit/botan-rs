@@ -55,6 +55,11 @@ extern "C" {
         input_size: usize,
         input_consumed: *mut usize,
     ) -> c_int;
+
+    pub fn botan_cipher_name(cipher: botan_cipher_t, name: *mut c_char, name_len: *mut usize) -> c_int;
+
+    pub fn botan_cipher_output_length(cipher: botan_cipher_t, inlen: usize, outlen: *mut usize) -> c_int;
+
     pub fn botan_cipher_clear(cipher: botan_cipher_t) -> c_int;
     pub fn botan_cipher_destroy(cipher: botan_cipher_t) -> c_int;
 

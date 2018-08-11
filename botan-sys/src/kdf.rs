@@ -10,6 +10,15 @@ extern "C" {
                        salt_len: usize,
                        iterations: usize) -> c_int;
 
+    pub fn botan_scrypt(out: *mut u8,
+                        out_len: usize,
+                        passphrase: *const c_char,
+                        salt: *const u8,
+                        salt_len: usize,
+                        N: usize,
+                        r: usize,
+                        p: usize) -> c_int;
+
     pub fn botan_pbkdf_timed(pbkdf_algo: *const c_char,
                              out: *mut u8,
                              out_len: usize,
