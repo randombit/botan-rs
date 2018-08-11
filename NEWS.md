@@ -1,8 +1,10 @@
 
-## 0.2.0 2018-8-11
+## 0.2.0 Not Yet Released
 
 Due to using several APIs only recently added, 0.2.0 onwards requires current
 `master` branch of botan (upcoming 2.8, to be released in early October).
+
+Adds scrypt. Adds various util functions to existing types
 
 ## 0.1.5 2018-8-5
 
