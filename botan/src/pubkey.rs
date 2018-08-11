@@ -118,7 +118,8 @@ impl Privkey {
     }
 
     pub fn der_encode(&self) -> Result<Vec<u8>> {
-        call_botan_ffi_returning_vec_u8(&|out_buf, out_len| {
+        let der_len = 4096; // fixme
+        call_botan_ffi_returning_vec_u8(der_len, &|out_buf, out_len| {
             unsafe { botan_privkey_export(self.obj, out_buf, out_len, 0u32) }
         })
     }
@@ -133,7 +134,8 @@ impl Privkey {
                                              pbkdf: &str,
                                              pbkdf_iter: usize,
                                              rng: &RandomNumberGenerator) -> Result<Vec<u8>> {
-        call_botan_ffi_returning_vec_u8(&|out_buf, out_len| {
+        let der_len = 4096; // fixme
+        call_botan_ffi_returning_vec_u8(der_len, &|out_buf, out_len| {
             unsafe {
                 botan_privkey_export_encrypted_pbkdf_iter(
                     self.obj, out_buf, out_len, rng.handle(),
@@ -156,7 +158,8 @@ impl Privkey {
                                              pbkdf: &str,
                                              pbkdf_iter: usize,
                                              rng: &RandomNumberGenerator) -> Result<String> {
-        call_botan_ffi_returning_string(&|out_buf, out_len| {
+        let pem_len = 4096; // fixme
+        call_botan_ffi_returning_string(pem_len, &|out_buf, out_len| {
             unsafe {
                 botan_privkey_export_encrypted_pbkdf_iter(
                     self.obj, out_buf, out_len, rng.handle(),
@@ -170,13 +173,15 @@ impl Privkey {
     }
 
     pub fn pem_encode(&self) -> Result<String> {
-        call_botan_ffi_returning_string(&|out_buf, out_len| {
+        let pem_len = 4096; // fixme
+        call_botan_ffi_returning_string(pem_len, &|out_buf, out_len| {
             unsafe { botan_privkey_export(self.obj, out_buf, out_len, 1u32) }
         })
     }
 
     pub fn key_agreement_key(&self) -> Result<Vec<u8>> {
-        call_botan_ffi_returning_vec_u8(&|out_buf, out_len| {
+        let ka_key_len = 512; // fixme
+        call_botan_ffi_returning_vec_u8(ka_key_len, &|out_buf, out_len| {
             unsafe { botan_pk_op_key_agreement_export_public(self.obj, out_buf, out_len) }
         })
     }
@@ -195,19 +200,22 @@ impl Pubkey {
     }
 
     pub fn der_encode(&self) -> Result<Vec<u8>> {
-        call_botan_ffi_returning_vec_u8(&|out_buf, out_len| {
+        let der_len = 4096; // fixme
+        call_botan_ffi_returning_vec_u8(der_len, &|out_buf, out_len| {
             unsafe { botan_pubkey_export(self.obj, out_buf, out_len, 0u32) }
         })
     }
 
     pub fn pem_encode(&self) -> Result<String> {
-        call_botan_ffi_returning_string(&|out_buf, out_len| {
+        let pem_len = 4096; // fixme
+        call_botan_ffi_returning_string(pem_len, &|out_buf, out_len| {
             unsafe { botan_pubkey_export(self.obj, out_buf, out_len, 1u32) }
         })
     }
 
     pub fn algo_name(&self) -> Result<String> {
-        call_botan_ffi_returning_string(&|out_buf, out_len| {
+        let name_len = 32;
+        call_botan_ffi_returning_string(name_len, &|out_buf, out_len| {
             unsafe { botan_pubkey_algo_name(self.obj, out_buf as *mut c_char, out_len) }
         })
     }

@@ -51,7 +51,7 @@ impl BlockCipher {
     pub fn block_size(&self) -> usize { self.block_size }
 
     pub fn algo_name(&self) -> Result<String> {
-        call_botan_ffi_returning_string(&|out_buf, out_len| {
+        call_botan_ffi_returning_string(32, &|out_buf, out_len| {
             unsafe { botan_block_cipher_name(self.obj, out_buf as *mut c_char, out_len) }
         })
     }

@@ -8,9 +8,11 @@ pub(crate) use std::mem;
 /// The result of calling an operation on the library
 pub type Result<T> = ::std::result::Result<T, Error>;
 
-pub(crate) fn call_botan_ffi_returning_vec_u8(cb: &Fn(*mut u8, *mut usize) -> c_int) -> Result<Vec<u8>> {
+pub(crate) fn call_botan_ffi_returning_vec_u8(
+    initial_size: usize,
+    cb: &Fn(*mut u8, *mut usize) -> c_int) -> Result<Vec<u8>> {
 
-    let mut output = vec![0; 4096]; // make this initial size configurable?
+    let mut output = vec![0; initial_size];
     let mut out_len = output.len();
 
     let rc = cb(output.as_mut_ptr(), &mut out_len);
@@ -34,8 +36,11 @@ pub(crate) fn call_botan_ffi_returning_vec_u8(cb: &Fn(*mut u8, *mut usize) -> c_
     Ok(output)
 }
 
-pub(crate) fn call_botan_ffi_returning_string(cb: &Fn(*mut u8, *mut usize) -> c_int) -> Result<String> {
-    let v = call_botan_ffi_returning_vec_u8(cb)?;
+pub(crate) fn call_botan_ffi_returning_string(
+    initial_size: usize,
+    cb: &Fn(*mut u8, *mut usize) -> c_int) -> Result<String> {
+
+    let v = call_botan_ffi_returning_vec_u8(initial_size, cb)?;
 
     let cstr = CStr::from_bytes_with_nul(&v).map_err(|_| Error::ConversionError)?;
     let ostr = cstr.to_str().map_err(|_| Error::ConversionError)?.to_owned();
