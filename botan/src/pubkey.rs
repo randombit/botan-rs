@@ -49,9 +49,7 @@ impl Privkey {
     pub fn load_der(der: &[u8]) -> Result<Privkey> {
         let mut obj = ptr::null_mut();
 
-        // Don't need this with 2.8
-        let rng = RandomNumberGenerator::new_system()?;
-        call_botan! { botan_privkey_load(&mut obj, rng.handle(), der.as_ptr(), der.len(), ptr::null()) }
+        call_botan! { botan_privkey_load(&mut obj, ptr::null_mut(), der.as_ptr(), der.len(), ptr::null()) }
 
         Ok(Privkey { obj })
     }
@@ -59,10 +57,8 @@ impl Privkey {
     pub fn load_pem(pem: &str) -> Result<Privkey> {
         let mut obj = ptr::null_mut();
 
-        // Don't need this with 2.8
-        let rng = RandomNumberGenerator::new_system()?;
         let cpem = CString::new(pem).unwrap();
-        call_botan! { botan_privkey_load(&mut obj, rng.handle(), cpem.as_ptr() as *const u8, pem.len(), ptr::null()) }
+        call_botan! { botan_privkey_load(&mut obj, ptr::null_mut(), cpem.as_ptr() as *const u8, pem.len(), ptr::null()) }
 
         Ok(Privkey { obj })
     }
@@ -70,10 +66,8 @@ impl Privkey {
     pub fn load_encrypted_der(der: &[u8], passphrase: &str) -> Result<Privkey> {
         let mut obj = ptr::null_mut();
 
-        // Don't need this with 2.8
-        let rng = RandomNumberGenerator::new_system()?;
         let passphrase = CString::new(passphrase).unwrap();
-        call_botan! { botan_privkey_load(&mut obj, rng.handle(), der.as_ptr(), der.len(), passphrase.as_ptr()) }
+        call_botan! { botan_privkey_load(&mut obj, ptr::null_mut(), der.as_ptr(), der.len(), passphrase.as_ptr()) }
 
         Ok(Privkey { obj })
     }
@@ -81,11 +75,9 @@ impl Privkey {
     pub fn load_encrypted_pem(pem: &str, passphrase: &str) -> Result<Privkey> {
         let mut obj = ptr::null_mut();
 
-        // Don't need this with 2.8
-        let rng = RandomNumberGenerator::new_system()?;
         let passphrase = CString::new(passphrase).unwrap();
         let cpem = CString::new(pem).unwrap();
-        call_botan! { botan_privkey_load(&mut obj, rng.handle(), cpem.as_ptr() as *const u8, pem.len(), passphrase.as_ptr()) }
+        call_botan! { botan_privkey_load(&mut obj, ptr::null_mut(), cpem.as_ptr() as *const u8, pem.len(), passphrase.as_ptr()) }
 
         Ok(Privkey { obj })
     }
@@ -113,8 +105,10 @@ impl Privkey {
     }
 
     pub fn algo_name(&self) -> Result<String> {
-        // FIXME(2.8) need botan_privkey_get_name
-        self.pubkey()?.algo_name()
+        let name_len = 32;
+        call_botan_ffi_returning_string(name_len, &|out_buf, out_len| {
+            unsafe { botan_privkey_algo_name(self.obj, out_buf as *mut c_char, out_len) }
+        })
     }
 
     pub fn der_encode(&self) -> Result<Vec<u8>> {
