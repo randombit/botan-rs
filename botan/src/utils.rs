@@ -66,6 +66,8 @@ pub enum Error {
     InvalidObject,
     /// A verifier was incorrect
     InvalidVerifier,
+    /// An key of invalid length was provided
+    InvalidKeyLength,
     /// An object was invoked without the key being set
     KeyNotSet,
     /// Some functionality is not implemented in the current library version
@@ -89,6 +91,7 @@ impl From<i32> for Error {
             BOTAN_FFI_ERROR_EXCEPTION_THROWN => Error::ExceptionThrown,
             BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE => Error::InsufficientBufferSpace,
             BOTAN_FFI_ERROR_INVALID_INPUT => Error::InvalidInput,
+            BOTAN_FFI_ERROR_INVALID_KEY_LENGTH => Error::InvalidKeyLength,
             BOTAN_FFI_ERROR_INVALID_OBJECT => Error::InvalidObject,
             BOTAN_FFI_ERROR_KEY_NOT_SET => Error::KeyNotSet,
             BOTAN_FFI_ERROR_NOT_IMPLEMENTED => Error::NotImplemented,

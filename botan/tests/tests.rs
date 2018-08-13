@@ -78,6 +78,8 @@ fn test_block_cipher() {
     assert!(key_spec.is_valid_keylength(20) == false);
     assert!(key_spec.is_valid_keylength(16));
 
+    assert_eq!(bc.set_key(&vec![0; 32]).unwrap_err(), botan::Error::InvalidKeyLength);
+
     bc.set_key(&vec![0; 16]).unwrap();
 
     let input = vec![0; 16];
@@ -102,6 +104,7 @@ fn test_cipher() {
     let zero12 = vec![0; 12];
 
     assert!(cipher.set_associated_data(&[1,2,3]).is_err()); // trying to set AD before key is set
+    assert_eq!(cipher.set_key(&vec![0; 42]).unwrap_err(), botan::Error::InvalidKeyLength);
 
     cipher.set_key(&zero16).unwrap();
 
