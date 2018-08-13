@@ -30,7 +30,7 @@ impl MsgAuthCode {
     /// ```
     pub fn new(name: &str) -> Result<MsgAuthCode> {
         let mut obj = ptr::null_mut();
-        call_botan! { botan_mac_init(&mut obj, CString::new(name).unwrap().as_ptr(), 0u32) };
+        call_botan! { botan_mac_init(&mut obj, make_cstr(name)?.as_ptr(), 0u32) };
 
         let mut output_length = 0;
         call_botan! { botan_mac_output_length(obj, &mut output_length) };

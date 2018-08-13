@@ -8,6 +8,11 @@ pub(crate) use std::mem;
 /// The result of calling an operation on the library
 pub type Result<T> = ::std::result::Result<T, Error>;
 
+pub(crate) fn make_cstr(input: &str) -> Result<CString> {
+    let cstr = CString::new(input).map_err(|_| Error::ConversionError)?;
+    Ok(cstr)
+}
+
 pub(crate) fn call_botan_ffi_returning_vec_u8(
     initial_size: usize,
     cb: &Fn(*mut u8, *mut usize) -> c_int) -> Result<Vec<u8>> {

@@ -22,7 +22,7 @@ impl Signer {
 
     /// Create a new signature operator
     pub fn new(key: &Privkey, padding: &str) -> Result<Signer> {
-        let padding = CString::new(padding).unwrap();
+        let padding = make_cstr(padding)?;
         let mut obj = ptr::null_mut();
         call_botan! { botan_pk_op_sign_create(&mut obj, key.handle(), padding.as_ptr(), 0u32) };
         let mut sig_len = 0;
@@ -60,7 +60,7 @@ impl Decryptor {
 
     /// Create a new decryption object
     pub fn new(key: &Privkey, padding: &str) -> Result<Decryptor> {
-        let padding = CString::new(padding).unwrap();
+        let padding = make_cstr(padding)?;
         let mut obj = ptr::null_mut();
         call_botan! { botan_pk_op_decrypt_create(&mut obj, key.handle(), padding.as_ptr(), 0u32) }
         Ok(Decryptor { obj })
@@ -94,7 +94,7 @@ impl Verifier {
 
     /// Create a new verifier object
     pub fn new(key: &Pubkey, padding: &str) -> Result<Verifier> {
-        let padding = CString::new(padding).unwrap();
+        let padding = make_cstr(padding)?;
         let mut obj = ptr::null_mut();
         call_botan! { botan_pk_op_verify_create(&mut obj, key.handle(), padding.as_ptr(), 0u32) }
         Ok(Verifier { obj })
@@ -140,7 +140,7 @@ impl Encryptor {
 
     /// Create a new public key encryptor object
     pub fn new(key: &Pubkey, padding: &str) -> Result<Encryptor> {
-        let padding = CString::new(padding).unwrap();
+        let padding = make_cstr(padding)?;
         let mut obj = ptr::null_mut();
         call_botan! { botan_pk_op_encrypt_create(&mut obj, key.handle(), padding.as_ptr(), 0u32) }
         Ok(Encryptor { obj })
@@ -174,7 +174,7 @@ impl KeyAgreement {
 
     /// Create a new key agreement operator
     pub fn new(key: &Privkey, kdf: &str) -> Result<KeyAgreement> {
-        let kdf = CString::new(kdf).unwrap();
+        let kdf = make_cstr(kdf)?;
         let mut obj = ptr::null_mut();
         call_botan! { botan_pk_op_key_agreement_create(&mut obj, key.handle(), kdf.as_ptr(), 0u32) }
         Ok(KeyAgreement { obj })

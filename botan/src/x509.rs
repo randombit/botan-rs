@@ -27,7 +27,7 @@ impl Certificate {
 
     /// Read an X.509 certificate from a file
     pub fn from_file(fsname: &str) -> Result<Certificate> {
-        let fsname = CString::new(fsname).unwrap();
+        let fsname = make_cstr(fsname)?;
 
         let mut obj = ptr::null_mut();
         call_botan! { botan_x509_cert_load_file(&mut obj, fsname.as_ptr()) };
@@ -45,7 +45,7 @@ impl Certificate {
     /// Return the fingerprint of this certificate
     pub fn fingerprint(&self, hash: &str) -> Result<Vec<u8>> {
         let fprint_len = 128;
-        let hash = CString::new(hash).unwrap();
+        let hash = make_cstr(hash)?;
         call_botan_ffi_returning_vec_u8(fprint_len, &|out_buf, out_len| {
             unsafe { botan_x509_cert_get_fingerprint(self.obj, hash.as_ptr(), out_buf, out_len) }
         })
@@ -92,7 +92,7 @@ impl Certificate {
 
     /// Return true if the provided hostname is valid for this certificate
     pub fn matches_hostname(&self, hostname: &str) -> Result<bool> {
-        let hostname = CString::new(hostname).unwrap();
+        let hostname = make_cstr(hostname)?;
         let rc = unsafe { botan_x509_cert_hostname_match(self.obj, hostname.as_ptr()) };
 
         if rc == 0 {

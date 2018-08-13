@@ -17,7 +17,8 @@ impl RandomNumberGenerator {
 
     fn new_of_type(typ: &str) -> Result<RandomNumberGenerator> {
         let mut obj = ptr::null_mut();
-        call_botan! { botan_rng_init(&mut obj, CString::new(typ).unwrap().as_ptr()) }
+        let typ = make_cstr(typ)?;
+        call_botan! { botan_rng_init(&mut obj, typ.as_ptr()) }
         Ok(RandomNumberGenerator { obj })
     }
 

@@ -32,7 +32,7 @@ impl BlockCipher {
     /// ```
     pub fn new(name: &str) -> Result<BlockCipher> {
         let mut obj = ptr::null_mut();
-        call_botan! { botan_block_cipher_init(&mut obj, CString::new(name).unwrap().as_ptr()) };
+        call_botan! { botan_block_cipher_init(&mut obj, make_cstr(name)?.as_ptr()) };
 
         let block_size = unsafe { botan_block_cipher_block_size(obj) };
 

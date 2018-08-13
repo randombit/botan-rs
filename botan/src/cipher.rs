@@ -38,7 +38,7 @@ impl Cipher {
     pub fn new(name: &str, dir: CipherDirection) -> Result<Cipher> {
         let mut obj = ptr::null_mut();
         let flag = if dir == CipherDirection::Encrypt { 0u32 } else { 1u32 };
-        call_botan! { botan_cipher_init(&mut obj, CString::new(name).unwrap().as_ptr(), flag) };
+        call_botan! { botan_cipher_init(&mut obj, make_cstr(name)?.as_ptr(), flag) };
 
         let mut tag_length = 0;
         call_botan! { botan_cipher_get_tag_length(obj, &mut tag_length) };

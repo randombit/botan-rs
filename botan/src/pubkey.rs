@@ -39,8 +39,8 @@ impl Privkey {
         let mut obj = ptr::null_mut();
 
         call_botan! { botan_privkey_create(&mut obj,
-                                           CString::new(alg).unwrap().as_ptr(),
-                                           CString::new(params).unwrap().as_ptr(),
+                                           make_cstr(alg)?.as_ptr(),
+                                           make_cstr(params)?.as_ptr(),
                                            rng.handle()) }
 
         Ok(Privkey { obj })
@@ -59,7 +59,7 @@ impl Privkey {
     pub fn load_pem(pem: &str) -> Result<Privkey> {
         let mut obj = ptr::null_mut();
 
-        let cpem = CString::new(pem).unwrap();
+        let cpem = make_cstr(pem)?;
         call_botan! { botan_privkey_load(&mut obj, ptr::null_mut(), cpem.as_ptr() as *const u8, pem.len(), ptr::null()) }
 
         Ok(Privkey { obj })
@@ -69,7 +69,7 @@ impl Privkey {
     pub fn load_encrypted_der(der: &[u8], passphrase: &str) -> Result<Privkey> {
         let mut obj = ptr::null_mut();
 
-        let passphrase = CString::new(passphrase).unwrap();
+        let passphrase = make_cstr(passphrase)?;
         call_botan! { botan_privkey_load(&mut obj, ptr::null_mut(), der.as_ptr(), der.len(), passphrase.as_ptr()) }
 
         Ok(Privkey { obj })
@@ -79,8 +79,8 @@ impl Privkey {
     pub fn load_encrypted_pem(pem: &str, passphrase: &str) -> Result<Privkey> {
         let mut obj = ptr::null_mut();
 
-        let passphrase = CString::new(passphrase).unwrap();
-        let cpem = CString::new(pem).unwrap();
+        let passphrase = make_cstr(passphrase)?;
+        let cpem = make_cstr(pem)?;
         call_botan! { botan_privkey_load(&mut obj, ptr::null_mut(), cpem.as_ptr() as *const u8, pem.len(), passphrase.as_ptr()) }
 
         Ok(Privkey { obj })
@@ -139,14 +139,18 @@ impl Privkey {
                                              pbkdf_iter: usize,
                                              rng: &RandomNumberGenerator) -> Result<Vec<u8>> {
         let der_len = 4096; // fixme
+        let passphrase = make_cstr(passphrase)?;
+        let cipher = make_cstr(cipher)?;
+        let pbkdf = make_cstr(pbkdf)?;
+
         call_botan_ffi_returning_vec_u8(der_len, &|out_buf, out_len| {
             unsafe {
                 botan_privkey_export_encrypted_pbkdf_iter(
                     self.obj, out_buf, out_len, rng.handle(),
-                    CString::new(passphrase).unwrap().as_ptr(),
+                    passphrase.as_ptr(),
                     pbkdf_iter,
-                    CString::new(cipher).unwrap().as_ptr(),
-                    CString::new(pbkdf).unwrap().as_ptr(),
+                    cipher.as_ptr(),
+                    pbkdf.as_ptr(),
                     0u32)
             }
         })
@@ -165,14 +169,19 @@ impl Privkey {
                                              pbkdf_iter: usize,
                                              rng: &RandomNumberGenerator) -> Result<String> {
         let pem_len = 4096; // fixme
+
+        let passphrase = make_cstr(passphrase)?;
+        let cipher = make_cstr(cipher)?;
+        let pbkdf = make_cstr(pbkdf)?;
+
         call_botan_ffi_returning_string(pem_len, &|out_buf, out_len| {
             unsafe {
                 botan_privkey_export_encrypted_pbkdf_iter(
                     self.obj, out_buf, out_len, rng.handle(),
-                    CString::new(passphrase).unwrap().as_ptr(),
+                    passphrase.as_ptr(),
                     pbkdf_iter,
-                    CString::new(cipher).unwrap().as_ptr(),
-                    CString::new(pbkdf).unwrap().as_ptr(),
+                    cipher.as_ptr(),
+                    pbkdf.as_ptr(),
                     1u32)
             }
         })
@@ -208,9 +217,41 @@ impl Pubkey {
         Ok(Pubkey { obj })
     }
 
+    /// Return estimated bit strength of this key
+    pub fn estimated_strength(&self) -> Result<usize> {
+        let mut strength = 0;
+        call_botan! { botan_pubkey_estimated_strength(self.obj, &mut strength) };
+        Ok(strength)
+    }
+
+    /// Check key for problems
+    pub fn check_key(&self, rng: &RandomNumberGenerator) -> Result<bool> {
+
+        let flags = 1u32;
+        let rc = unsafe { botan_pubkey_check_key(self.obj, rng.handle(), flags) };
+
+        if rc == 0 {
+            Ok(true)
+        }
+        else if rc == -1 {
+            Ok(false)
+        }
+        else {
+            Err(Error::from(rc))
+        }
+    }
+
+    /// Return hash of the public key data
+    pub fn fingerprint(&self, hash: &str) -> Result<String> {
+        let hash = make_cstr(hash)?;
+        let fprint_len = 64; // hashes > 512 bits are rare
+        call_botan_ffi_returning_string(fprint_len, &|out_buf, out_len| {
+            unsafe { botan_pubkey_fingerprint(self.obj, hash.as_ptr(), out_buf, out_len) }
+        })
+    }
+
     // TODO load_pem
-    // TODO estimated_strength
-    // TODO check_key
+
     // TODO fingerprint
     // TODO get_field (needs mp)
 

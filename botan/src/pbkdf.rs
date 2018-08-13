@@ -19,8 +19,8 @@ pub fn pbkdf(algo: &str,
              salt: &[u8],
              iterations: usize) -> Result<Vec<u8>> {
 
-    let algo = CString::new(algo).unwrap();
-    let passphrase = CString::new(passphrase).unwrap();
+    let algo = make_cstr(algo)?;
+    let passphrase = make_cstr(passphrase)?;
 
     let mut output = vec![0u8; out_len];
 
@@ -44,7 +44,7 @@ pub fn scrypt(out_len: usize,
               r: usize,
               p: usize) -> Result<Vec<u8>> {
 
-    let passphrase = CString::new(passphrase).unwrap();
+    let passphrase = make_cstr(passphrase)?;
 
     let mut output = vec![0u8; out_len];
 

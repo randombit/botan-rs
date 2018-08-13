@@ -18,7 +18,7 @@ pub fn kdf(algo: &str, output_len: usize, secret: &[u8], salt: &[u8], label: &[u
 
     let mut output = vec![0u8; output_len];
 
-    let algo = CString::new(algo).unwrap();
+    let algo = make_cstr(algo)?;
 
     call_botan! { botan_kdf(algo.as_ptr(),
                             output.as_mut_ptr(), output_len,

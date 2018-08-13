@@ -23,13 +23,13 @@ pub fn bcrypt_hash(pass: &str, rng : &RandomNumberGenerator, workfactor: usize) 
 
     call_botan! {
         botan_bcrypt_generate(out.as_mut_ptr(), &mut out_len,
-                              CString::new(pass).unwrap().as_ptr(),
+                              make_cstr(pass)?.as_ptr(),
                               rng.handle(),
                               workfactor, 0u32)
     };
 
     out.resize(out_len - 1, 0);
-    Ok(String::from_utf8(out).unwrap())
+    Ok(String::from_utf8(out).map_err(|_| Error::ConversionError)?)
 }
 
 /// Verify a bcrypt password hash
@@ -45,8 +45,8 @@ pub fn bcrypt_hash(pass: &str, rng : &RandomNumberGenerator, workfactor: usize) 
 pub fn bcrypt_verify(pass: &str, hash: &str) -> Result<bool> {
 
     let rc = unsafe {
-        botan_bcrypt_is_valid(CString::new(pass).unwrap().as_ptr(),
-                              CString::new(hash).unwrap().as_ptr())
+        botan_bcrypt_is_valid(make_cstr(pass)?.as_ptr(),
+                              make_cstr(hash)?.as_ptr())
     };
 
     if rc == 0 {
