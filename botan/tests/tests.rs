@@ -101,7 +101,7 @@ fn test_cipher() {
     let zero16 = vec![0; 16];
     let zero12 = vec![0; 12];
 
-    //assert!(cipher.set_associated_data(&[1,2,3]).is_err());
+    assert!(cipher.set_associated_data(&[1,2,3]).is_err()); // trying to set AD before key is set
 
     cipher.set_key(&zero16).unwrap();
 
@@ -390,10 +390,18 @@ fn test_pubkey_key_agreement() {
 
     let salt = rng.read(16).unwrap();
 
-    let a_key = a_ka.agree(&b_pub, &salt).unwrap();
-    let b_key = b_ka.agree(&a_pub, &salt).unwrap();
+    let a_key = a_ka.agree(32, &b_pub, &salt).unwrap();
+    let b_key = b_ka.agree(32, &a_pub, &salt).unwrap();
+    assert_eq!(a_key, b_key);
+
+    let a_ka = botan::KeyAgreement::new(&a_priv, "Raw").unwrap();
+    let b_ka = botan::KeyAgreement::new(&b_priv, "Raw").unwrap();
+
+    let a_key = a_ka.agree(0, &b_pub, &salt).unwrap();
+    let b_key = b_ka.agree(0, &a_pub, &vec![]).unwrap();
 
     assert_eq!(a_key, b_key);
+    assert_eq!(a_key.len(), 384/8);
 }
 
 #[test]

@@ -181,8 +181,14 @@ impl KeyAgreement {
     }
 
     /// Perform key agreement operation
-    pub fn agree(&self, counterparty_key: &[u8], salt: &[u8]) -> Result<Vec<u8>> {
-        let ka_len = 128; // (2.8)FIXME!!
+    pub fn agree(&self, requested_output: usize, counterparty_key: &[u8], salt: &[u8]) -> Result<Vec<u8>> {
+
+        let mut ka_len = requested_output;
+
+        if ka_len == 0 {
+            call_botan! { botan_pk_op_key_agreement_size(self.obj, &mut ka_len) };
+        }
+
         call_botan_ffi_returning_vec_u8(ka_len, &|out_buf, out_len| {
             unsafe { botan_pk_op_key_agreement(self.obj, out_buf, out_len,
                                                counterparty_key.as_ptr(), counterparty_key.len(),

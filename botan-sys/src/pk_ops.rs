@@ -99,6 +99,7 @@ extern "C" {
         flags: u32,
     ) -> c_int;
     pub fn botan_pk_op_key_agreement_destroy(op: botan_pk_op_ka_t) -> c_int;
+    pub fn botan_pk_op_key_agreement_size(op: botan_pk_op_ka_t, agreed_len: *mut usize) -> c_int;
     pub fn botan_pk_op_key_agreement_export_public(
         key: botan_privkey_t,
         out: *mut u8,
