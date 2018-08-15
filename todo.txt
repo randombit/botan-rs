@@ -38,15 +38,6 @@ botan_x509_cert_allowed_usage
 botan_x509_cert_verify
 botan_x509_cert_validation_status
 
-botan_privkey_load_rsa
-botan_privkey_load_dh
-botan_privkey_load_ecdsa
-botan_privkey_load_ecdh
-
-botan_pubkey_load_dh
-botan_pubkey_load_ecdsa
-botan_pubkey_load_ecdh
-
 botan_privkey_load_dsa
 botan_pubkey_load_dsa
 botan_privkey_load_elgamal

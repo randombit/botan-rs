@@ -47,12 +47,49 @@ impl Privkey {
         Ok(Privkey { obj })
     }
 
+    /// Load an RSA private key (p,q,e)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let p = botan::MPI::new_from_str("289698020102256958291511331409682926199").unwrap();
+    /// let q = botan::MPI::new_from_str("293497288893125842977275290547344412783").unwrap();
+    /// let e = botan::MPI::new_from_str("65537").unwrap();
+    /// let rsa = botan::Privkey::load_rsa(&p, &q, &e).unwrap();
+    /// ```
+    pub fn load_rsa(p: &MPI, q: &MPI, e: &MPI) -> Result<Privkey> {
+        let mut obj = ptr::null_mut();
+        call_botan! { botan_privkey_load_rsa(&mut obj, p.handle(), q.handle(), e.handle()) };
+        Ok(Privkey { obj })
+    }
+
+    /// Load an DH private key (p,g,x)
+    pub fn load_dh(p: &MPI, g: &MPI, x: &MPI) -> Result<Privkey> {
+        let mut obj = ptr::null_mut();
+        call_botan! { botan_privkey_load_dh(&mut obj, p.handle(), g.handle(), x.handle()) };
+        Ok(Privkey { obj })
+    }
+
+    /// Load an ECDSA private key with specified curve and secret scalar
+    pub fn load_ecdsa(s: &MPI, curve_name: &str) -> Result<Privkey> {
+        let mut obj = ptr::null_mut();
+        let curve_name = make_cstr(curve_name)?;
+        call_botan! { botan_privkey_load_ecdsa(&mut obj, s.handle(), curve_name.as_ptr()) }
+        Ok(Privkey { obj })
+    }
+
+    /// Load an ECDH private key with specified curve and secret scalar
+    pub fn load_ecdh(s: &MPI, curve_name: &str) -> Result<Privkey> {
+        let mut obj = ptr::null_mut();
+        let curve_name = make_cstr(curve_name)?;
+        call_botan! { botan_privkey_load_ecdh(&mut obj, s.handle(), curve_name.as_ptr()) }
+        Ok(Privkey { obj })
+    }
+
     /// Load DER bytes as an unencrypted PKCS#8 private key
     pub fn load_der(der: &[u8]) -> Result<Privkey> {
         let mut obj = ptr::null_mut();
-
         call_botan! { botan_privkey_load(&mut obj, ptr::null_mut(), der.as_ptr(), der.len(), ptr::null()) }
-
         Ok(Privkey { obj })
     }
 
@@ -232,6 +269,29 @@ impl Pubkey {
     pub fn load_rsa(n: &MPI, e: &MPI) -> Result<Pubkey> {
         let mut obj = ptr::null_mut();
         call_botan! { botan_pubkey_load_rsa(&mut obj, n.handle(), e.handle()) };
+        Ok(Pubkey { obj })
+    }
+
+    /// Load an DH public key (p,g,y)
+    pub fn load_dh(p: &MPI, g: &MPI, y: &MPI) -> Result<Pubkey> {
+        let mut obj = ptr::null_mut();
+        call_botan! { botan_pubkey_load_dh(&mut obj, p.handle(), g.handle(), y.handle()) };
+        Ok(Pubkey { obj })
+    }
+
+    /// Load an ECDSA public key (x,y) for the specified curve
+    pub fn load_ecdsa(pub_x: &MPI, pub_y: &MPI, curve_name: &str) -> Result<Pubkey> {
+        let mut obj = ptr::null_mut();
+        let curve_name = make_cstr(curve_name)?;
+        call_botan! { botan_pubkey_load_ecdsa(&mut obj, pub_x.handle(), pub_y.handle(), curve_name.as_ptr()) }
+        Ok(Pubkey { obj })
+    }
+
+    /// Load an ECDH public key (x,y) for the specified curve
+    pub fn load_ecdh(pub_x: &MPI, pub_y: &MPI, curve_name: &str) -> Result<Pubkey> {
+        let mut obj = ptr::null_mut();
+        let curve_name = make_cstr(curve_name)?;
+        call_botan! { botan_pubkey_load_ecdh(&mut obj, pub_x.handle(), pub_y.handle(), curve_name.as_ptr()) }
         Ok(Pubkey { obj })
     }
 
