@@ -328,7 +328,7 @@ fn test_rsa() {
     let p = privkey.get_field("p").unwrap();
     let q = privkey.get_field("q").unwrap();
 
-    assert_eq!(p.mul(&q), privkey.get_field("n"));
+    assert_eq!(&p * &q, privkey.get_field("n").unwrap());
 
     let signer = botan::Signer::new(&privkey, padding).unwrap();
     signer.update(&msg).unwrap();
@@ -530,13 +530,13 @@ fn test_mp() {
     assert_eq!(a.to_u32().unwrap(), 9);
     assert_eq!(b.to_u32().unwrap(), 81);
 
-    let mut c = a.add(&b).unwrap();
+    let mut c = &a + &b;
     assert_eq!(c.to_u32().unwrap(), 90);
 
     let d = botan::MPI::from_str("0x5A").unwrap();
     assert_eq!(c, d);
 
-    c.mul_assign(&botan::MPI::from_str("1030").unwrap()).unwrap();
+    c *= &botan::MPI::from_str("1030").unwrap();
 
     assert_eq!(c.to_string().unwrap(), "92700");
 
@@ -545,8 +545,43 @@ fn test_mp() {
     assert_eq!(format!("{:X}", c), "016A1C");
     assert_eq!(format!("{:#x}", c), "0x016a1c");
     assert_eq!(format!("{:#X}", c), "0x016A1C");
-
     assert_eq!(c.to_bin().unwrap(), vec![0x01, 0x6a, 0x1c]);
+
+    let mut s = &c << 32;
+    assert_eq!(s.to_hex().unwrap(), "016A1C00000000");
+
+    s <<= 4;
+    s += &botan::MPI::new_from_i32(5).unwrap();
+    assert_eq!(s.to_hex().unwrap(), "16A1C000000005");
+
+    s >>= 8;
+    assert_eq!(s.to_hex().unwrap(), "16A1C0000000");
+
+    let mut t = &s >> 28;
+    assert_eq!(t, c);
+
+    t += &s;
+    t <<= 4;
+    assert_eq!(t.to_hex().unwrap(), "016A1C0016A1C0");
+
+    let ten = botan::MPI::new_from_i32(10).unwrap();
+    let d = &t / &ten;
+    assert_eq!(d.to_hex().unwrap(), "243600024360");
+
+    t /= &ten;
+    assert_eq!(d, t);
+    t /= &ten;
+
+    let r = &t % &ten;
+
+    assert_eq!(r.to_string().unwrap(), "4");
+
+    let t = -t * &ten;
+
+    assert!(t.is_negative().unwrap(), true);
+
+    assert_eq!(format!("{}", t), "-39814346982240");
+
 }
 
 #[test]

@@ -7,8 +7,7 @@ use std::cmp::{Eq, Ord, Ordering};
 use std::fmt;
 use std::str::FromStr;
 
-/*
-use std::ops::{Add, AddAssign};
+use std::ops::{Add, AddAssign,
                Sub, SubAssign,
                Mul, MulAssign,
                Div, DivAssign,
@@ -16,7 +15,6 @@ use std::ops::{Add, AddAssign};
                Shl, ShlAssign,
                Shr, ShrAssign,
                Neg};
-*/
 
 /// A big integer type
 pub struct MPI {
@@ -50,6 +48,13 @@ impl MPI {
     pub fn new_from_bytes(val: &[u8]) -> Result<MPI> {
         let mut mpi = MPI::new()?;
         mpi.set_bytes(val)?;
+        Ok(mpi)
+    }
+
+    /// Crate a new MPI setting value from a i32
+    pub fn new_from_i32(val: i32) -> Result<MPI> {
+        let mut mpi = MPI::new()?;
+        mpi.set_i32(val)?;
         Ok(mpi)
     }
 
@@ -246,66 +251,66 @@ impl MPI {
     }
 
     /// Addition operator
-    pub fn add(&self, other: &MPI) -> Result<MPI> {
+    pub fn mp_add(&self, other: &MPI) -> Result<MPI> {
         let r = MPI::new()?;
         call_botan! { botan_mp_add(r.obj, self.obj, other.obj) };
         Ok(r)
     }
 
     /// Addition operator, assignment version
-    pub fn add_assign(&mut self, other: &MPI) -> Result<()> {
+    pub fn mp_add_assign(&mut self, other: &MPI) -> Result<()> {
         call_botan! { botan_mp_add(self.obj, self.obj, other.obj) };
         Ok(())
     }
 
     /// Subtraction operator
-    pub fn sub(&self, other: &MPI) -> Result<MPI> {
+    pub fn mp_sub(&self, other: &MPI) -> Result<MPI> {
         let r = MPI::new()?;
         call_botan! { botan_mp_sub(r.obj, self.obj, other.obj) };
         Ok(r)
     }
 
     /// Subtraction operator, assignment version
-    pub fn sub_assign(&mut self, other: &MPI) -> Result<()> {
+    pub fn mp_sub_assign(&mut self, other: &MPI) -> Result<()> {
         call_botan! { botan_mp_sub(self.obj, self.obj, other.obj) };
         Ok(())
     }
 
     /// Multiplication operator
-    pub fn mul(&self, other: &MPI) -> Result<MPI> {
+    pub fn mp_mul(&self, other: &MPI) -> Result<MPI> {
         let r = MPI::new()?;
         call_botan! { botan_mp_mul(r.obj, self.obj, other.obj) };
         Ok(r)
     }
 
     /// Multiplication operator, assignment version
-    pub fn mul_assign(&mut self, other: &MPI) -> Result<()> {
+    pub fn mp_mul_assign(&mut self, other: &MPI) -> Result<()> {
         call_botan! { botan_mp_mul(self.obj, self.obj, other.obj) };
         Ok(())
     }
 
     /// Bitwise left shift
-    pub fn shl(&self, shift: usize) -> Result<MPI> {
+    pub fn mp_shl(&self, shift: usize) -> Result<MPI> {
         let r = MPI::new()?;
         call_botan! { botan_mp_lshift(r.obj, self.obj, shift) };
         Ok(r)
     }
 
     /// Bitwise left shift, assignment version
-    pub fn shl_assign(&mut self, shift: usize) -> Result<()> {
+    pub fn mp_shl_assign(&mut self, shift: usize) -> Result<()> {
         call_botan! { botan_mp_lshift(self.obj, self.obj, shift) };
         Ok(())
     }
 
     /// Bitwise right shift
-    pub fn shr(&self, shift: usize) -> Result<MPI> {
+    pub fn mp_shr(&self, shift: usize) -> Result<MPI> {
         let r = MPI::new()?;
         call_botan! { botan_mp_rshift(r.obj, self.obj, shift) };
         Ok(r)
     }
 
     /// Bitwise right shift, assignment version
-    pub fn shr_assign(&mut self, shift: usize) -> Result<()> {
+    pub fn mp_shr_assign(&mut self, shift: usize) -> Result<()> {
         call_botan! { botan_mp_rshift(self.obj, self.obj, shift) };
         Ok(())
     }
@@ -441,5 +446,143 @@ impl fmt::LowerHex for MPI {
     }
 }
 
+impl<'a> Add<&'a MPI> for MPI {
+    type Output = MPI;
 
-// TODO proper arithmetic operators
+    fn add(mut self, other: &MPI) -> MPI {
+        self.mp_add_assign(other).expect("MPI::mp_add_assign succeeded");
+        self
+    }
+}
+
+impl<'a,'b> Add<&'a MPI> for &'b MPI {
+    type Output = MPI;
+
+    fn add(self, other: &MPI) -> MPI {
+        self.mp_add(other).expect("MPI::mp_add succeeded")
+    }
+}
+
+impl<'a> AddAssign<&'a MPI> for MPI {
+    fn add_assign(&mut self, other: &MPI) {
+        self.mp_add_assign(&other).expect("MPI::mp_add_assign succeeded");
+    }
+}
+
+impl<'a> Sub<&'a MPI> for MPI {
+    type Output = MPI;
+
+    fn sub(mut self, other: &MPI) -> MPI {
+        self.mp_sub_assign(other).expect("MPI::mp_sub_assign succeeded");
+        self
+    }
+}
+
+impl<'a,'b> Sub<&'a MPI> for &'b MPI {
+    type Output = MPI;
+
+    fn sub(self, other: &MPI) -> MPI {
+        self.mp_sub(other).expect("MPI::mp_sub succeeded")
+    }
+}
+
+impl<'a> SubAssign<&'a MPI> for MPI {
+    fn sub_assign(&mut self, other: &MPI) {
+        self.mp_sub_assign(&other).expect("MPI::mp_sub_assign succeeded");
+    }
+}
+
+// TODO add, sub for u32 (needs FFI support)
+
+impl<'a> Mul<&'a MPI> for MPI {
+    type Output = MPI;
+
+    fn mul(mut self, other: &MPI) -> MPI {
+        self.mp_mul_assign(other).expect("MPI::mp_mul_assign succeeded");
+        self
+    }
+}
+
+impl<'a,'b> Mul<&'a MPI> for &'b MPI {
+    type Output = MPI;
+
+    fn mul(self, other: &MPI) -> MPI {
+        self.mp_mul(other).expect("MPI::mp_mul succeeded")
+    }
+}
+
+impl<'a> MulAssign<&'a MPI> for MPI {
+    fn mul_assign(&mut self, other: &MPI) {
+        self.mp_mul_assign(&other).expect("MPI::mp_mul_assign succeeded");
+    }
+}
+
+impl<'a,'b> Div<&'b MPI> for &'a MPI {
+    type Output = MPI;
+
+    #[inline]
+    fn div(self, other: &MPI) -> MPI {
+        let (q, _r) = self.divrem(other).expect("MPI::divrem succeeded");
+        q
+    }
+}
+
+impl<'a> DivAssign<&'a MPI> for MPI {
+    fn div_assign(&mut self, other: &'a MPI) {
+        *self = &*self / other;
+    }
+}
+
+impl<'a,'b> Rem<&'b MPI> for &'a MPI {
+    type Output = MPI;
+
+    fn rem(self, other: &MPI) -> MPI {
+        let (_q, r) = self.divrem(other).expect("MPI::divrem succeeded");
+        r
+    }
+}
+
+impl<'a> RemAssign<&'a MPI> for MPI {
+    fn rem_assign(&mut self, other: &MPI) {
+        *self = &*self % other;
+    }
+}
+
+impl<'a> Shl<usize> for &'a MPI {
+    type Output = MPI;
+
+    fn shl(self, shift: usize) -> MPI {
+        self.mp_shl(shift).expect("MPI::mp_shl succeeded")
+    }
+}
+
+impl ShlAssign<usize> for MPI {
+
+    fn shl_assign(&mut self, shift: usize) {
+        self.mp_shl_assign(shift).expect("MPI::mp_shl_assign succeeded")
+    }
+}
+
+impl<'a> Shr<usize> for &'a MPI {
+    type Output = MPI;
+
+    fn shr(self, shift: usize) -> MPI {
+        self.mp_shr(shift).expect("MPI::mp_shr succeeded")
+    }
+}
+
+impl ShrAssign<usize> for MPI {
+
+    fn shr_assign(&mut self, shift: usize) {
+        self.mp_shr_assign(shift).expect("MPI::mp_shr_assign succeeded")
+    }
+}
+
+impl Neg for MPI {
+    type Output = MPI;
+
+    fn neg(mut self) -> MPI {
+        self.flip_sign().expect("MPI::flip_sign succeeded");
+        self
+    }
+}
