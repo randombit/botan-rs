@@ -309,21 +309,49 @@ fn test_pubkey() {
 }
 
 #[test]
+fn test_rsa() {
+    let rng = botan::RandomNumberGenerator::new_system().unwrap();
+
+    let padding = "EMSA-PKCS1-v1_5(SHA-256)";
+    let msg = rng.read(32).unwrap();
+
+    let privkey = botan::Privkey::create("RSA", "1024", &rng).unwrap();
+    let pubkey = privkey.pubkey().unwrap();
+
+    assert_eq!(privkey.get_field("e"), botan::MPI::new_from_str("65537"));
+    assert_eq!(privkey.get_field("n").unwrap().bit_count().unwrap(), 1024);
+
+    assert_eq!(pubkey.get_field("n"), privkey.get_field("n"));
+
+    let p = privkey.get_field("p").unwrap();
+    let q = privkey.get_field("q").unwrap();
+
+    assert_eq!(p.mul(&q), privkey.get_field("n"));
+
+    let signer = botan::Signer::new(&privkey, padding).unwrap();
+    signer.update(&msg).unwrap();
+    let signature = signer.finish(&rng).unwrap();
+
+    let verifier = botan::Verifier::new(&pubkey, padding).unwrap();
+    verifier.update(&msg).unwrap();
+    assert_eq!(verifier.finish(&signature).unwrap(), true);
+
+    let pubkey = botan::Pubkey::load_rsa(&privkey.get_field("n").unwrap(), &privkey.get_field("e").unwrap()).unwrap();
+    let verifier = botan::Verifier::new(&pubkey, padding).unwrap();
+    verifier.update(&msg).unwrap();
+    assert_eq!(verifier.finish(&signature).unwrap(), true);
+
+
+}
+
+#[test]
 fn test_pubkey_encryption() {
 
     let padding = "EMSA-PKCS1-v1_5(SHA-256)";
     let msg = [1,2,3];
 
     let rng = botan::RandomNumberGenerator::new_system().unwrap();
-    let key = botan::Privkey::create("RSA", "3072", &rng).unwrap();
-
-    assert_eq!(key.get_field("e"), botan::MPI::new_from_str("65537"));
-    assert_eq!(key.get_field("n").unwrap().bit_count().unwrap(), 3072);
-
-    let p = key.get_field("p").unwrap();
-    let q = key.get_field("q").unwrap();
-
-    assert_eq!(p.mul(&q), key.get_field("n"));
+    let key = botan::Privkey::create("RSA", "1024", &rng).unwrap();
 
     let der = key.der_encode_encrypted("passphrase", &rng).unwrap();
     let pem = key.pem_encode_encrypted("pemword", &rng).unwrap();

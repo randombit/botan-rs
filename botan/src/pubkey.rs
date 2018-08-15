@@ -226,6 +226,12 @@ impl Pubkey {
         Ok(Pubkey { obj })
     }
 
+    pub fn load_rsa(n: &MPI, e: &MPI) -> Result<Pubkey> {
+        let mut obj = ptr::null_mut();
+        call_botan! { botan_pubkey_load_rsa(&mut obj, n.handle(), e.handle()) };
+        Ok(Pubkey { obj })
+    }
+
     /// Return estimated bit strength of this key
     pub fn estimated_strength(&self) -> Result<usize> {
         let mut strength = 0;
