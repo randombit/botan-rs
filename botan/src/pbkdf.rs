@@ -3,6 +3,7 @@ use botan_sys::*;
 use utils::*;
 
 /// Password based key derivation function
+///
 /// Note currently only PBKDF2 is supported by this interface.
 /// For PBKDF2, iterations >= 100000 is recommended.
 ///

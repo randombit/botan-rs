@@ -3,6 +3,7 @@ use botan_sys::*;
 use utils::*;
 
 /// Key derivation function
+///
 /// Produces a KDF output of the specified size when run over the
 /// provided secret, salt, and label inputs
 ///

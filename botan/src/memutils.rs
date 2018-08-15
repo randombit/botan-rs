@@ -3,6 +3,7 @@ use botan_sys::*;
 use utils::*;
 
 /// Const time comparison
+///
 /// Compare two arrays without leaking side channel information
 pub fn const_time_compare<T: Copy>(a: &[T], b: &[T]) -> bool {
     if a.len() != b.len() {
@@ -16,6 +17,7 @@ pub fn const_time_compare<T: Copy>(a: &[T], b: &[T]) -> bool {
 }
 
 /// Securely zeroize memory
+///
 /// Write zeros to the array (eg to clear out a key) in a way that is
 /// unlikely to be removed by the compiler.
 pub fn scrub_mem<T: Copy>(a: &mut [T]) {
