@@ -2,13 +2,23 @@ extern crate botan;
 
 #[test]
 fn test_version() {
-    let version = botan::Version::new();
+    let version = botan::Version::new().unwrap();
+
+    /*
+    If we are running against a released version we know it must be at
+    least 2.8 since we require APIs added after the 2.7 release.
+    */
 
     assert_eq!(version.major, 2);
-    assert!(version.release_date == 0 || version.release_date >= 20170000);
-    assert!(version.ffi_api >= 20150000);
+    assert!(version.minor >= 8);
+    assert!(version.release_date == 0 || version.release_date >= 20181001);
+    assert!(version.ffi_api >= 20180713);
 
-    println!("{:?}", version);
+    assert!(botan::Version::supports_version(version.ffi_api));
+    assert!(botan::Version::supports_version(20180713));
+    assert!(!botan::Version::supports_version(20180712));
+
+        //println!("{:?}", version);
 }
 
 #[test]

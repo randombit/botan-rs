@@ -20,21 +20,28 @@ pub struct Version {
 }
 
 impl Version {
+
     /// Read the version information
-    pub fn new() -> Version {
+    pub fn new() -> Result<Version> {
 
         unsafe {
-            let version_str = CStr::from_ptr(botan_version_string()).to_str().unwrap().to_string();
+            let version_str = CStr::from_ptr(botan_version_string()).to_str().map_err(|_| Error::ConversionError)?;
 
-            Version {
+            Ok(Version {
                 major: botan_version_major(),
                 minor: botan_version_minor(),
                 patch: botan_version_patch(),
                 release_date: botan_version_datestamp(),
                 ffi_api: botan_ffi_api_version(),
-                string: version_str,
-            }
+                string: version_str.to_string(),
+            })
         }
+    }
+
+    /// Return true if the specified API version is supported by this version of the library
+    pub fn supports_version(version: u32) -> bool {
+        let rc = unsafe { botan_ffi_supports_api(version) };
+        return rc == 0;
     }
 
 }
