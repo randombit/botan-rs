@@ -266,6 +266,13 @@ impl Pubkey {
         Ok(Pubkey { obj })
     }
 
+    /// Load a PEM encoded public key
+    pub fn load_pem(pem: &str) -> Result<Pubkey> {
+        let mut obj = ptr::null_mut();
+        call_botan! { botan_pubkey_load(&mut obj, make_cstr(pem)?.as_ptr() as *const u8, pem.len()) }
+        Ok(Pubkey { obj })
+    }
+
     /// Load an RSA public key (n,e)
     pub fn load_rsa(n: &MPI, e: &MPI) -> Result<Pubkey> {
         let mut obj = ptr::null_mut();
@@ -328,8 +335,6 @@ impl Pubkey {
             unsafe { botan_pubkey_fingerprint(self.obj, hash.as_ptr(), out_buf, out_len) }
         })
     }
-
-    // TODO load_pem
 
     /// DER encode this public key
     pub fn der_encode(&self) -> Result<Vec<u8>> {
