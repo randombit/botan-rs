@@ -64,8 +64,21 @@ impl RandomNumberGenerator {
     /// ```
     pub fn read(&self, len: usize) -> Result<Vec<u8>> {
         let mut result = vec![0; len];
-        call_botan! { botan_rng_get(self.obj, result.as_mut_ptr(), result.len()) }
+        self.fill(&mut result)?;
         Ok(result)
+    }
+
+    /// Store bytes from the RNG into the passed slice
+    ///
+    /// # Examples
+    /// ```
+    /// let rng = botan::RandomNumberGenerator::new().unwrap();
+    /// let mut output = vec![0; 32];
+    /// rng.fill(&mut output).unwrap();
+    /// ```
+    pub fn fill(&self, out: &mut [u8]) -> Result<()> {
+        call_botan! { botan_rng_get(self.obj, out.as_mut_ptr(), out.len()) }
+        Ok(())
     }
 
     /// Attempt to reseed the RNG by unspecified means

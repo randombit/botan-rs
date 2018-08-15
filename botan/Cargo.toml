@@ -1,6 +1,6 @@
 [package]
 name = "botan"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Jack Lloyd <jack@randombit.net>"]
 description = "Rust wrapper for Botan cryptography library"
 license = "MIT"
@@ -19,3 +19,4 @@ status = "actively-developed"
 
 [dependencies]
 botan-sys = { version = "0.2.0", path = "../botan-sys" }
+digest = "0.7.0"
