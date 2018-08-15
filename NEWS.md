@@ -6,6 +6,7 @@ Due to using several APIs only recently added, 0.2.0 onwards requires current
 
 - Adds MPI type.
 - Adds scrypt.
+- Adds format preserving encryption
 - Add NIST key wrapping.
 - Adds various util functions to existing types.
 - Fix a bug affecting DH/ECDH (it always returned exactly 128 bytes,

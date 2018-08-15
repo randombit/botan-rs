@@ -1,4 +1,4 @@
-use std::os::raw::{c_int, c_char};
+use std::os::raw::{c_int};
 
 use mp::botan_mp_t;
 

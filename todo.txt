@@ -49,8 +49,3 @@ botan_privkey_load_dsa
 botan_pubkey_load_dsa
 botan_privkey_load_elgamal
 botan_pubkey_load_elgamal
-
-botan_fpe_fe1_init
-botan_fpe_destroy
-botan_fpe_encrypt
-botan_fpe_decrypt

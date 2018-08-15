@@ -504,6 +504,23 @@ fn test_mp() {
     assert_eq!(c.to_string().unwrap(), "92700");
 
     assert_eq!(c.to_bin().unwrap(), vec![0x01, 0x6a, 0x1c]);
+}
 
+#[test]
+fn test_fpe() {
+    let modulus = botan::MPI::new_from_str("1000000000").unwrap();
+    let input = botan::MPI::new_from_str("939210311").unwrap();
 
+    let key = vec![0; 32];
+    let tweak = vec![0; 8];
+
+    let fpe = botan::FPE::new_fe1(&modulus, &key, 8, false).unwrap();
+
+    let ctext = fpe.encrypt(&input, &tweak).unwrap();
+
+    assert_ne!(ctext, input);
+
+    let ptext = fpe.decrypt(&ctext, &tweak).unwrap();
+
+    assert_eq!(ptext, input);
 }

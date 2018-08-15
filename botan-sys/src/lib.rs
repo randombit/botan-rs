@@ -3,6 +3,7 @@
 mod block;
 mod cipher;
 mod errors;
+mod fpe;
 mod hash;
 mod keywrap;
 mod kdf;
@@ -19,6 +20,7 @@ mod x509;
 pub use block::*;
 pub use cipher::*;
 pub use errors::*;
+pub use fpe::*;
 pub use hash::*;
 pub use keywrap::*;
 pub use kdf::*;

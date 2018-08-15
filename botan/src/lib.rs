@@ -18,6 +18,7 @@ macro_rules! call_botan {
 mod bcrypt;
 mod block;
 mod cipher;
+mod fpe;
 mod hash;
 mod keywrap;
 mod kdf;
@@ -35,6 +36,7 @@ mod utils;
 pub use bcrypt::*;
 pub use block::*;
 pub use cipher::*;
+pub use fpe::*;
 pub use hash::*;
 pub use kdf::*;
 pub use keywrap::*;
