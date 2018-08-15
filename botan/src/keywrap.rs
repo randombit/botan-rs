@@ -2,9 +2,10 @@
 use botan_sys::*;
 use utils::*;
 
-/// Wrap a key using NIST's AES key wrap algorithm. The kek
-/// (key-encryption-key) must be a valid length for an AES key.
-/// The wrapped key must be a multiple of 8 bytes.
+/// Wrap a key using NIST's AES key wrap algorithm.
+///
+/// The kek (key-encryption-key) must be a valid length for an AES
+/// key. The wrapped key must be a multiple of 8 bytes.
 ///
 /// # Examples
 ///
@@ -12,9 +13,9 @@ use utils::*;
 /// // Wrap a 128-bit key with a 256-bit key:
 /// let key = vec![0; 16];
 /// let kek = vec![0; 32];
-/// let wrapped = botan::nist_aes_key_wrap(&kek, &key).unwrap();
+/// let wrapped = botan::nist_key_wrap(&kek, &key).unwrap();
 /// ```
-pub fn nist_aes_key_wrap(kek: &[u8], key: &[u8]) -> Result<Vec<u8>> {
+pub fn nist_key_wrap(kek: &[u8], key: &[u8]) -> Result<Vec<u8>> {
 
     if kek.len() != 16 && kek.len() != 24 && kek.len() != 32 {
         return Err(Error::InvalidKeyLength);
@@ -45,11 +46,11 @@ pub fn nist_aes_key_wrap(kek: &[u8], key: &[u8]) -> Result<Vec<u8>> {
 /// // Wrap a 128-bit key with a 256-bit key:
 /// let key = vec![0; 16];
 /// let kek = vec![0; 32];
-/// let wrapped = botan::nist_aes_key_wrap(&kek, &key).unwrap();
-/// let unwrapped = botan::nist_aes_key_unwrap(&kek, &wrapped).unwrap();
+/// let wrapped = botan::nist_key_wrap(&kek, &key).unwrap();
+/// let unwrapped = botan::nist_key_unwrap(&kek, &wrapped).unwrap();
 /// assert_eq!(unwrapped, key);
 /// ```
-pub fn nist_aes_key_unwrap(kek: &[u8], wrapped: &[u8]) -> Result<Vec<u8>> {
+pub fn nist_key_unwrap(kek: &[u8], wrapped: &[u8]) -> Result<Vec<u8>> {
 
     if kek.len() != 16 && kek.len() != 24 && kek.len() != 32 {
         return Err(Error::InvalidKeyLength);
