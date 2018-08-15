@@ -163,6 +163,10 @@ extern "C" {
         q: botan_mp_t,
         e: botan_mp_t,
     ) -> c_int;
+    pub fn botan_privkey_load_rsa_pkcs1(
+        key: *mut botan_privkey_t,
+        bits: *const u8,
+        len: usize) -> c_int;
     pub fn botan_privkey_rsa_get_p(
         p: botan_mp_t,
         rsa_key: botan_privkey_t,

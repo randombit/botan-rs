@@ -64,6 +64,13 @@ impl Privkey {
         Ok(Privkey { obj })
     }
 
+    /// Load a PKCS#1 encoded RSA private key
+    pub fn load_rsa_pkcs1(pkcs1: &[u8]) -> Result<Privkey> {
+        let mut obj = ptr::null_mut();
+        call_botan! { botan_privkey_load_rsa_pkcs1(&mut obj, pkcs1.as_ptr(), pkcs1.len()) }
+        Ok(Privkey { obj })
+    }
+
     /// Load an DH private key (p,g,x)
     pub fn load_dh(p: &MPI, g: &MPI, x: &MPI) -> Result<Privkey> {
         let mut obj = ptr::null_mut();
