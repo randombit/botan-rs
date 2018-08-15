@@ -204,6 +204,8 @@ impl Privkey {
         })
     }
 
+    /// Get a value for the private key
+    /// The which parameter selects a field which is algorithm specific
     pub fn get_field(&self, which: &str) -> Result<MPI> {
         let which = make_cstr(which)?;
 
@@ -226,6 +228,7 @@ impl Pubkey {
         Ok(Pubkey { obj })
     }
 
+    /// Load an RSA public key (n,e)
     pub fn load_rsa(n: &MPI, e: &MPI) -> Result<Pubkey> {
         let mut obj = ptr::null_mut();
         call_botan! { botan_pubkey_load_rsa(&mut obj, n.handle(), e.handle()) };
@@ -266,7 +269,6 @@ impl Pubkey {
     }
 
     // TODO load_pem
-    // TODO get_field (needs mp)
 
     /// DER encode this public key
     pub fn der_encode(&self) -> Result<Vec<u8>> {
@@ -292,6 +294,8 @@ impl Pubkey {
         })
     }
 
+    /// Get a value for the public key
+    /// The which parameter selects a field which is algorithm specific
     pub fn get_field(&self, which: &str) -> Result<MPI> {
         let which = make_cstr(which)?;
 
