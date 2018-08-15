@@ -38,6 +38,20 @@ pub fn pbkdf(algo: &str,
 
 
 /// Scrypt key derivation
+///
+/// The n, r, p parameters control how much time and memory is used.
+/// As of 2018, n = 32768, r = 8, p = 1 seems sufficient.
+///
+/// # Examples
+/// ```
+/// let rng = botan::RandomNumberGenerator::new().unwrap();
+/// let salt = rng.read(10).unwrap();
+/// let n = 32768;
+/// let r = 8;
+/// let p = 1;
+/// let key = botan::scrypt(32, "passphrase", &salt, n, r, p).unwrap();
+/// assert_eq!(key.len(), 32);
+/// ```
 pub fn scrypt(out_len: usize,
               passphrase: &str,
               salt: &[u8],
