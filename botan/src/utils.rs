@@ -61,7 +61,7 @@ pub enum Error {
     BadFlag,
     /// An invalid parameter was provided to the library
     BadParameter,
-    /// An exception was thrown will processing this request
+    /// An exception was thrown while processing this request
     ExceptionThrown,
     /// There was insufficient buffer space to write the output
     InsufficientBufferSpace,
