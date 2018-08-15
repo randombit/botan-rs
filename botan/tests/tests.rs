@@ -27,6 +27,7 @@ fn test_hash() {
 
     assert_eq!(hash.output_length().unwrap(), 48);
     assert_eq!(hash.block_size().unwrap(), 128);
+    assert_eq!(hash.algo_name().unwrap(), "SHA-384");
 
     assert!(hash.update(&[97,98]).is_ok());
 
@@ -34,6 +35,10 @@ fn test_hash() {
 
     assert!(hash.update(&[99]).is_ok());
     assert!(hash_dup.update(&[100]).is_ok());
+
+    hash.clear().unwrap();
+
+    hash.update(&[97,98,99]).unwrap();
 
     let digest = hash.finish().unwrap();
 
@@ -59,6 +64,8 @@ fn test_mac() {
     let mac = botan::MsgAuthCode::new("HMAC(SHA-384)").unwrap();
 
     let key_spec = mac.key_spec().unwrap();
+    assert_eq!(mac.output_length().unwrap(), 48);
+    assert_eq!(mac.algo_name().unwrap(), "HMAC(SHA-384)");
 
     assert!(key_spec.is_valid_keylength(20));
 

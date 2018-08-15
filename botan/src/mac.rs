@@ -67,9 +67,11 @@ impl MsgAuthCode {
     /// # Examples
     /// ```
     /// let hmac = botan::MsgAuthCode::new("HMAC(SHA-256)").unwrap();
-    /// assert_eq!(hmac.output_length(), 32);
+    /// assert_eq!(hmac.output_length().unwrap(), 32);
     /// ```
-    pub fn output_length(&self) -> usize { self.output_length }
+    pub fn output_length(&self) -> Result<usize> {
+        Ok(self.output_length)
+    }
 
     /// Set the key for the authentication code object
     /// # Examples
@@ -110,7 +112,7 @@ impl MsgAuthCode {
     /// let mac = hmac.finish().unwrap();
     /// ```
     pub fn finish(&self) -> Result<Vec<u8>> {
-        let mut output = vec![0; self.output_length()];
+        let mut output = vec![0; self.output_length];
         call_botan! { botan_mac_final(self.obj, output.as_mut_ptr()) };
         Ok(output)
     }
