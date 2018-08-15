@@ -383,35 +383,35 @@ impl MPI {
         }
     }
 
-}
+    /// Return the greatest common divisor of x and y
+    /// # Examples
+    ///
+    /// ```
+    /// use std::str::FromStr;
+    /// let x = botan::MPI::from_str("1111111111111111").unwrap();
+    /// let y = botan::MPI::from_str("111111111111").unwrap();
+    /// assert_eq!(botan::MPI::gcd(&x, &y).unwrap(), botan::MPI::from_str("1111").unwrap());
+    /// ```
+    pub fn gcd(x: &MPI, y: &MPI) -> Result<MPI> {
+        let r = MPI::new()?;
+        call_botan! { botan_mp_gcd(r.obj, x.obj, y.obj) };
+        Ok(r)
+    }
 
-/// Return the greatest common divisor of x and y
-/// # Examples
-///
-/// ```
-/// use std::str::FromStr;
-/// let x = botan::MPI::from_str("1111111111111111").unwrap();
-/// let y = botan::MPI::from_str("111111111111").unwrap();
-/// assert_eq!(botan::gcd(&x, &y).unwrap(), botan::MPI::from_str("1111").unwrap());
-/// ```
-pub fn gcd(x: &MPI, y: &MPI) -> Result<MPI> {
-    let r = MPI::new()?;
-    call_botan! { botan_mp_gcd(r.obj, x.obj, y.obj) };
-    Ok(r)
-}
+    /// Return the inverse of x modulo m, or 0 if gcd(x,m) > 1
+    pub fn modular_inverse(x: &MPI, m: &MPI) -> Result<MPI> {
+        let r = MPI::new()?;
+        call_botan! { botan_mp_mod_inverse(r.obj, x.obj, m.obj) };
+        Ok(r)
+    }
 
-/// Return the inverse of x modulo m, or 0 if gcd(x,m) > 1
-pub fn modular_inverse(x: &MPI, m: &MPI) -> Result<MPI> {
-    let r = MPI::new()?;
-    call_botan! { botan_mp_mod_inverse(r.obj, x.obj, m.obj) };
-    Ok(r)
-}
+    /// Return (x^e) mod m
+    pub fn powmod(x: &MPI, e: &MPI, m: &MPI) -> Result<MPI> {
+        let r = MPI::new()?;
+        call_botan! { botan_mp_powmod(r.obj, x.obj, e.obj, m.obj) };
+        Ok(r)
+    }
 
-/// Return (x^e) mod m
-pub fn powmod(x: &MPI, e: &MPI, m: &MPI) -> Result<MPI> {
-    let r = MPI::new()?;
-    call_botan! { botan_mp_powmod(r.obj, x.obj, e.obj, m.obj) };
-    Ok(r)
 }
 
 impl PartialOrd for MPI {
