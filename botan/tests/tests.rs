@@ -423,6 +423,16 @@ fn test_aes_key_wrap() {
 }
 
 #[test]
+fn test_pkcs_hash_id() {
+    assert!(botan::pkcs_hash_id("SHA-192").is_err());
+
+    let id = botan::pkcs_hash_id("SHA-384").unwrap();
+
+    assert_eq!(botan::hex_encode(&id).unwrap(),
+               "3041300D060960864801650304020205000430");
+}
+
+#[test]
 fn test_ct_compare() {
     let a = vec![1,2,3];
 

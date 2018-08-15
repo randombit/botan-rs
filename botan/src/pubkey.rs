@@ -251,8 +251,6 @@ impl Pubkey {
     }
 
     // TODO load_pem
-
-    // TODO fingerprint
     // TODO get_field (needs mp)
 
     /// DER encode this public key
@@ -278,5 +276,15 @@ impl Pubkey {
             unsafe { botan_pubkey_algo_name(self.obj, out_buf as *mut c_char, out_len) }
         })
     }
+
+}
+
+/// Return the identifier used for PKCS1 v1.5 signatures for the specified hash
+pub fn pkcs_hash_id(hash_algo: &str) -> Result<Vec<u8>> {
+    let hash_algo = make_cstr(hash_algo)?;
+    let id_len = 32; // largest currently is 20 bytes
+    call_botan_ffi_returning_vec_u8(id_len, &|out_buf, out_len| {
+        unsafe { botan_pkcs_hash_id(hash_algo.as_ptr(), out_buf, out_len) }
+    })
 
 }

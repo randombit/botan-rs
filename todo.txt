@@ -34,8 +34,6 @@ botan_pubkey_ed25519_get_pubkey
 
 botan_privkey_load_rsa_pkcs1
 
-botan_pkcs_hash_id
-
 botan_x509_cert_gen_selfsigned
 botan_x509_cert_allowed_usage
 botan_x509_cert_verify
