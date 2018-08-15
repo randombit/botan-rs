@@ -403,7 +403,34 @@ impl Ord for MPI {
 
 impl fmt::Debug for MPI {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        self.to_string().expect("MPI::to_string succeeded").fmt(formatter)
+        let s = self.to_string().map_err(|_| fmt::Error)?;
+        let is_positive = self.is_positive().map_err(|_| fmt::Error)?;
+        formatter.pad_integral(is_positive, "", &s)
+    }
+}
+
+impl fmt::Display for MPI {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        let s = self.to_string().map_err(|_| fmt::Error)?;
+        let is_positive = self.is_positive().map_err(|_| fmt::Error)?;
+        formatter.pad_integral(is_positive, "", &s)
+    }
+}
+
+impl fmt::UpperHex for MPI {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        let s = self.to_hex().map_err(|_| fmt::Error)?;
+        let is_positive = self.is_positive().map_err(|_| fmt::Error)?;
+        formatter.pad_integral(is_positive, "0x", &s)
+    }
+}
+
+impl fmt::LowerHex for MPI {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        let mut s = self.to_hex().map_err(|_| fmt::Error)?;
+        let is_positive = self.is_positive().map_err(|_| fmt::Error)?;
+        s.make_ascii_lowercase();
+        formatter.pad_integral(is_positive, "0x", &s)
     }
 }
 

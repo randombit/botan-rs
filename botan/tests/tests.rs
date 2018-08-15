@@ -538,6 +538,12 @@ fn test_mp() {
 
     assert_eq!(c.to_string().unwrap(), "92700");
 
+    assert_eq!(format!("{}", c), "92700");
+    assert_eq!(format!("{:x}", c), "016a1c");
+    assert_eq!(format!("{:X}", c), "016A1C");
+    assert_eq!(format!("{:#x}", c), "0x016a1c");
+    assert_eq!(format!("{:#X}", c), "0x016A1C");
+
     assert_eq!(c.to_bin().unwrap(), vec![0x01, 0x6a, 0x1c]);
 }
 
