@@ -58,6 +58,13 @@ impl MPI {
         Ok(mpi)
     }
 
+    /// Crate a new MPI setting value from a u32
+    pub fn new_from_u32(val: u32) -> Result<MPI> {
+        let mut mpi = MPI::new()?;
+        mpi.mp_add_u32_assign(val)?;
+        Ok(mpi)
+    }
+
     /// Crate a new MPI duplicating the value of self
     pub fn duplicate(&self) -> Result<MPI> {
         let mpi = MPI::new()?;
@@ -263,6 +270,19 @@ impl MPI {
         Ok(())
     }
 
+    /// Addition operator
+    pub fn mp_add_u32(&self, other: u32) -> Result<MPI> {
+        let r = MPI::new()?;
+        call_botan! { botan_mp_add_u32(r.obj, self.obj, other) };
+        Ok(r)
+    }
+
+    /// Addition operator, assignment version
+    pub fn mp_add_u32_assign(&mut self, other: u32) -> Result<()> {
+        call_botan! { botan_mp_add_u32(self.obj, self.obj, other) };
+        Ok(())
+    }
+
     /// Subtraction operator
     pub fn mp_sub(&self, other: &MPI) -> Result<MPI> {
         let r = MPI::new()?;
@@ -273,6 +293,19 @@ impl MPI {
     /// Subtraction operator, assignment version
     pub fn mp_sub_assign(&mut self, other: &MPI) -> Result<()> {
         call_botan! { botan_mp_sub(self.obj, self.obj, other.obj) };
+        Ok(())
+    }
+
+    /// Subtraction operator
+    pub fn mp_sub_u32(&self, other: u32) -> Result<MPI> {
+        let r = MPI::new()?;
+        call_botan! { botan_mp_sub_u32(r.obj, self.obj, other) };
+        Ok(r)
+    }
+
+    /// Subtraction operator, assignment version
+    pub fn mp_sub_u32_assign(&mut self, other: u32) -> Result<()> {
+        call_botan! { botan_mp_sub_u32(self.obj, self.obj, other) };
         Ok(())
     }
 
@@ -463,9 +496,32 @@ impl<'a,'b> Add<&'a MPI> for &'b MPI {
     }
 }
 
+impl Add<u32> for MPI {
+    type Output = MPI;
+
+    fn add(mut self, other: u32) -> MPI {
+        self.mp_add_u32_assign(other).expect("MPI::mp_add_u32_assign succeeded");
+        self
+    }
+}
+
+impl<'a> Add<u32> for &'a MPI {
+    type Output = MPI;
+
+    fn add(self, other: u32) -> MPI {
+        self.mp_add_u32(other).expect("MPI::mp_add_u32 succeeded")
+    }
+}
+
 impl<'a> AddAssign<&'a MPI> for MPI {
     fn add_assign(&mut self, other: &MPI) {
         self.mp_add_assign(&other).expect("MPI::mp_add_assign succeeded");
+    }
+}
+
+impl AddAssign<u32> for MPI {
+    fn add_assign(&mut self, other: u32) {
+        self.mp_add_u32_assign(other).expect("MPI::mp_add_u32_assign succeeded");
     }
 }
 
@@ -486,13 +542,35 @@ impl<'a,'b> Sub<&'a MPI> for &'b MPI {
     }
 }
 
+impl Sub<u32> for MPI {
+    type Output = MPI;
+
+    fn sub(mut self, other: u32) -> MPI {
+        self.mp_sub_u32_assign(other).expect("MPI::mp_sub_u32_assign succeeded");
+        self
+    }
+}
+
+impl<'a> Sub<u32> for &'a MPI {
+    type Output = MPI;
+
+    fn sub(self, other: u32) -> MPI {
+        self.mp_sub_u32(other).expect("MPI::mp_sub_u32 succeeded")
+    }
+}
+
 impl<'a> SubAssign<&'a MPI> for MPI {
     fn sub_assign(&mut self, other: &MPI) {
         self.mp_sub_assign(&other).expect("MPI::mp_sub_assign succeeded");
     }
 }
 
-// TODO add, sub for u32 (needs FFI support)
+impl SubAssign<u32> for MPI {
+    fn sub_assign(&mut self, other: u32) {
+        self.mp_sub_u32_assign(other).expect("MPI::mp_sub_u32_assign succeeded");
+    }
+}
+
 
 impl<'a> Mul<&'a MPI> for MPI {
     type Output = MPI;

@@ -551,8 +551,13 @@ fn test_mp() {
     assert_eq!(s.to_hex().unwrap(), "016A1C00000000");
 
     s <<= 4;
-    s += &botan::MPI::new_from_i32(5).unwrap();
+    s += 5;
     assert_eq!(s.to_hex().unwrap(), "16A1C000000005");
+
+    let mut s = s - 19;
+    assert_eq!(s.to_hex().unwrap(), "16A1BFFFFFFFF2");
+
+    s += 14;
 
     s >>= 8;
     assert_eq!(s.to_hex().unwrap(), "16A1C0000000");
@@ -564,7 +569,7 @@ fn test_mp() {
     t <<= 4;
     assert_eq!(t.to_hex().unwrap(), "016A1C0016A1C0");
 
-    let ten = botan::MPI::new_from_i32(10).unwrap();
+    let ten = botan::MPI::new_from_u32(10).unwrap();
     let d = &t / &ten;
     assert_eq!(d.to_hex().unwrap(), "243600024360");
 

@@ -34,6 +34,8 @@ extern "C" {
     pub fn botan_mp_is_even(mp: botan_mp_t) -> c_int;
     pub fn botan_mp_add(result: botan_mp_t, x: botan_mp_t, y: botan_mp_t) -> c_int;
     pub fn botan_mp_sub(result: botan_mp_t, x: botan_mp_t, y: botan_mp_t) -> c_int;
+    pub fn botan_mp_add_u32(result: botan_mp_t, x: botan_mp_t, y: u32) -> c_int;
+    pub fn botan_mp_sub_u32(result: botan_mp_t, x: botan_mp_t, y: u32) -> c_int;
     pub fn botan_mp_mul(result: botan_mp_t, x: botan_mp_t, y: botan_mp_t) -> c_int;
     pub fn botan_mp_div(
         quotient: botan_mp_t,
