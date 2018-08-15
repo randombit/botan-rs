@@ -118,10 +118,15 @@ pub struct KeySpec {
 
 impl KeySpec {
 
-    pub(crate) fn new(min_keylen: usize, max_keylen: usize, mod_keylen: usize) -> KeySpec {
-        assert!(min_keylen <= max_keylen);
-        assert!(mod_keylen > 0);
-        KeySpec { min_keylen, max_keylen, mod_keylen }
+    pub(crate) fn new(min_keylen: usize, max_keylen: usize, mod_keylen: usize) -> Result<KeySpec> {
+        if min_keylen > max_keylen {
+            return Err(Error::ConversionError);
+        }
+        if mod_keylen == 0 {
+            return Err(Error::ConversionError);
+        }
+
+        Ok(KeySpec { min_keylen, max_keylen, mod_keylen })
     }
 
     /// Return true if the specified key length is valid for this object

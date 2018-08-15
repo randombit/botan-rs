@@ -125,7 +125,7 @@ impl Cipher {
     }
 
     /// Return information about the key lengths supported by this object
-    pub fn key_spec(&self) -> KeySpec {
+    pub fn key_spec(&self) -> Result<KeySpec> {
         KeySpec::new(self.min_keylen, self.max_keylen, self.mod_keylen)
     }
 

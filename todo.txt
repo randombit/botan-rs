@@ -21,7 +21,6 @@ exposed by the high level Rust wrapper:
 botan_base64_encode
 botan_base64_decode
 
-botan_hash_block_size
 botan_cipher_output_length
 botan_pbkdf_timed
 

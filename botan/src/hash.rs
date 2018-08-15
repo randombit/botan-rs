@@ -60,9 +60,24 @@ impl HashFunction {
     /// # Examples
     /// ```
     /// let hash = botan::HashFunction::new("SHA-256").unwrap();
-    /// assert_eq!(hash.output_length(), 32);
+    /// assert_eq!(hash.output_length().unwrap(), 32);
     /// ```
-    pub fn output_length(&self) -> usize { self.output_length }
+    pub fn output_length(&self) -> Result<usize> {
+        Ok(self.output_length)
+    }
+
+    /// Return the block length of the hash function, in bytes
+    ///
+    /// # Examples
+    /// ```
+    /// let hash = botan::HashFunction::new("SHA-256").unwrap();
+    /// assert_eq!(hash.block_size().unwrap(), 64);
+    /// ```
+    pub fn block_size(&self) -> Result<usize> {
+        let mut block_length = 0;
+        call_botan! { botan_hash_block_size(self.obj, &mut block_length) };
+        Ok(block_length)
+    }
 
     /// Add data to a hash computation, may be called many times
     ///
@@ -87,7 +102,7 @@ impl HashFunction {
     /// let digest = hash.finish().unwrap();
     /// ```
     pub fn finish(&self) -> Result<Vec<u8>> {
-        let mut output = vec![0; self.output_length()];
+        let mut output = vec![0; self.output_length];
         call_botan! { botan_hash_final(self.obj, output.as_mut_ptr()) };
         Ok(output)
     }

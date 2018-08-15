@@ -15,7 +15,8 @@ fn test_version() {
 fn test_hash() {
     let hash = botan::HashFunction::new("SHA-384").unwrap();
 
-    assert_eq!(hash.output_length(), 48);
+    assert_eq!(hash.output_length().unwrap(), 48);
+    assert_eq!(hash.block_size().unwrap(), 128);
 
     assert!(hash.update(&[97,98]).is_ok());
 
@@ -47,7 +48,7 @@ fn test_hash() {
 fn test_mac() {
     let mac = botan::MsgAuthCode::new("HMAC(SHA-384)").unwrap();
 
-    let key_spec = mac.key_spec();
+    let key_spec = mac.key_spec().unwrap();
 
     assert!(key_spec.is_valid_keylength(20));
 
@@ -72,8 +73,9 @@ fn test_block_cipher() {
     let bc = botan::BlockCipher::new("AES-128").unwrap();
 
     assert_eq!(bc.algo_name().unwrap(), "AES-128");
+    assert_eq!(bc.block_size().unwrap(), 16);
 
-    let key_spec = bc.key_spec();
+    let key_spec = bc.key_spec().unwrap();
 
     assert!(key_spec.is_valid_keylength(20) == false);
     assert!(key_spec.is_valid_keylength(16));
@@ -130,7 +132,7 @@ fn test_chacha() {
 
     assert_eq!(cipher.tag_length(), 0);
 
-    let key_spec = cipher.key_spec();
+    let key_spec = cipher.key_spec().unwrap();
 
     assert!(key_spec.is_valid_keylength(0) == false);
     assert!(key_spec.is_valid_keylength(16));

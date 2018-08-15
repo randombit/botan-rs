@@ -54,9 +54,11 @@ impl BlockCipher {
     ///
     /// ```
     /// let cipher = botan::BlockCipher::new("AES-128").unwrap();
-    /// assert_eq!(cipher.block_size(), 16);
+    /// assert_eq!(cipher.block_size().unwrap(), 16);
     /// ```
-    pub fn block_size(&self) -> usize { self.block_size }
+    pub fn block_size(&self) -> Result<usize> {
+        Ok(self.block_size)
+    }
 
     /// Return the name of this algorithm which may or may not exactly
     /// match what was provided to new()
@@ -74,7 +76,7 @@ impl BlockCipher {
     }
 
     /// Return information about the key lengths supported by this object
-    pub fn key_spec(&self) -> KeySpec {
+    pub fn key_spec(&self) -> Result<KeySpec> {
         KeySpec::new(self.min_keylen, self.max_keylen, self.mod_keylen)
     }
 
