@@ -50,6 +50,12 @@ impl MPI {
         Ok(mpi)
     }
 
+    pub fn new_from_bytes(val: &[u8]) -> Result<MPI> {
+        let mut mpi = MPI::new()?;
+        mpi.set_bytes(val)?;
+        Ok(mpi)
+    }
+
     pub fn duplicate(&self) -> Result<MPI> {
         let mpi = MPI::new()?;
         call_botan! { botan_mp_set_from_mp(mpi.obj, self.obj) };
@@ -64,6 +70,11 @@ impl MPI {
     pub fn set_str(&mut self, val: &str) -> Result<()> {
         let cstr = make_cstr(val)?;
         call_botan! { botan_mp_set_from_str(self.obj, cstr.as_ptr()) };
+        Ok(())
+    }
+
+    pub fn set_bytes(&mut self, val: &[u8]) -> Result<()> {
+        call_botan! { botan_mp_from_bin(self.obj, val.as_ptr(), val.len()) };
         Ok(())
     }
 
@@ -122,20 +133,12 @@ impl MPI {
         })
     }
 
-/*
-    TODO:
-
-    pub fn botan_mp_to_hex(mp: botan_mp_t, out: *mut c_char) -> c_int;
-
-    pub fn botan_mp_set_from_radix_str(
-        dest: botan_mp_t,
-        str: *const c_char,
-        radix: usize,
-    ) -> c_int;
-    pub fn botan_mp_to_bin(mp: botan_mp_t, vec: *mut u8) -> c_int;
-    pub fn botan_mp_from_bin(mp: botan_mp_t, vec: *const u8, vec_len: usize) -> c_int;
-
-     */
+    pub fn to_bin(&self) -> Result<Vec<u8>> {
+        let bytes = self.byte_count()?;
+        let mut output = vec![0; bytes];
+        call_botan! { botan_mp_to_bin(self.obj, output.as_mut_ptr()) };
+        Ok(output)
+    }
 
     pub fn bit_count(&self) -> Result<usize> {
         let mut bits = 0;

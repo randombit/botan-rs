@@ -271,6 +271,10 @@ fn test_pubkey() {
     assert!(ecdsa_key.check_key(&rng).unwrap(), true);
     assert_eq!(ecdsa_key.algo_name().unwrap(), "ECDSA");
 
+    assert!(ecdsa_key.get_field("n").is_err());
+    assert_eq!(ecdsa_key.get_field("order"),
+               botan::MPI::new_from_str("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551"));
+
     let pub_key = ecdsa_key.pubkey().unwrap();
 
     assert_eq!(pub_key.algo_name().unwrap(), "ECDSA");
@@ -305,6 +309,15 @@ fn test_pubkey_encryption() {
 
     let rng = botan::RandomNumberGenerator::new_system().unwrap();
     let key = botan::Privkey::create("RSA", "3072", &rng).unwrap();
+
+    assert_eq!(key.get_field("e"), botan::MPI::new_from_str("65537"));
+    assert_eq!(key.get_field("n").unwrap().bit_count().unwrap(), 3072);
+
+    let p = key.get_field("p").unwrap();
+    let q = key.get_field("q").unwrap();
+
+    assert_eq!(p.mul(&q), key.get_field("n"));
+
     let der = key.der_encode_encrypted("passphrase", &rng).unwrap();
     let pem = key.pem_encode_encrypted("pemword", &rng).unwrap();
 
@@ -489,6 +502,8 @@ fn test_mp() {
     c.mul_assign(&botan::MPI::new_from_str("1030").unwrap()).unwrap();
 
     assert_eq!(c.to_string().unwrap(), "92700");
+
+    assert_eq!(c.to_bin().unwrap(), vec![0x01, 0x6a, 0x1c]);
 
 
 }

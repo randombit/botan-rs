@@ -2,6 +2,7 @@
 use botan_sys::*;
 use utils::*;
 
+use mp::MPI;
 use rng::RandomNumberGenerator;
 
 #[derive(Debug)]
@@ -202,6 +203,14 @@ impl Privkey {
             unsafe { botan_pk_op_key_agreement_export_public(self.obj, out_buf, out_len) }
         })
     }
+
+    pub fn get_field(&self, which: &str) -> Result<MPI> {
+        let which = make_cstr(which)?;
+
+        let r = MPI::new()?;
+        call_botan! { botan_privkey_get_field(r.handle(), self.obj, which.as_ptr()) };
+        Ok(r)
+    }
 }
 
 impl Pubkey {
@@ -275,6 +284,14 @@ impl Pubkey {
         call_botan_ffi_returning_string(name_len, &|out_buf, out_len| {
             unsafe { botan_pubkey_algo_name(self.obj, out_buf as *mut c_char, out_len) }
         })
+    }
+
+    pub fn get_field(&self, which: &str) -> Result<MPI> {
+        let which = make_cstr(which)?;
+
+        let r = MPI::new()?;
+        call_botan! { botan_pubkey_get_field(r.handle(), self.obj, which.as_ptr()) };
+        Ok(r)
     }
 
 }

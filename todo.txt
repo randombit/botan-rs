@@ -24,13 +24,6 @@ botan_base64_decode
 botan_cipher_output_length
 botan_pbkdf_timed
 
-botan_mp_to_hex
-botan_mp_to_str
-
-botan_mp_set_from_radix_str
-botan_mp_to_bin
-botan_mp_from_bin
-
 botan_privkey_load_ed25519
 botan_pubkey_load_ed25519
 botan_privkey_ed25519_get_privkey
@@ -42,11 +35,6 @@ botan_x509_cert_gen_selfsigned
 botan_x509_cert_allowed_usage
 botan_x509_cert_verify
 botan_x509_cert_validation_status
-
-Needs MP
-^^^^^^^^^
-botan_pubkey_get_field
-botan_privkey_get_field
 
 botan_privkey_load_rsa
 botan_pubkey_load_rsa
