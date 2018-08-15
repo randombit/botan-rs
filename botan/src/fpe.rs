@@ -21,7 +21,8 @@ impl FPE {
     /// # Examples
     ///
     /// ```
-    /// let x = botan::MPI::new_from_str("1000000000").unwrap();
+    /// use std::str::FromStr;
+    /// let x = botan::MPI::from_str("1000000000").unwrap();
     /// let key = vec![0; 32];
     /// let rounds = 16;
     /// let compat_mode = false;

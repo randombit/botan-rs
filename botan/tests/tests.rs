@@ -1,5 +1,7 @@
 extern crate botan;
 
+use std::str::FromStr;
+
 #[test]
 fn test_version() {
     let version = botan::Version::new().unwrap();
@@ -280,7 +282,7 @@ fn test_pubkey() {
 
     assert!(ecdsa_key.get_field("n").is_err());
     assert_eq!(ecdsa_key.get_field("order"),
-               botan::MPI::new_from_str("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551"));
+               botan::MPI::from_str("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551"));
 
     let pub_key = ecdsa_key.pubkey().unwrap();
 
@@ -318,7 +320,7 @@ fn test_rsa() {
     let privkey = botan::Privkey::create("RSA", "1024", &rng).unwrap();
     let pubkey = privkey.pubkey().unwrap();
 
-    assert_eq!(privkey.get_field("e"), botan::MPI::new_from_str("65537"));
+    assert_eq!(privkey.get_field("e"), botan::MPI::from_str("65537"));
     assert_eq!(privkey.get_field("n").unwrap().bit_count().unwrap(), 1024);
 
     assert_eq!(pubkey.get_field("n"), privkey.get_field("n"));
@@ -531,10 +533,10 @@ fn test_mp() {
     let mut c = a.add(&b).unwrap();
     assert_eq!(c.to_u32().unwrap(), 90);
 
-    let d = botan::MPI::new_from_str("0x5A").unwrap();
+    let d = botan::MPI::from_str("0x5A").unwrap();
     assert_eq!(c, d);
 
-    c.mul_assign(&botan::MPI::new_from_str("1030").unwrap()).unwrap();
+    c.mul_assign(&botan::MPI::from_str("1030").unwrap()).unwrap();
 
     assert_eq!(c.to_string().unwrap(), "92700");
 
@@ -549,8 +551,8 @@ fn test_mp() {
 
 #[test]
 fn test_fpe() {
-    let modulus = botan::MPI::new_from_str("1000000000").unwrap();
-    let input = botan::MPI::new_from_str("939210311").unwrap();
+    let modulus = botan::MPI::from_str("1000000000").unwrap();
+    let input = botan::MPI::from_str("939210311").unwrap();
 
     let key = vec![0; 32];
     let tweak = vec![0; 8];

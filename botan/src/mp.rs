@@ -5,6 +5,7 @@ use rng::RandomNumberGenerator;
 
 use std::cmp::{Eq, Ord, Ordering};
 use std::fmt;
+use std::str::FromStr;
 
 /*
 use std::ops::{Add, AddAssign};
@@ -43,13 +44,6 @@ impl MPI {
         let mut obj = ptr::null_mut();
         call_botan! { botan_mp_init(&mut obj) };
         Ok(MPI { obj })
-    }
-
-    /// Crate a new MPI setting value from a string
-    pub fn new_from_str(val: &str) -> Result<MPI> {
-        let mut mpi = MPI::new()?;
-        mpi.set_str(val)?;
-        Ok(mpi)
     }
 
     /// Crate a new MPI setting value from an array of bytes (big-endian)
@@ -337,7 +331,8 @@ impl MPI {
     /// # Examples
     ///
     /// ```
-    /// let n = botan::MPI::new_from_str("1111111111111111111").unwrap();
+    /// use std::str::FromStr;
+    /// let n = botan::MPI::from_str("1111111111111111111").unwrap();
     /// let rng = botan::RandomNumberGenerator::new_system().unwrap();
     /// assert!(n.is_prime(&rng, 128).unwrap());
     /// ```
@@ -356,9 +351,10 @@ impl MPI {
 /// # Examples
 ///
 /// ```
-/// let x = botan::MPI::new_from_str("1111111111111111").unwrap();
-/// let y = botan::MPI::new_from_str("111111111111").unwrap();
-/// assert_eq!(botan::gcd(&x, &y).unwrap(), botan::MPI::new_from_str("1111").unwrap());
+/// use std::str::FromStr;
+/// let x = botan::MPI::from_str("1111111111111111").unwrap();
+/// let y = botan::MPI::from_str("111111111111").unwrap();
+/// assert_eq!(botan::gcd(&x, &y).unwrap(), botan::MPI::from_str("1111").unwrap());
 /// ```
 pub fn gcd(x: &MPI, y: &MPI) -> Result<MPI> {
     let r = MPI::new()?;
@@ -398,6 +394,17 @@ impl Ord for MPI {
 
     fn cmp(&self, other: &MPI) -> Ordering {
         self.compare(other).expect("botan_mp_cmp should succeed")
+    }
+}
+
+
+impl FromStr for MPI {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<MPI> {
+        let mut mpi = MPI::new()?;
+        mpi.set_str(s)?;
+        Ok(mpi)
     }
 }
 

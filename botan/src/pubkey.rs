@@ -52,9 +52,10 @@ impl Privkey {
     /// # Examples
     ///
     /// ```
-    /// let p = botan::MPI::new_from_str("289698020102256958291511331409682926199").unwrap();
-    /// let q = botan::MPI::new_from_str("293497288893125842977275290547344412783").unwrap();
-    /// let e = botan::MPI::new_from_str("65537").unwrap();
+    /// use std::str::FromStr;
+    /// let p = botan::MPI::from_str("289698020102256958291511331409682926199").unwrap();
+    /// let q = botan::MPI::from_str("293497288893125842977275290547344412783").unwrap();
+    /// let e = botan::MPI::from_str("65537").unwrap();
     /// let rsa = botan::Privkey::load_rsa(&p, &q, &e).unwrap();
     /// ```
     pub fn load_rsa(p: &MPI, q: &MPI, e: &MPI) -> Result<Privkey> {
