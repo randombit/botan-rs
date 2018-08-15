@@ -4,6 +4,7 @@ use utils::*;
 
 #[derive(Debug)]
 /// A raw block cipher interface (ie ECB mode)
+///
 /// Warning: you almost certainly want an AEAD cipher mode instead
 pub struct BlockCipher {
     obj: botan_block_cipher_t,

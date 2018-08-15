@@ -7,6 +7,16 @@ use rng::RandomNumberGenerator;
 
 #[derive(Debug)]
 /// An object that can generate signatures
+///
+/// # Examples
+///
+/// ```
+/// let rng = botan::RandomNumberGenerator::new_system().unwrap();
+/// let rsa = botan::Privkey::create("RSA", "2048", &rng).unwrap();
+/// let signer = botan::Signer::new(&rsa, "PKCS1v15(SHA-256)").unwrap();
+/// signer.update(&[1,2,3]).unwrap();
+/// let signature = signer.finish(&rng).unwrap();
+/// ```
 pub struct Signer {
     obj: botan_pk_op_sign_t,
     sig_len: usize,
@@ -126,6 +136,16 @@ impl Verifier {
 
 #[derive(Debug)]
 /// An object that performs public key encryption
+///
+/// # Examples
+///
+/// ```
+/// let rng = botan::RandomNumberGenerator::new_system().unwrap();
+/// let rsa = botan::Privkey::create("RSA", "2048", &rng).unwrap();
+/// let rsa_pub = rsa.pubkey().unwrap();
+/// let enc = botan::Encryptor::new(&rsa_pub, "OAEP(SHA-256)").unwrap();
+/// let ctext = enc.encrypt(&[1,2,3], &rng).unwrap();
+/// ```
 pub struct Encryptor {
     obj: botan_pk_op_encrypt_t
 }

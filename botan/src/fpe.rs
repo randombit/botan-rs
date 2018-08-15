@@ -5,6 +5,23 @@ use mp::MPI;
 
 #[derive(Debug)]
 /// Represents an instance of format preserving encryption
+///
+/// # Examples
+///
+/// ```
+/// use std::str::FromStr;
+/// let modulus = botan::MPI::from_str("1000000000").unwrap();
+/// let key = vec![0; 32];
+/// let rounds = 16;
+/// let compat_mode = false;
+/// let fpe = botan::FPE::new_fe1(&modulus, &key, rounds, compat_mode).unwrap();
+/// let input = botan::MPI::from_str("9392024").unwrap();
+/// let tweak = vec![1,2,3,4,5];
+/// let ctext = fpe.encrypt(&input, &tweak).unwrap();
+/// assert!(ctext < modulus);
+/// let ptext = fpe.decrypt(&ctext, &tweak).unwrap();
+/// assert_eq!(ptext, input);
+/// ```
 pub struct FPE {
     obj: botan_fpe_t
 }
@@ -17,17 +34,7 @@ impl Drop for FPE {
 
 impl FPE {
     /// Create a new FPE instance, FE1 scheme
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use std::str::FromStr;
-    /// let x = botan::MPI::from_str("1000000000").unwrap();
-    /// let key = vec![0; 32];
-    /// let rounds = 16;
-    /// let compat_mode = false;
-    /// let fpe = botan::FPE::new_fe1(&x, &key, rounds, compat_mode).unwrap();
-    /// ```
+    /// Rounds should be 16 or higher for best security
     pub fn new_fe1(modulus: &MPI, key: &[u8], rounds: usize, compat_mode: bool) -> Result<FPE> {
         let mut obj = ptr::null_mut();
 
