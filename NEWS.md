@@ -1,6 +1,7 @@
 
 ## 0.3.0 Not Yet Released
 
+- Add certificate verification
 - Add HOTP and TOTP
 - Add setters and getters for Ed25519 specific fields
 - Add base64 encode/decode
