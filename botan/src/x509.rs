@@ -54,8 +54,7 @@ impl ToString for CertValidationStatus {
             let result_str = botan_x509_cert_validation_status(*code);
 
             let cstr = CStr::from_ptr(result_str);
-            let ostr = cstr.to_str().unwrap().to_owned();
-            ostr
+            cstr.to_str().unwrap().to_owned()
         }
     }
 }
