@@ -64,6 +64,23 @@ impl Privkey {
         Ok(Privkey { obj })
     }
 
+    /// Load an Ed25519 private key
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let v = vec![0x42; 32];
+    /// let key = botan::Privkey::load_ed25519(&v).unwrap();
+    /// ```
+    pub fn load_ed25519(key: &[u8]) -> Result<Privkey> {
+        if key.len() != 32 {
+            return Err(Error::BadParameter);
+        }
+        let mut obj = ptr::null_mut();
+        call_botan! { botan_privkey_load_ed25519(&mut obj, key.as_ptr()) };
+        Ok(Privkey { obj })
+    }
+
     /// Load a PKCS#1 encoded RSA private key
     pub fn load_rsa_pkcs1(pkcs1: &[u8]) -> Result<Privkey> {
         let mut obj = ptr::null_mut();
@@ -258,6 +275,20 @@ impl Privkey {
         call_botan! { botan_privkey_get_field(r.handle(), self.obj, which.as_ptr()) };
         Ok(r)
     }
+
+    /// Get the public and private key associated with this key
+    pub fn get_ed25519_key(&self) -> Result<(Vec<u8>, Vec<u8>)> {
+
+        let mut out = vec![0; 64];
+
+        call_botan! {
+            botan_privkey_ed25519_get_privkey(self.obj, out.as_mut_ptr())
+        }
+
+        let pubkey = out.split_off(32);
+
+        Ok((pubkey,out))
+    }
 }
 
 impl Pubkey {
@@ -307,6 +338,16 @@ impl Pubkey {
         let mut obj = ptr::null_mut();
         let curve_name = make_cstr(curve_name)?;
         call_botan! { botan_pubkey_load_ecdh(&mut obj, pub_x.handle(), pub_y.handle(), curve_name.as_ptr()) }
+        Ok(Pubkey { obj })
+    }
+
+    /// Load an Ed25519 key
+    pub fn load_ed25519(key: &[u8]) -> Result<Pubkey> {
+        if key.len() != 32 {
+            return Err(Error::BadParameter);
+        }
+        let mut obj = ptr::null_mut();
+        call_botan! { botan_pubkey_load_ed25519(&mut obj, key.as_ptr()) };
         Ok(Pubkey { obj })
     }
 
@@ -375,6 +416,17 @@ impl Pubkey {
         let r = MPI::new()?;
         call_botan! { botan_pubkey_get_field(r.handle(), self.obj, which.as_ptr()) };
         Ok(r)
+    }
+
+    /// Return the 32-byte Ed25519 public key
+    pub fn get_ed25519_key(&self) -> Result<Vec<u8>> {
+        let mut out = vec![0; 32];
+
+        call_botan! {
+            botan_pubkey_ed25519_get_pubkey(self.obj, out.as_mut_ptr())
+        }
+
+        Ok(out)
     }
 
 }

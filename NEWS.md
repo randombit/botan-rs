@@ -2,6 +2,7 @@
 ## 0.3.0 Not Yet Released
 
 - Add HOTP and TOTP
+- Add setters and getters for Ed25519 specific fields
 
 ## 0.2.0 2018-8-15
 

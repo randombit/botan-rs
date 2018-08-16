@@ -17,11 +17,6 @@ exposed by the high level Rust wrapper:
 botan_base64_encode
 botan_base64_decode
 
-botan_privkey_load_ed25519
-botan_pubkey_load_ed25519
-botan_privkey_ed25519_get_privkey
-botan_pubkey_ed25519_get_pubkey
-
 botan_x509_cert_gen_selfsigned
 botan_x509_cert_allowed_usage
 botan_x509_cert_verify

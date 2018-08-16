@@ -314,6 +314,49 @@ fn test_pubkey() {
 }
 
 #[test]
+fn test_ed25519() {
+    let rng = botan::RandomNumberGenerator::new_system().unwrap();
+
+    let msg = vec![23,42,69,6,66];
+    let padding = "Pure";
+
+    let ed_priv = botan::Privkey::create("Ed25519", "", &rng).unwrap();
+
+    let signer = botan::Signer::new(&ed_priv, padding).unwrap();
+    signer.update(&msg).unwrap();
+    let signature1 = signer.finish(&rng).unwrap();
+
+    let ed_bits = ed_priv.get_ed25519_key().unwrap();
+
+    let ed_loaded = botan::Privkey::load_ed25519(&ed_bits.1).unwrap();
+    let signer = botan::Signer::new(&ed_loaded, padding).unwrap();
+    signer.update(&msg).unwrap();
+    let signature2 = signer.finish(&rng).unwrap();
+
+    let ed_pub = ed_priv.pubkey().unwrap();
+
+    let verifier = botan::Verifier::new(&ed_pub, padding).unwrap();
+    verifier.update(&msg).unwrap();
+    assert!(verifier.finish(&signature1).unwrap());
+
+    verifier.update(&msg).unwrap();
+    assert!(verifier.finish(&signature2).unwrap());
+
+    let ed_loaded = botan::Pubkey::load_ed25519(&ed_bits.0).unwrap();
+    let verifier = botan::Verifier::new(&ed_loaded, padding).unwrap();
+    verifier.update(&msg).unwrap();
+    assert!(verifier.finish(&signature1).unwrap());
+
+    verifier.update(&msg).unwrap();
+    assert!(verifier.finish(&signature2).unwrap());
+
+    assert_eq!(ed_loaded.get_ed25519_key().unwrap(), ed_pub.get_ed25519_key().unwrap());
+
+    assert_eq!(signature1, signature2);
+
+}
+
+#[test]
 fn test_rsa() {
     let rng = botan::RandomNumberGenerator::new_system().unwrap();
 
