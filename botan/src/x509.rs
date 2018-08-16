@@ -23,10 +23,42 @@ impl Clone for Certificate {
 }
 
 #[derive(Debug)]
-pub enum ValidationStatus {
-    SuccessfulValidation(int),
-    FailedValidation(int)
-};
+/// Represents result of cert validation
+pub enum CertValidationStatus {
+    /// Successful validation, with possible detail code
+    Success(i32),
+    /// Failed validation, with reason code
+    Failed(i32)
+}
+
+impl CertValidationStatus {
+
+    /// Return true if the validation was successful
+    pub fn success(&self) -> bool {
+        match self {
+            CertValidationStatus::Success(_) => true,
+            CertValidationStatus::Failed(_) => false
+        }
+    }
+}
+
+impl ToString for CertValidationStatus {
+    fn to_string(&self) -> String {
+
+        let code = match self {
+            CertValidationStatus::Success(x) => x,
+            CertValidationStatus::Failed(x) => x
+        };
+
+        unsafe {
+            let result_str = botan_x509_cert_validation_status(*code);
+
+            let cstr = CStr::from_ptr(result_str);
+            let ostr = cstr.to_str().unwrap().to_owned();
+            ostr
+        }
+    }
+}
 
 impl Certificate {
 
@@ -120,7 +152,7 @@ impl Certificate {
                   trusted: &[&Certificate],
                   trusted_path: Option<&str>,
                   hostname: Option<&str>,
-                  reference_time: Option<u64>) -> Result<bool> {
+                  reference_time: Option<u64>) -> Result<CertValidationStatus> {
 
         let required_key_strength = 110;
 
@@ -155,10 +187,10 @@ impl Certificate {
         };
 
         if rc == 0 {
-            Ok(true)
+            Ok(CertValidationStatus::Success(result))
         }
         else if rc == 1 {
-            Ok(false)
+            Ok(CertValidationStatus::Failed(result))
         }
         else {
             Err(Error::from(rc))

@@ -270,6 +270,7 @@ BggqhkjOPQQDAgNIADBFAiEAowK8jGhosOxQpOCjlRg0nFceQ0ETITQC43fk0CZA
 AzMCIEJSRDmXjX8TMTbSfoTLmhaYJnCL+AfHLZLdHlSLDIzh
 -----END CERTIFICATE-----";
 
+    // Bit flipped from ee
     let bad_ee = b"-----BEGIN CERTIFICATE-----
 MIIBoDCCAUagAwIBAgIRAK27a2NlSYEH63xIsAbBA1wwCgYIKoZIzj0EAwIwEjEQ
 MA4GA1UEAxMHVGVzdCBDQTAeFw0xODA4MTYyMjMzNDBaFw00NjAxMDEyMjMzNDBa
@@ -288,10 +289,25 @@ AzMCIEJSRDmXjX8TMTbSfoTLmhaYJnCL+AfHLZLdHlSLDIzh
 
     let ca_dup = ca.clone();
 
-    assert_eq!(ee.verify(&[], &[&ca], None, None, None).unwrap(), true);
-    assert_eq!(ee.verify(&[], &[&ca], None, Some("no.hostname.com"), None).unwrap(), false);
-    assert_eq!(ee.verify(&[], &[], None, None, None).unwrap(), false);
-    assert_eq!(bad_ee.verify(&[], &[&ca_dup], None, None, None).unwrap(), false);
+    let result = ee.verify(&[], &[&ca], None, None, None).unwrap();
+    assert_eq!(result.success(), true);
+    assert_eq!(result.to_string(), "Verified");
+
+    let result = ee.verify(&[], &[&ca], None, None, Some(300)).unwrap();
+    assert_eq!(result.success(), false);
+    assert_eq!(result.to_string(), "Certificate is not yet valid");
+
+    let result = ee.verify(&[], &[&ca], None, Some("no.hostname.com"), None).unwrap();
+    assert_eq!(result.success(), false);
+    assert_eq!(result.to_string(), "Certificate does not match provided name");
+
+    let result = ee.verify(&[], &[], None, None, None).unwrap();
+    assert_eq!(result.success(), false);
+    assert_eq!(result.to_string(), "Certificate issuer not found");
+
+    let result = bad_ee.verify(&[], &[&ca_dup], None, None, None).unwrap();
+    assert_eq!(result.success(), false);
+    assert_eq!(result.to_string(), "Signature error");
 }
 
 #[test]
