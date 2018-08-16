@@ -44,15 +44,13 @@ fn test_hash() {
 
     let digest = hash.finish().unwrap();
 
-    assert_eq!(digest[0], 0xCB);
-    assert_eq!(digest[1], 0x00);
-    assert_eq!(digest[47], 0xA7);
+    assert_eq!(botan::hex_encode(&digest).unwrap(),
+               "CB00753F45A35E8BB5A03D699AC65007272C32AB0EDED1631A8B605A43FF5BED8086072BA1E7CC2358BAECA134C825A7");
 
     let digest_dup = hash_dup.finish().unwrap();
 
-    assert_eq!(digest_dup[0], 0x5D);
-    assert_eq!(digest_dup[1], 0x15);
-    assert_eq!(digest_dup[47], 0xF7);
+    assert_eq!(botan::hex_encode(&digest_dup).unwrap(),
+               "5D15BCEBB965FA77926C23471C96E3A326B363F5F105C3EF17CFD033B9734FA46556F81A26BB3044D2DDA50481325EF7");
 
     let bad_hash = botan::HashFunction::new("BunnyHash9000");
 
@@ -79,12 +77,8 @@ fn test_mac() {
 
     let r = mac.finish().unwrap();
 
-    println!("{:?}", r);
-
-    assert_eq!(r[0], 0x88);
-    assert_eq!(r[1], 0x06);
-    assert_eq!(r[47], 0x27);
-
+    assert_eq!(botan::hex_encode(&r).unwrap(),
+               "88062608D3E6AD8A0AA2ACE014C8A86F0AA635D947AC9FEBE83EF4E55966144B2A5AB39DC13814B94E3AB6E101A34F27");
 }
 
 #[test]
@@ -107,8 +101,8 @@ fn test_block_cipher() {
 
     let ctext = bc.encrypt_blocks(&input).unwrap();
 
-    let expected = vec![0x66, 0xe9, 0x4b, 0xd4, 0xef, 0x8a, 0x2c, 0x3b, 0x88, 0x4c, 0xfa, 0x59, 0xca, 0x34, 0x2b, 0x2e];
-    assert_eq!(ctext, expected);
+    assert_eq!(botan::hex_encode(&ctext).unwrap(),
+               "66E94BD4EF8A2C3B884CFA59CA342B2E");
 
     let ptext = bc.decrypt_blocks(&ctext).unwrap();
 
@@ -132,10 +126,10 @@ fn test_cipher() {
     cipher.set_associated_data(&[1,2,3]).unwrap();
     cipher.set_associated_data(&[]).unwrap();
 
-
     let ctext = cipher.process(&zero12, &zero16).unwrap();
 
-    assert_eq!(ctext, botan::hex_decode("0388DACE60B6A392F328C2B971B2FE78AB6E47D42CEC13BDF53A67B21257BDDF").unwrap());
+    assert_eq!(botan::hex_encode(&ctext).unwrap(),
+               "0388DACE60B6A392F328C2B971B2FE78AB6E47D42CEC13BDF53A67B21257BDDF");
 
     let cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Decrypt).unwrap();
     cipher.set_key(&zero16).unwrap();
