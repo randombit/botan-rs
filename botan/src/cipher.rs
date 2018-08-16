@@ -14,7 +14,7 @@ pub struct Cipher {
     mod_keylen: usize
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Copy, Clone)]
 /// Which direction the cipher processes in
 pub enum CipherDirection {
     /// Encrypt
@@ -87,7 +87,7 @@ impl Cipher {
     /// assert_eq!(cipher.direction().unwrap(), botan::CipherDirection::Encrypt);
     /// ```
     pub fn direction(&self) -> Result<CipherDirection> {
-        Ok(self.direction.clone())
+        Ok(self.direction)
     }
 
     /// Query if a particular nonce size is valid for this cipher
