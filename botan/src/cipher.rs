@@ -6,6 +6,7 @@ use utils::*;
 /// A symmetric cipher
 pub struct Cipher {
     obj: botan_cipher_t,
+    direction: CipherDirection,
     tag_length: usize,
     default_nonce_length: usize,
     min_keylen: usize,
@@ -13,7 +14,7 @@ pub struct Cipher {
     mod_keylen: usize
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug, Clone)]
 /// Which direction the cipher processes in
 pub enum CipherDirection {
     /// Encrypt
@@ -35,9 +36,9 @@ impl Cipher {
     /// ```
     /// let aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
     /// ```
-    pub fn new(name: &str, dir: CipherDirection) -> Result<Cipher> {
+    pub fn new(name: &str, direction: CipherDirection) -> Result<Cipher> {
         let mut obj = ptr::null_mut();
-        let flag = if dir == CipherDirection::Encrypt { 0u32 } else { 1u32 };
+        let flag = if direction == CipherDirection::Encrypt { 0u32 } else { 1u32 };
         call_botan! { botan_cipher_init(&mut obj, make_cstr(name)?.as_ptr(), flag) };
 
         let mut tag_length = 0;
@@ -53,6 +54,7 @@ impl Cipher {
 
         Ok(Cipher {
             obj,
+            direction,
             tag_length,
             default_nonce_length,
             min_keylen,
@@ -74,6 +76,18 @@ impl Cipher {
         call_botan_ffi_returning_string(32, &|out_buf, out_len| {
             unsafe { botan_cipher_name(self.obj, out_buf as *mut c_char, out_len) }
         })
+    }
+
+    /// Return the direction this cipher object is operating in
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// assert_eq!(cipher.direction().unwrap(), botan::CipherDirection::Encrypt);
+    /// ```
+    pub fn direction(&self) -> Result<CipherDirection> {
+        Ok(self.direction.clone())
     }
 
     /// Query if a particular nonce size is valid for this cipher
