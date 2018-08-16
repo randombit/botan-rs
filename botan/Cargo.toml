@@ -18,5 +18,4 @@ travis-ci = { repository = "randombit/botan-rs" }
 status = "actively-developed"
 
 [dependencies]
-botan-sys = { version = "0.2.0", path = "../botan-sys" }
-digest = "0.7.0"
+botan-sys = { version = "0.3.0", path = "../botan-sys" }

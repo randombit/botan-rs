@@ -1,4 +1,8 @@
 
+## 0.3.0 Not Yet Released
+
+- Add HOTP and TOTP
+
 ## 0.2.0 2018-8-15
 
 Due to using several APIs only recently added, 0.2.0 onwards requires current

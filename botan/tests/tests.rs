@@ -610,3 +610,29 @@ fn test_fpe() {
 
     assert_eq!(ptext, input);
 }
+
+
+#[test]
+fn test_hotp() {
+    let hotp = botan::HOTP::new(&[0xFF], "SHA-1", 6).unwrap();
+    assert_eq!(hotp.generate(23).unwrap(), 330795);
+
+    assert!(hotp.check(330795, 23).unwrap());
+    assert!(!hotp.check(330795, 22).unwrap());
+    assert!(!hotp.check(330796, 23).unwrap());
+}
+
+#[test]
+fn test_totp() {
+    let totp = botan::TOTP::new(b"1234567890123456789012345678901234567890123456789012345678901234",
+                                "SHA-512", 8, 30).unwrap();
+
+    assert_eq!(totp.generate(59).unwrap(), 90693936);
+    assert_eq!(totp.generate(1111111109).unwrap(), 25091201);
+    assert_eq!(totp.generate(1111111111).unwrap(), 99943326);
+
+    assert!(totp.check(90693936, 59, 0).unwrap());
+    assert!(!totp.check(90693936, 60, 0).unwrap());
+    assert!(totp.check(90693936, 59+30, 1).unwrap());
+    assert!(!totp.check(90693936, 59+31, 1).unwrap());
+}
