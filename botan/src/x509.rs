@@ -22,6 +22,65 @@ impl Clone for Certificate {
     }
 }
 
+/// Indicates if the certificate key is allowed for a particular usage
+#[derive(Debug)]
+pub enum CertUsage {
+    /// No particular usage restrictions
+    NoRestrictions,
+    /// Allowed for digital signature
+    DigitalSignature,
+    /// Allowed for "non-repudiation" (whatever that means)
+    NonRepudiation,
+    /// Allowed for enciphering symmetric keys
+    KeyEncipherment,
+    /// Allowed for enciphering plaintext messages
+    DataEncipherment,
+    /// Allowed for key agreement
+    KeyAgreement,
+    /// Allowed for signing certificates
+    CertificateSign,
+    /// Allowed for signing CRLs
+    CrlSign,
+    /// Allowed only for encryption
+    EncipherOnly,
+    /// Allowed only for decryption
+    DecipherOnly
+}
+
+impl From<X509KeyConstraints> for CertUsage {
+    fn from(err: X509KeyConstraints) -> CertUsage {
+        match err {
+            X509KeyConstraints::NO_CONSTRAINTS => CertUsage::NoRestrictions,
+            X509KeyConstraints::DIGITAL_SIGNATURE => CertUsage::DigitalSignature,
+            X509KeyConstraints::NON_REPUDIATION => CertUsage::NonRepudiation,
+            X509KeyConstraints::KEY_ENCIPHERMENT => CertUsage::KeyEncipherment,
+            X509KeyConstraints::DATA_ENCIPHERMENT => CertUsage::DataEncipherment,
+            X509KeyConstraints::KEY_AGREEMENT => CertUsage::KeyAgreement,
+            X509KeyConstraints::KEY_CERT_SIGN => CertUsage::CertificateSign,
+            X509KeyConstraints::CRL_SIGN => CertUsage::CrlSign,
+            X509KeyConstraints::ENCIPHER_ONLY => CertUsage::EncipherOnly,
+            X509KeyConstraints::DECIPHER_ONLY => CertUsage::DecipherOnly
+        }
+    }
+}
+
+impl From<CertUsage> for X509KeyConstraints {
+    fn from(err: CertUsage) -> X509KeyConstraints {
+        match err {
+            CertUsage::NoRestrictions => X509KeyConstraints::NO_CONSTRAINTS,
+            CertUsage::DigitalSignature => X509KeyConstraints::DIGITAL_SIGNATURE,
+            CertUsage::NonRepudiation => X509KeyConstraints::NON_REPUDIATION,
+            CertUsage::KeyEncipherment => X509KeyConstraints::KEY_ENCIPHERMENT,
+            CertUsage::DataEncipherment => X509KeyConstraints::DATA_ENCIPHERMENT,
+            CertUsage::KeyAgreement => X509KeyConstraints::KEY_AGREEMENT,
+            CertUsage::CertificateSign => X509KeyConstraints::KEY_CERT_SIGN,
+            CertUsage::CrlSign => X509KeyConstraints::CRL_SIGN,
+            CertUsage::EncipherOnly => X509KeyConstraints::ENCIPHER_ONLY,
+            CertUsage::DecipherOnly => X509KeyConstraints::DECIPHER_ONLY,
+        }
+    }
+}
+
 #[derive(Debug)]
 /// Represents result of cert validation
 pub enum CertValidationStatus {
@@ -145,6 +204,23 @@ impl Certificate {
         })
     }
 
+    /// Test if the certificate is allowed for a particular usage
+    pub fn allows_usage(&self, usage: CertUsage) -> Result<bool> {
+
+        let usage_bit : X509KeyConstraints = X509KeyConstraints::from(usage);
+
+        let rc = unsafe { botan_x509_cert_allowed_usage(self.obj, usage_bit as u32) };
+
+        if rc == 0 {
+            Ok(true)
+        }
+        else if rc == 1 {
+            Ok(false)
+        }
+        else {
+            Err(Error::from(rc))
+        }
+    }
     /// Attempt to verify this certificate
     pub fn verify(&self,
                   intermediates: &[&Certificate],

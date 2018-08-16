@@ -15,7 +15,6 @@ These are functions currently exposed by Botan's C API which are not
 exposed by the high level Rust wrapper:
 
 botan_x509_cert_gen_selfsigned
-botan_x509_cert_allowed_usage
 
 botan_pbkdf_timed
 botan_privkey_create_dsa

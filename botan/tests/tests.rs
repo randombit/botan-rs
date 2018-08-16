@@ -239,6 +239,10 @@ fn test_certs() {
     assert_eq!(cert.authority_key_id().unwrap(), key_id);
     assert_eq!(cert.subject_key_id().unwrap(), key_id);
 
+    assert_eq!(cert.allows_usage(botan::CertUsage::CertificateSign).unwrap(), true);
+    assert_eq!(cert.allows_usage(botan::CertUsage::CrlSign).unwrap(), true);
+    assert_eq!(cert.allows_usage(botan::CertUsage::KeyEncipherment).unwrap(), false);
+
     let pubkey = cert.public_key().unwrap();
 
     assert_eq!(pubkey.algo_name().unwrap(), "ECDSA");
