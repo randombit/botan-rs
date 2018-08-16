@@ -51,3 +51,41 @@ pub fn hex_decode(x: &str) -> Result<Vec<u8>> {
 
     Ok(output)
 }
+
+/// Base64 encode some data
+///
+/// # Examples
+///
+/// ```
+/// assert_eq!(botan::base64_encode(&[97,98,99,100,101,102]).unwrap(), "YWJjZGVm");
+/// assert_eq!(botan::base64_encode(&[0x5A, 0x16, 0xAD, 0x4E, 0x17, 0x87, 0x79, 0xC9]).unwrap(), "WhatTheHeck=");
+/// ```
+pub fn base64_encode(x: &[u8]) -> Result<String> {
+
+    let b64_len = 1 + ((x.len() + 2) / 3) * 4;
+
+    call_botan_ffi_returning_string(b64_len, &|out_buf, out_len| {
+        unsafe { botan_base64_encode(x.as_ptr(), x.len(), out_buf as *mut c_char, out_len) }
+    })
+}
+
+/// Base64 decode some data
+///
+/// # Examples
+///
+/// ```
+/// assert!(botan::base64_decode("ThisIsInvalid!").is_err());
+/// assert_eq!(botan::base64_decode("YWJjZGVm").unwrap(), b"abcdef");
+/// ```
+pub fn base64_decode(x: &str) -> Result<Vec<u8>> {
+
+    // Hard to provide a decent lower bound as it is possible x includes
+    // lots of spaces or trailing = padding chars
+    let bin_len = x.len();
+
+    let input = make_cstr(x)?;
+
+    call_botan_ffi_returning_vec_u8(bin_len, &|out_buf, out_len| {
+        unsafe { botan_base64_decode(input.as_ptr(), x.len(), out_buf, out_len) }
+    })
+}
