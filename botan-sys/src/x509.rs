@@ -26,6 +26,10 @@ extern "C" {
         cert: *const u8,
         cert_len: usize,
     ) -> c_int;
+    pub fn botan_x509_cert_dup(
+        cert_obj: *mut botan_x509_cert_t,
+        cert: botan_x509_cert_t,
+    ) -> c_int;
     pub fn botan_x509_cert_load_file(
         cert_obj: *mut botan_x509_cert_t,
         filename: *const c_char,
@@ -107,4 +111,17 @@ extern "C" {
         hostname: *const c_char,
     ) -> c_int;
 
+    pub fn botan_x509_cert_verify(
+        validation_result: *mut c_int,
+        ee_cert: botan_x509_cert_t,
+        intermediates: *const botan_x509_cert_t,
+        intermediates_len: usize,
+        trusted: *const botan_x509_cert_t,
+        trusted_len: usize,
+        trusted_path: *const c_char,
+        required_key_strength: usize,
+        hostname: *const c_char,
+        reference_time: u64) -> c_int;
+
+    pub fn botan_x509_cert_validation_status(code: c_int) -> *const c_char;
 }

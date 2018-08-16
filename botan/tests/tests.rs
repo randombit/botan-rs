@@ -245,6 +245,56 @@ fn test_certs() {
 }
 
 #[test]
+fn test_cert_verify() {
+    let ca = b"-----BEGIN CERTIFICATE-----
+MIIBkDCCATegAwIBAgIRANQudMcHu/SmX8470nbNlj0wCgYIKoZIzj0EAwIwEjEQ
+MA4GA1UEAxMHVGVzdCBDQTAeFw0xODA4MTYyMjMyNDFaFw00NjAxMDEyMjMyNDFa
+MBIxEDAOBgNVBAMTB1Rlc3QgQ0EwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASN
++LHr9ZN72sxZqi4zcYDIg4xzN3DOF3epvlpGHLnju5ogp8dJ46YydTi3g/SfBGOp
+j9jrYP5Jgkkmpo0lMh7ho24wbDAhBgNVHQ4EGgQYLg/lfneWJ36rZdGMoVyKD6Zl
+mHkST7ZNMA4GA1UdDwEB/wQEAwIBBjASBgNVHRMBAf8ECDAGAQH/AgEBMCMGA1Ud
+IwQcMBqAGC4P5X53lid+q2XRjKFcig+mZZh5Ek+2TTAKBggqhkjOPQQDAgNHADBE
+AiB30ZIFV1cZbknu5lt1fWrM9tNSgCbj5BN9CI+Q9aq1LQIgD9o/8oGmFgvWLjsx
+b39VOu00+Vy9kpNO1Sgx7wSWoIU=
+-----END CERTIFICATE-----";
+
+    let ee = b"-----BEGIN CERTIFICATE-----
+MIIBoDCCAUagAwIBAgIRAK27a2NlSYEH63xIsAbBA1wwCgYIKoZIzj0EAwIwEjEQ
+MA4GA1UEAxMHVGVzdCBDQTAeFw0xODA4MTYyMjMzNDBaFw00NjAxMDEyMjMzNDBa
+MBoxGDAWBgNVBAMTD1Rlc3QgRW5kIEVudGl0eTBZMBMGByqGSM49AgEGCCqGSM49
+AwEHA0IABDykQMvlV7GyIJeANLWEs5bXReqpvTEFu3zYPBjOhyx784VPVl84h8c5
+ycru3Hk8N/SIITSWzpbjPMp9jRbyDy+jdTBzMCEGA1UdDgQaBBjkPzL+BXHtQJDR
+ciwvzeHQKuQZOstyM2swGwYDVR0RBBQwEoIQdGVzdC5leGFtcGxlLmNvbTAMBgNV
+HRMBAf8EAjAAMCMGA1UdIwQcMBqAGC4P5X53lid+q2XRjKFcig+mZZh5Ek+2TTAK
+BggqhkjOPQQDAgNIADBFAiEAowK8jGhosOxQpOCjlRg0nFceQ0ETITQC43fk0CZA
+AzMCIEJSRDmXjX8TMTbSfoTLmhaYJnCL+AfHLZLdHlSLDIzh
+-----END CERTIFICATE-----";
+
+    let bad_ee = b"-----BEGIN CERTIFICATE-----
+MIIBoDCCAUagAwIBAgIRAK27a2NlSYEH63xIsAbBA1wwCgYIKoZIzj0EAwIwEjEQ
+MA4GA1UEAxMHVGVzdCBDQTAeFw0xODA4MTYyMjMzNDBaFw00NjAxMDEyMjMzNDBa
+MBoxGDAWBgNVBAMTD1Rlc3QgrW5kIEVudGl0eTBZMBMGByqGSM49AgEGCCqGSM49
+AwEHA0IABDykQMvlV7GyIJeANLWEs5bXReqpvTEFu3zYPBjOhyx784VPVl84h8c5
+ycru3Hk8N/SIITSWzpbjPMp9jRbyDy+jdTBzMCEGA1UdDgQaBBjkPzL+BXHtQJDR
+ciwvzeHQKuQZOstyM2swGwYDVR0RBBQwEoIQdGVzdC5leGFtcGxlLmNvbTAMBgNV
+HRMBAf8EAjAAMCMGA1UdIwQcMBqAGC4P5X53lid+q2XRjKFcig+mZZh5Ek+2TTAK
+BggqhkjOPQQDAgNIADBFAiEAowK8jGhosOxQpOCjlRg0nFceQ0ETITQC43fk0CZA
+AzMCIEJSRDmXjX8TMTbSfoTLmhaYJnCL+AfHLZLdHlSLDIzh
+-----END CERTIFICATE-----";
+
+    let ca = botan::Certificate::load(ca).unwrap();
+    let ee = botan::Certificate::load(ee).unwrap();
+    let bad_ee = botan::Certificate::load(bad_ee).unwrap();
+
+    let ca_dup = ca.clone();
+
+    assert_eq!(ee.verify(&[], &[&ca], None, None, None).unwrap(), true);
+    assert_eq!(ee.verify(&[], &[&ca], None, Some("no.hostname.com"), None).unwrap(), false);
+    assert_eq!(ee.verify(&[], &[], None, None, None).unwrap(), false);
+    assert_eq!(bad_ee.verify(&[], &[&ca_dup], None, None, None).unwrap(), false);
+}
+
+#[test]
 fn test_bcrypt() {
     let pass = "password";
     let rng = botan::RandomNumberGenerator::new_system().unwrap();

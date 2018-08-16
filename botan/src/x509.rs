@@ -16,7 +16,21 @@ impl Drop for Certificate {
     }
 }
 
+impl Clone for Certificate {
+    fn clone(&self) -> Certificate {
+        self.duplicate().expect("copying X509 cert object succeeded")
+    }
+}
+
+#[derive(Debug)]
+pub enum ValidationStatus {
+    SuccessfulValidation(int),
+    FailedValidation(int)
+};
+
 impl Certificate {
+
+    pub(crate) fn handle(&self) -> botan_x509_cert_t { self.obj }
 
     /// Load a X.509 certificate from DER or PEM representation
     pub fn load(data: &[u8]) -> Result<Certificate> {
@@ -49,6 +63,16 @@ impl Certificate {
         call_botan_ffi_returning_vec_u8(fprint_len, &|out_buf, out_len| {
             unsafe { botan_x509_cert_get_fingerprint(self.obj, hash.as_ptr(), out_buf, out_len) }
         })
+    }
+
+    /// Duplicate the certificate object
+    ///
+    /// Since certificate objects are immutable, duplication just involves
+    /// atomic incrementing a reference count, so is quite cheap
+    pub fn duplicate(&self) -> Result<Certificate> {
+        let mut obj = ptr::null_mut();
+        call_botan! { botan_x509_cert_dup(&mut obj, self.obj) }
+        Ok(Certificate { obj })
     }
 
     /// Return the authority key id, if set
@@ -89,6 +113,59 @@ impl Certificate {
             unsafe { botan_x509_cert_to_string(self.obj, out_buf as *mut c_char, out_len) }
         })
     }
+
+    /// Attempt to verify this certificate
+    pub fn verify(&self,
+                  intermediates: &[&Certificate],
+                  trusted: &[&Certificate],
+                  trusted_path: Option<&str>,
+                  hostname: Option<&str>,
+                  reference_time: Option<u64>) -> Result<bool> {
+
+        let required_key_strength = 110;
+
+        let trusted_path = make_cstr(trusted_path.unwrap_or(""))?;
+        let hostname = make_cstr(hostname.unwrap_or(""))?;
+
+        // TODO: more idiomatic way to do this?
+        let mut trusted_h = Vec::new();
+        for t in trusted {
+            trusted_h.push(t.handle());
+        }
+
+        let mut intermediates_h = Vec::new();
+        for t in intermediates {
+            intermediates_h.push(t.handle());
+        }
+
+        // TODO this information is lost :(
+        let mut result = 0;
+
+        let rc = unsafe {
+            botan_x509_cert_verify(&mut result,
+                                   self.obj,
+                                   intermediates_h.as_ptr(),
+                                   intermediates_h.len(),
+                                   trusted_h.as_ptr(),
+                                   trusted_h.len(),
+                                   trusted_path.as_ptr(),
+                                   required_key_strength,
+                                   hostname.as_ptr(),
+                                   reference_time.unwrap_or(0))
+        };
+
+        if rc == 0 {
+            Ok(true)
+        }
+        else if rc == 1 {
+            Ok(false)
+        }
+        else {
+            Err(Error::from(rc))
+        }
+
+    }
+
 
     /// Return true if the provided hostname is valid for this certificate
     pub fn matches_hostname(&self, hostname: &str) -> Result<bool> {
