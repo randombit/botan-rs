@@ -21,3 +21,8 @@ botan_x509_cert_gen_selfsigned
 botan_x509_cert_allowed_usage
 botan_x509_cert_verify
 botan_x509_cert_validation_status
+
+botan_pbkdf_timed
+botan_privkey_create_dsa
+botan_privkey_load_sm2
+botan_pubkey_load_sm2
