@@ -9,8 +9,8 @@ cryptography library. Due to making use of functions only recently added to the
 C API, right now the latest version of `master` branch (upcoming 2.8) is required.
 
 Currently the crate exposes ciphers, hashes, MACs, KDFs, PBKDF2, Scrypt, random
-number generators, X.509 certificates, format preserving encryption, NIST key
-wrapping, multiprecision integers, and various public key algorithms.
+number generators, X.509 certificates, format preserving encryption, HOTP/TOTP,
+NIST key wrapping, multiprecision integers, and various public key algorithms.
 
 This is still a work in progress and the API may change in the future.
 
