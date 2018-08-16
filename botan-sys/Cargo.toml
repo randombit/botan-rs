@@ -9,7 +9,7 @@ license = "MIT"
 homepage = "https://botan.randombit.net/"
 repository = "https://github.com/randombit/botan-rs"
 documentation = "https://docs.rs/botan-sys"
-readme = "../README.md"
+readme = "README.md"
 categories = [ "cryptography", "external-ffi-bindings" ]
 
 [badges]
