@@ -3,6 +3,7 @@
 
 - Add HOTP and TOTP
 - Add setters and getters for Ed25519 specific fields
+- Add base64 encode/decode
 
 ## 0.2.0 2018-8-15
 
