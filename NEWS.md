@@ -1,5 +1,5 @@
 
-## 0.3.0 Not Yet Released
+## 0.3.0 2018-8-16
 
 - Add certificate verification
 - Add HOTP and TOTP
