@@ -378,6 +378,31 @@ fn test_pubkey() {
 }
 
 #[test]
+fn test_x25519() {
+
+    // Test from RFC 8037
+    let a_pub_bits = botan::hex_decode("de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f").unwrap();
+    let b_priv_bits = botan::hex_decode("77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a").unwrap();
+    let b_pub_bits = botan::hex_decode("8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a").unwrap();
+    let expected_shared = botan::hex_decode("4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742").unwrap();
+
+    let a_pub = botan::Pubkey::load_x25519(&a_pub_bits).unwrap();
+    assert_eq!(a_pub.get_x25519_key().unwrap(), a_pub_bits);
+
+    let b_priv = botan::Privkey::load_x25519(&b_priv_bits).unwrap();
+    assert_eq!(b_priv.get_x25519_key().unwrap(), b_priv_bits);
+
+    assert_eq!(b_priv.key_agreement_key().unwrap(), b_pub_bits);
+    assert_eq!(b_priv.pubkey().unwrap().get_x25519_key().unwrap(), b_pub_bits);
+
+    let ka = botan::KeyAgreement::new(&b_priv, "Raw").unwrap();
+
+    let shared = ka.agree(0, &a_pub_bits, &[]).unwrap();
+
+    assert_eq!(shared, expected_shared);
+}
+
+#[test]
 fn test_ed25519() {
     let rng = botan::RandomNumberGenerator::new_system().unwrap();
 

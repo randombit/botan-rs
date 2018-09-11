@@ -81,6 +81,23 @@ impl Privkey {
         Ok(Privkey { obj })
     }
 
+    /// Load an X25519 private key
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let v = vec![0x42; 32];
+    /// let key = botan::Privkey::load_x25519(&v).unwrap();
+    /// ```
+    pub fn load_x25519(key: &[u8]) -> Result<Privkey> {
+        if key.len() != 32 {
+            return Err(Error::BadParameter);
+        }
+        let mut obj = ptr::null_mut();
+        call_botan! { botan_privkey_load_x25519(&mut obj, key.as_ptr()) };
+        Ok(Privkey { obj })
+    }
+
     /// Load a PKCS#1 encoded RSA private key
     pub fn load_rsa_pkcs1(pkcs1: &[u8]) -> Result<Privkey> {
         let mut obj = ptr::null_mut();
@@ -289,6 +306,18 @@ impl Privkey {
 
         Ok((pubkey,out))
     }
+
+    /// Get the X25519 private key
+    pub fn get_x25519_key(&self) -> Result<Vec<u8>> {
+
+        let mut out = vec![0; 32];
+
+        call_botan! {
+            botan_privkey_x25519_get_privkey(self.obj, out.as_mut_ptr())
+        }
+
+        Ok(out)
+    }
 }
 
 impl Pubkey {
@@ -341,13 +370,23 @@ impl Pubkey {
         Ok(Pubkey { obj })
     }
 
-    /// Load an Ed25519 key
+    /// Load an Ed25519 public key
     pub fn load_ed25519(key: &[u8]) -> Result<Pubkey> {
         if key.len() != 32 {
             return Err(Error::BadParameter);
         }
         let mut obj = ptr::null_mut();
         call_botan! { botan_pubkey_load_ed25519(&mut obj, key.as_ptr()) };
+        Ok(Pubkey { obj })
+    }
+
+    /// Load an X25519 key
+    pub fn load_x25519(key: &[u8]) -> Result<Pubkey> {
+        if key.len() != 32 {
+            return Err(Error::BadParameter);
+        }
+        let mut obj = ptr::null_mut();
+        call_botan! { botan_pubkey_load_x25519(&mut obj, key.as_ptr()) };
         Ok(Pubkey { obj })
     }
 
@@ -429,6 +468,17 @@ impl Pubkey {
         Ok(out)
     }
 
+    /// Get the X25519 public key
+    pub fn get_x25519_key(&self) -> Result<Vec<u8>> {
+
+        let mut out = vec![0; 32];
+
+        call_botan! {
+            botan_pubkey_x25519_get_pubkey(self.obj, out.as_mut_ptr())
+        }
+
+        Ok(out)
+    }
 }
 
 /// Return the identifier used for PKCS1 v1.5 signatures for the specified hash
