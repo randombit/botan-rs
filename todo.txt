@@ -2,8 +2,8 @@
 API considerations
 ----------------------
 
-Some Rust APIs seems to prefer writing to a slice vs returning a Vec.
-Worth it?
+Some Rust APIs seems to prefer writing to a slice vs returning a Vec
+to save an allocation. Worth it?
 
 Currently we only offer one-shot encryption/decryption for symmetric
 ciphers. Support incremental update?
@@ -15,8 +15,7 @@ These are functions currently exposed by Botan's C API which are not
 exposed by the high level Rust wrapper:
 
 botan_x509_cert_gen_selfsigned
-
-botan_pbkdf_timed
+botan_pwdhash_timed
 botan_privkey_create_dsa
 botan_privkey_load_sm2
 botan_pubkey_load_sm2

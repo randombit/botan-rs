@@ -1,4 +1,9 @@
 
+## 0.4.0 Not Yet Released
+
+- Add setters and getters for X25519 specific fields
+- Use new interface for password hashing
+
 ## 0.3.0 2018-8-16
 
 - Add certificate verification
