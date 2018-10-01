@@ -5,13 +5,10 @@
 [![docs.rs](https://docs.rs/botan/badge.svg)](https://docs.rs/botan)
 
 This crate wraps the C API exposed by the [Botan](https://botan.randombit.net/)
-cryptography library. Due to making use of functions only recently added to the
-C API, right now the latest version of `master` branch (upcoming 2.8) is required.
+cryptography library. Botan 2.8.0 or higher is required.
 
 Currently the crate exposes ciphers, hashes, MACs, KDFs, PBKDF2, Scrypt, random
 number generators, X.509 certificates, format preserving encryption, HOTP/TOTP,
 NIST key wrapping, multiprecision integers, and various public key algorithms.
-
-This is still a work in progress and the API may change in the future.
 
 PRs and comments/issues happily accepted.
