@@ -8,6 +8,7 @@ pub struct Cipher {
     obj: botan_cipher_t,
     direction: CipherDirection,
     tag_length: usize,
+    update_granularity: usize,
     default_nonce_length: usize,
     min_keylen: usize,
     max_keylen: usize,
@@ -44,6 +45,9 @@ impl Cipher {
         let mut tag_length = 0;
         call_botan! { botan_cipher_get_tag_length(obj, &mut tag_length) };
 
+        let mut update_granularity = 0;
+        call_botan! { botan_cipher_get_update_granularity(obj, &mut update_granularity) };
+
         let mut default_nonce_length = 0;
         call_botan! { botan_cipher_get_default_nonce_length(obj, &mut default_nonce_length) };
 
@@ -56,6 +60,7 @@ impl Cipher {
             obj,
             direction,
             tag_length,
+            update_granularity,
             default_nonce_length,
             min_keylen,
             max_keylen,
@@ -123,6 +128,11 @@ impl Cipher {
     /// ```
     pub fn tag_length(&self) -> usize {
         self.tag_length
+    }
+
+    /// update_granularity
+    pub fn update_granularity(&self) -> usize {
+        self.update_granularity
     }
 
     /// Return the default nonce length for the cipher. Some ciphers only
@@ -207,6 +217,49 @@ impl Cipher {
         output.resize(output_written, 0);
 
         Ok(output)
+    }
+
+    /// start function
+    pub fn start(&self, nonce: &[u8]) -> Result<()>{
+        call_botan! { botan_cipher_start(self.obj, nonce.as_ptr(), nonce.len()) }
+        Ok(())
+    }
+
+    /// Encrypt or decrypt a message with the provided nonce. The key must
+    /// incremental update
+    fn _update(&self, msg: &[u8], end: bool) -> Result<Vec<u8>> {
+        let flags = if end {1} else {0}; 
+        let mut output = vec![0; msg.len() + if end {self.tag_length()} else {0}];
+        let mut output_written = 0;
+        let mut input_consumed = 0;
+
+        call_botan! {
+            botan_cipher_update(self.obj,
+                                flags,
+                                output.as_mut_ptr(),
+                                output.len(),
+                                &mut output_written,
+                                msg.as_ptr(),
+                                msg.len(),
+                                &mut input_consumed)
+        }
+
+        assert!(input_consumed == msg.len());
+        assert!(output_written <= output.len());
+
+        output.resize(output_written, 0);
+
+        Ok(output)
+    }
+
+    /// incremental update
+    pub fn update(&self, msg: &[u8]) -> Result<Vec<u8>> {
+        self._update(msg, false)
+    }
+
+    /// finish function
+    pub fn finish(&self, msg: &[u8]) -> Result<Vec<u8>> {
+        self._update(msg, true)
     }
 
     /// Clear all state associated with the key
