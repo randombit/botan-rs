@@ -1,4 +1,4 @@
-use std::os::raw::{c_int};
+use libc::{c_int};
 
 extern "C" {
 

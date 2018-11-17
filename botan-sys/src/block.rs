@@ -1,4 +1,4 @@
-use std::os::raw::{c_int, c_char};
+use libc::{c_int, c_char};
 
 pub enum botan_block_cipher_struct {}
 pub type botan_block_cipher_t = *mut botan_block_cipher_struct;

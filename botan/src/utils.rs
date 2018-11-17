@@ -1,6 +1,6 @@
 use botan_sys::*;
 
-pub(crate) use std::os::raw::{c_char, c_int, c_void};
+pub(crate) use libc::{c_char, c_int, c_void};
 pub(crate) use std::ffi::{CStr, CString};
 pub(crate) use std::ptr;
 pub(crate) use std::mem;

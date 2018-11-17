@@ -19,3 +19,5 @@ travis-ci = { repository = "randombit/botan-rs" }
 status = "actively-developed"
 
 [dependencies]
+# we don't need std support
+libc = { version = "0.2", default-features = false }

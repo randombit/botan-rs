@@ -1,6 +1,10 @@
 #![deny(warnings)]
 #![allow(non_camel_case_types)]
 
+#![no_std]
+
+extern crate libc;
+
 mod block;
 mod cipher;
 mod errors;

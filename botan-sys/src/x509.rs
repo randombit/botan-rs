@@ -1,4 +1,4 @@
-use std::os::raw::{c_int, c_char, c_uint};
+use libc::{c_int, c_char, c_uint};
 
 use pubkey::{botan_pubkey_t, botan_privkey_t};
 use rng::botan_rng_t;

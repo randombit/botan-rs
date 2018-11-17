@@ -6,6 +6,7 @@
 //! A wrapper for the Botan cryptography library
 
 extern crate botan_sys;
+extern crate libc;
 
 macro_rules! call_botan {
     ($x:expr) => {

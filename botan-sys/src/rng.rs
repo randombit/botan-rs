@@ -1,4 +1,4 @@
-use std::os::raw::{c_int, c_char};
+use libc::{c_int, c_char};
 
 pub enum botan_rng_struct {}
 pub type botan_rng_t = *mut botan_rng_struct;
