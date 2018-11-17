@@ -130,6 +130,7 @@ impl KeySpec {
     }
 
     /// Return true if the specified key length is valid for this object
+    #[must_use]
     pub fn is_valid_keylength(&self, keylen: usize) -> bool {
         (keylen >= self.min_keylen &&
          keylen <= self.max_keylen &&
@@ -137,11 +138,13 @@ impl KeySpec {
     }
 
     /// Return the minimum supported keylength
+    #[must_use]
     pub fn minimum_keylength(&self) -> usize {
         self.min_keylen
     }
 
     /// Return the maximum supported keylength
+    #[must_use]
     pub fn maximum_keylength(&self) -> usize {
         self.max_keylen
     }
@@ -149,6 +152,7 @@ impl KeySpec {
     /// Return the required multiple of the keylength
     ///
     /// That is each key must be N*keylength_multiple() for some N
+    #[must_use]
     pub fn keylength_multiple(&self) -> usize {
         self.mod_keylen
     }

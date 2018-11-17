@@ -5,6 +5,7 @@ use utils::*;
 /// Const time comparison
 ///
 /// Compare two arrays without leaking side channel information
+#[must_use]
 pub fn const_time_compare<T: Copy>(a: &[T], b: &[T]) -> bool {
     if a.len() != b.len() {
         return false;

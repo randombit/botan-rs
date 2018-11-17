@@ -93,6 +93,7 @@ pub enum CertValidationStatus {
 impl CertValidationStatus {
 
     /// Return true if the validation was successful
+    #[must_use]
     pub fn success(&self) -> bool {
         match self {
             CertValidationStatus::Success(_) => true,

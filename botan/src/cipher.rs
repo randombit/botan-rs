@@ -126,6 +126,7 @@ impl Cipher {
     /// let aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
     /// assert_eq!(aes_gcm.tag_length(), 16);
     /// ```
+    #[must_use]
     pub fn tag_length(&self) -> usize {
         self.tag_length
     }
@@ -144,6 +145,7 @@ impl Cipher {
     /// let aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
     /// assert_eq!(aes_gcm.default_nonce_length(), 12);
     /// ```
+    #[must_use]
     pub fn default_nonce_length(&self) -> usize {
         self.default_nonce_length
     }

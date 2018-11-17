@@ -38,7 +38,16 @@ impl Version {
         }
     }
 
-    /// Return true if the specified API version is supported by this version of the library
+    /// Return true if the specified API version is supported by this
+    /// version of the library.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// assert_eq!(botan::Version::supports_version(42), false);
+    /// assert_eq!(botan::Version::supports_version(20180713), true);
+    /// ```
+    #[must_use]
     pub fn supports_version(version: u32) -> bool {
         let rc = unsafe { botan_ffi_supports_api(version) };
         return rc == 0;
