@@ -33,9 +33,7 @@ pub fn hex_encode(x: &[u8]) -> Result<String> {
     let mut output = vec![0u8; x.len() * 2];
     call_botan! { botan_hex_encode(x.as_ptr(), x.len(), output.as_mut_ptr() as *mut c_char, flags) };
 
-    let cstr = CString::new(output).map_err(|_| Error::ConversionError)?;
-    let ostr = cstr.into_string().map_err(|_| Error::ConversionError)?;
-    Ok(ostr)
+    String::from_utf8(output).map_err(|_| Error::ConversionError)
 }
 
 /// Hex decode some data
