@@ -65,10 +65,14 @@ pub enum Error {
     ExceptionThrown,
     /// There was insufficient buffer space to write the output
     InsufficientBufferSpace,
+    /// An internal error occurred (this is a bug in the library)
+    InternalError,
     /// Something about the input was invalid
     InvalidInput,
     /// An invalid object was provided to the library
     InvalidObject,
+    /// An object was invoked in a way that is invalid for its current state
+    InvalidObjectState,
     /// A verifier was incorrect
     InvalidVerifier,
     /// An key of invalid length was provided
@@ -81,10 +85,16 @@ pub enum Error {
     NullPointer,
     /// Memory exhaustion
     OutOfMemory,
+    /// An error occurred while invoking a system API
+    SystemError,
     /// Some unknown error occurred
     UnknownError,
     /// An error occured while converting data to C
-    ConversionError
+    ConversionError,
+    /// An error occurred in TLS
+    TlsError,
+    /// An error occurred during an HTTP transaction
+    HttpError,
 }
 
 impl From<i32> for Error {
@@ -94,14 +104,19 @@ impl From<i32> for Error {
             BOTAN_FFI_ERROR_BAD_MAC => Error::BadAuthCode,
             BOTAN_FFI_ERROR_BAD_PARAMETER => Error::BadParameter,
             BOTAN_FFI_ERROR_EXCEPTION_THROWN => Error::ExceptionThrown,
+            BOTAN_FFI_ERROR_HTTP_ERROR => Error::HttpError,
             BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE => Error::InsufficientBufferSpace,
+            BOTAN_FFI_ERROR_INTERNAL_ERROR => Error::InternalError,
             BOTAN_FFI_ERROR_INVALID_INPUT => Error::InvalidInput,
             BOTAN_FFI_ERROR_INVALID_KEY_LENGTH => Error::InvalidKeyLength,
             BOTAN_FFI_ERROR_INVALID_OBJECT => Error::InvalidObject,
+            BOTAN_FFI_ERROR_INVALID_OBJECT_STATE => Error::InvalidObjectState,
             BOTAN_FFI_ERROR_KEY_NOT_SET => Error::KeyNotSet,
             BOTAN_FFI_ERROR_NOT_IMPLEMENTED => Error::NotImplemented,
             BOTAN_FFI_ERROR_NULL_POINTER => Error::NullPointer,
             BOTAN_FFI_ERROR_OUT_OF_MEMORY => Error::OutOfMemory,
+            BOTAN_FFI_ERROR_SYSTEM_ERROR => Error::SystemError,
+            BOTAN_FFI_ERROR_TLS_ERROR => Error::TlsError,
             BOTAN_FFI_ERROR_UNKNOWN_ERROR => Error::UnknownError,
             BOTAN_FFI_INVALID_VERIFIER => Error::InvalidVerifier,
             _ => Error::UnknownError,

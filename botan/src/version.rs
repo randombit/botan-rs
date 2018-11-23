@@ -21,8 +21,8 @@ pub struct Version {
 
 impl Version {
 
-    /// Read the version information
-    pub fn new() -> Result<Version> {
+    /// Read the version information of the currently linked lib
+    pub fn current() -> Result<Version> {
 
         unsafe {
             let version_str = CStr::from_ptr(botan_version_string()).to_str().map_err(|_| Error::ConversionError)?;
@@ -36,6 +36,13 @@ impl Version {
                 string: version_str.to_string(),
             })
         }
+    }
+
+    #[must_use]
+    /// Return true if the current version is at least as high as the
+    /// major and minor numbers passed as arguments
+    pub fn at_least(&self, major: u32, minor: u32) -> bool {
+        self.major > major || (self.major == major && self.minor >= minor)
     }
 
     /// Return true if the specified API version is supported by this

@@ -1,5 +1,5 @@
 
-## 0.4.02 2018-10-01
+## 0.4.0 2018-10-01
 
 - Add setters and getters for X25519 specific fields
 - Use new interface for password hashing

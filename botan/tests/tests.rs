@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 #[test]
 fn test_version() {
-    let version = botan::Version::new().unwrap();
+    let version = botan::Version::current().unwrap();
 
     /*
     If we are running against a released version we know it must be at
@@ -20,7 +20,15 @@ fn test_version() {
     assert!(botan::Version::supports_version(20180713));
     assert!(!botan::Version::supports_version(20180712));
 
-        //println!("{:?}", version);
+    assert!(version.at_least(2,8));
+    assert!(version.at_least(2,4));
+    assert!(version.at_least(1,100));
+
+    /*
+    We know we are not linked against Botan 3.x because botan-sys crate
+    links to botan-2 and the library name will change in a new major release.
+    */
+    assert!(!version.at_least(3,1));
 }
 
 #[test]
@@ -141,6 +149,12 @@ fn test_cipher() {
 
 #[test]
 fn test_incremental_cipher() {
+
+    // This test requires Botan 2.9 or higher to work correctly
+    if ! botan::Version::current().unwrap().at_least(2,9) {
+        return;
+    }
+
     // Key    = 00000000000000000000000000000000
     // Nonce  = 0AAC82F3E53C2756034F7BD5827C9EDD
     // In     = 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
