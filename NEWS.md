@@ -1,4 +1,9 @@
 
+## 0.5.0 Not Yet Released
+
+- Add incremental cipher interface
+- Support no_std builds (feature `no-std`)
+
 ## 0.4.0 2018-10-01
 
 - Add setters and getters for X25519 specific fields
