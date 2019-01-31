@@ -57,7 +57,6 @@ impl HOTP {
     /// Check an HOTP code
     pub fn check(&self, code: u32, counter: u64) -> Result<bool> {
         let cmp_code = self.generate(counter)?;
-        println!("{} {}", code, cmp_code);
         Ok(cmp_code == code)
     }
 

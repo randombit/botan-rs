@@ -5,6 +5,16 @@
 
 //! A wrapper for the Botan cryptography library
 
+#![cfg_attr(feature = "no-std", feature(alloc))]
+#![cfg_attr(feature = "no-std", no_std)]
+
+#[cfg(feature = "no-std")]
+#[macro_use]
+extern crate alloc;
+
+#[cfg(feature = "no-std")]
+extern crate cstr_core;
+
 extern crate botan_sys;
 extern crate libc;
 

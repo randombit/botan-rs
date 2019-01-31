@@ -1,12 +1,20 @@
 use botan_sys::*;
 
-pub(crate) use libc::{c_char, c_int, c_void};
+#[cfg(feature = "no-std")]
+pub(crate) use alloc::prelude::*;
+
+#[cfg(feature = "no-std")]
+pub(crate) use cstr_core::{CStr, CString};
+
+#[cfg(not(feature = "no-std"))]
 pub(crate) use std::ffi::{CStr, CString};
-pub(crate) use std::ptr;
-pub(crate) use std::mem;
+
+pub(crate) use libc::{c_char, c_int, c_void};
+pub(crate) use core::ptr;
+pub(crate) use core::mem;
 
 /// The result of calling an operation on the library
-pub type Result<T> = ::std::result::Result<T, Error>;
+pub type Result<T> = ::core::result::Result<T, Error>;
 
 pub(crate) fn make_cstr(input: &str) -> Result<CString> {
     let cstr = CString::new(input).map_err(|_| Error::ConversionError)?;

@@ -3,11 +3,11 @@ use crate::utils::*;
 
 use crate::rng::RandomNumberGenerator;
 
-use std::cmp::{Eq, Ord, Ordering};
-use std::fmt;
-use std::str::FromStr;
+use core::cmp::{Eq, Ord, Ordering};
+use core::fmt;
+use core::str::FromStr;
 
-use std::ops::{Add, AddAssign,
+use core::ops::{Add, AddAssign,
                Sub, SubAssign,
                Mul, MulAssign,
                Div, DivAssign,
@@ -137,7 +137,7 @@ impl MPI {
     /// Return value of self as decimal string
     pub fn to_string(&self) -> Result<String> {
         let bit_count = self.bit_count()? as f64;
-        let log_base = (10f64).log2();
+        let log_base = 3.3219; // log2(10)
         let bn_digits = 1 + (bit_count / log_base) as usize;
 
         call_botan_ffi_returning_string(bn_digits, &|out_buf, out_len| {
@@ -369,7 +369,7 @@ impl MPI {
     /// # Examples
     ///
     /// ```
-    /// use std::str::FromStr;
+    /// use core::str::FromStr;
     /// let n = botan::MPI::from_str("1111111111111111111").unwrap();
     /// let rng = botan::RandomNumberGenerator::new_system().unwrap();
     /// assert!(n.is_prime(&rng, 128).unwrap());
@@ -387,7 +387,7 @@ impl MPI {
     /// # Examples
     ///
     /// ```
-    /// use std::str::FromStr;
+    /// use core::str::FromStr;
     /// let x = botan::MPI::from_str("1111111111111111").unwrap();
     /// let y = botan::MPI::from_str("111111111111").unwrap();
     /// assert_eq!(botan::MPI::gcd(&x, &y).unwrap(), botan::MPI::from_str("1111").unwrap());
