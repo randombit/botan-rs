@@ -1,5 +1,5 @@
 use botan_sys::*;
-use utils::*;
+use crate::utils::*;
 
 #[derive(Debug)]
 /// A cryptographic random number generator

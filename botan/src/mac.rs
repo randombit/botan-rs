@@ -1,6 +1,6 @@
 
 use botan_sys::*;
-use utils::*;
+use crate::utils::*;
 
 #[derive(Debug)]
 /// Message authentication code

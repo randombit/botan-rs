@@ -1,8 +1,8 @@
 
 use botan_sys::*;
-use utils::*;
+use crate::utils::*;
 
-use rng::RandomNumberGenerator;
+use crate::rng::RandomNumberGenerator;
 
 const BCRYPT_SIZE : usize = 60;
 

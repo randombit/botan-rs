@@ -1,9 +1,9 @@
 
 use botan_sys::*;
-use utils::*;
+use crate::utils::*;
 
-use mp::MPI;
-use rng::RandomNumberGenerator;
+use crate::mp::MPI;
+use crate::rng::RandomNumberGenerator;
 
 #[derive(Debug)]
 /// A public key object

@@ -10,6 +10,7 @@ documentation = "https://docs.rs/botan"
 keywords = [ "crypto" ]
 readme = "../README.md"
 categories = [ "cryptography", "api-bindings" ]
+edition = "2018"
 
 [badges]
 travis-ci = { repository = "randombit/botan-rs" }

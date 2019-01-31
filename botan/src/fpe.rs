@@ -1,7 +1,7 @@
 use botan_sys::*;
-use utils::*;
+use crate::utils::*;
 
-use mp::MPI;
+use crate::mp::MPI;
 
 #[derive(Debug)]
 /// Represents an instance of format preserving encryption

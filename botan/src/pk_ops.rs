@@ -1,9 +1,9 @@
 
 use botan_sys::*;
-use utils::*;
+use crate::utils::*;
 
-use pubkey::{Privkey, Pubkey};
-use rng::RandomNumberGenerator;
+use crate::pubkey::{Privkey, Pubkey};
+use crate::rng::RandomNumberGenerator;
 
 #[derive(Debug)]
 /// An object that can generate signatures

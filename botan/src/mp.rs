@@ -1,7 +1,7 @@
 use botan_sys::*;
-use utils::*;
+use crate::utils::*;
 
-use rng::RandomNumberGenerator;
+use crate::rng::RandomNumberGenerator;
 
 use std::cmp::{Eq, Ord, Ordering};
 use std::fmt;

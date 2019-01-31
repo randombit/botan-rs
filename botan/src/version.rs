@@ -1,5 +1,5 @@
 use botan_sys::*;
-use utils::*;
+use crate::utils::*;
 
 #[derive(Debug)]
 /// Information about the library version

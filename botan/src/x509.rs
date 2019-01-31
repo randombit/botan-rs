@@ -1,8 +1,8 @@
 
 use botan_sys::*;
-use utils::*;
+use crate::utils::*;
 
-use pubkey::Pubkey;
+use crate::pubkey::Pubkey;
 
 #[derive(Debug)]
 /// X.509 certificate
