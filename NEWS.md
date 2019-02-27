@@ -3,6 +3,7 @@
 
 - Add incremental cipher interface
 - Support no_std builds (feature `no-std`)
+- Switch to 2018 edition
 
 ## 0.4.0 2018-10-01
 
