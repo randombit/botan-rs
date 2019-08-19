@@ -16,7 +16,7 @@ extern crate alloc;
 extern crate cstr_core;
 
 extern crate botan_sys;
-extern crate libc;
+extern crate cty;
 
 macro_rules! call_botan {
     ($x:expr) => {

@@ -3,7 +3,7 @@
 
 #![no_std]
 
-extern crate libc;
+extern crate cty;
 
 mod block;
 mod cipher;

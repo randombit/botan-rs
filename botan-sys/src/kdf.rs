@@ -1,4 +1,4 @@
-use libc::{c_int, c_char};
+use cty::{c_int, c_char};
 
 extern "C" {
 
@@ -40,7 +40,7 @@ extern "C" {
                                passphrase: *const c_char,
                                passphrase_len: usize,
                                salt: *const u8,
-                               salt_len: usize);
+                               salt_len: usize) -> c_int;
 
     pub fn botan_scrypt(out: *mut u8,
                         out_len: usize,

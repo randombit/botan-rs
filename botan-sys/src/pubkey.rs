@@ -1,4 +1,4 @@
-use libc::{c_int, c_char};
+use cty::{c_int, c_char};
 
 use mp::botan_mp_t;
 use rng::botan_rng_t;

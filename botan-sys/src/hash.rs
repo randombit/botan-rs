@@ -1,4 +1,4 @@
-use libc::{c_int, c_char};
+use cty::{c_int, c_char};
 
 pub enum botan_hash_struct {}
 pub type botan_hash_t = *mut botan_hash_struct;

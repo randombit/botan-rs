@@ -1,4 +1,4 @@
-use libc::{c_int, c_char};
+use cty::{c_int, c_char};
 
 use rng::botan_rng_t;
 use pubkey::{botan_pubkey_t, botan_privkey_t};

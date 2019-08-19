@@ -9,7 +9,7 @@ pub(crate) use cstr_core::{CStr, CString};
 #[cfg(not(feature = "no-std"))]
 pub(crate) use std::ffi::{CStr, CString};
 
-pub(crate) use libc::{c_char, c_int, c_void};
+pub(crate) use cty::{c_char, c_int, c_void};
 pub(crate) use core::ptr;
 pub(crate) use core::mem;
 

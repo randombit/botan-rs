@@ -1,4 +1,4 @@
-use libc::{c_int};
+use cty::{c_int};
 
 extern "C" {
 

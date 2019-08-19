@@ -10,7 +10,7 @@ homepage = "https://botan.randombit.net/"
 repository = "https://github.com/randombit/botan-rs"
 documentation = "https://docs.rs/botan-sys"
 readme = "README.md"
-categories = [ "cryptography", "external-ffi-bindings" ]
+categories = [ "cryptography", "external-ffi-bindings", "no-std" ]
 
 [badges]
 travis-ci = { repository = "randombit/botan-rs" }
@@ -19,5 +19,4 @@ travis-ci = { repository = "randombit/botan-rs" }
 status = "actively-developed"
 
 [dependencies]
-# we don't need std support
-libc = { version = "0.2", default-features = false }
+cty = { version = "0.2" }

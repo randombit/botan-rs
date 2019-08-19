@@ -1,4 +1,4 @@
-use libc::{c_int, c_char};
+use cty::{c_int, c_char};
 
 pub enum botan_hotp_struct {}
 pub type botan_hotp_t = *mut botan_hotp_struct;

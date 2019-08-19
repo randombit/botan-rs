@@ -1,4 +1,4 @@
-use libc::{c_int, c_char};
+use cty::{c_int, c_char};
 
 pub enum botan_cipher_struct {}
 pub type botan_cipher_t = *mut botan_cipher_struct;
