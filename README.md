@@ -10,8 +10,10 @@ cryptography library. Botan 2.8.0 or higher is required.
 Rust 1.32.0 or later are supported.  `no_std` builds are supported,
 just use feature `no-std`.
 
-Currently the crate exposes ciphers, hashes, MACs, KDFs, PBKDF2, Scrypt, random
-number generators, X.509 certificates, format preserving encryption, HOTP/TOTP,
-NIST key wrapping, multiprecision integers, and various public key algorithms.
+Currently the crate exposes ciphers, hashes, MACs, KDFs, password based
+key derivation (PBKDF2, Scrypt, Argon2, etc), bcrypt password hashes,
+random number generators, X.509 certificates, format preserving encryption,
+HOTP/TOTP, NIST key wrapping, multiprecision integers, and various
+public key algorithms (RSA, ECDSA, ECDH, ...)
 
 PRs and comments/issues happily accepted.

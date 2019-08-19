@@ -23,7 +23,7 @@ pub(crate) fn make_cstr(input: &str) -> Result<CString> {
 
 pub(crate) fn call_botan_ffi_returning_vec_u8(
     initial_size: usize,
-    cb: &Fn(*mut u8, *mut usize) -> c_int) -> Result<Vec<u8>> {
+    cb: &dyn Fn(*mut u8, *mut usize) -> c_int) -> Result<Vec<u8>> {
 
     let mut output = vec![0; initial_size];
     let mut out_len = output.len();
@@ -51,7 +51,7 @@ pub(crate) fn call_botan_ffi_returning_vec_u8(
 
 pub(crate) fn call_botan_ffi_returning_string(
     initial_size: usize,
-    cb: &Fn(*mut u8, *mut usize) -> c_int) -> Result<String> {
+    cb: &dyn Fn(*mut u8, *mut usize) -> c_int) -> Result<String> {
 
     let v = call_botan_ffi_returning_vec_u8(initial_size, cb)?;
 
