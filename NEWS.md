@@ -1,5 +1,9 @@
 
-## 0.5.0 Not Yet Released
+## 0.6.0 Not Yet Released
+
+- Add time-based password key derivation
+
+## 0.5.0 2019-02-27
 
 - Add incremental cipher interface
 - Support no_std builds (feature `no-std`)

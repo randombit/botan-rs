@@ -289,6 +289,17 @@ fn test_scrypt() {
 }
 
 #[test]
+fn test_pwdhash() {
+    let rng = botan::RandomNumberGenerator::new().unwrap();
+    let salt = rng.read(10).unwrap();
+    let msec = 30;
+    let (key,r,p,n) = botan::derive_key_from_password_timed("Scrypt", 32, "passphrase", &salt, msec).unwrap();
+    assert_eq!(key.len(), 32);
+    let key2 = botan::derive_key_from_password("Scrypt", 32, "passphrase", &salt, n, r, p).unwrap();
+    assert_eq!(key, key2);
+}
+
+#[test]
 fn test_hex() {
     let raw = vec![1,2,3,255,42,23];
     assert_eq!(botan::hex_encode(&raw).unwrap(), "010203FF2A17");
