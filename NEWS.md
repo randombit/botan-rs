@@ -2,6 +2,7 @@
 ## 0.6.0 Not Yet Released
 
 - Add time-based password key derivation
+- Switch to using cty crate instead of libc to get C ABI types
 
 ## 0.5.0 2019-02-27
 
