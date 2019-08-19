@@ -1,5 +1,5 @@
 
-## 0.6.0 Not Yet Released
+## 0.6.0 2019-08-19
 
 - Add time-based password key derivation
 - Switch to using cty crate instead of libc to get C ABI types
