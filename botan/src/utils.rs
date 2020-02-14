@@ -155,9 +155,7 @@ impl KeySpec {
     /// Return true if the specified key length is valid for this object
     #[must_use]
     pub fn is_valid_keylength(&self, keylen: usize) -> bool {
-        (keylen >= self.min_keylen &&
-         keylen <= self.max_keylen &&
-         keylen % self.mod_keylen == 0)
+        keylen >= self.min_keylen && keylen <= self.max_keylen && keylen % self.mod_keylen == 0
     }
 
     /// Return the minimum supported keylength

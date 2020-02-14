@@ -134,6 +134,6 @@ impl HashFunction {
     pub fn duplicate(&self) -> Result<HashFunction> {
         let mut obj = ptr::null_mut();
         call_botan! { botan_hash_copy_state(&mut obj, self.obj) };
-        Ok(HashFunction { obj: obj, output_length: self.output_length })
+        Ok(HashFunction { obj, output_length: self.output_length })
     }
 }

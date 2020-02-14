@@ -57,7 +57,7 @@ impl Version {
     #[must_use]
     pub fn supports_version(version: u32) -> bool {
         let rc = unsafe { botan_ffi_supports_api(version) };
-        return rc == 0;
+        rc == 0
     }
 
 }

@@ -208,7 +208,8 @@ impl Privkey {
 
     /// DER encode the key (encrypted)
     pub fn der_encode_encrypted(&self, passphrase: &str, rng: &RandomNumberGenerator) -> Result<Vec<u8>> {
-        self.der_encode_encrypted_with_options(passphrase, "AES-256/CBC", "SHA-512", 150000, rng)
+        let iterations = 150_000;
+        self.der_encode_encrypted_with_options(passphrase, "AES-256/CBC", "SHA-512", iterations, rng)
     }
 
     /// DER encode the key (encrypted), specifying cipher/hash options
@@ -238,7 +239,8 @@ impl Privkey {
 
     /// PEM encode the key (encrypted)
     pub fn pem_encode_encrypted(&self, passphrase: &str, rng: &RandomNumberGenerator) -> Result<String> {
-        self.pem_encode_encrypted_with_options(passphrase, "AES-256/CBC", "SHA-512", 150000, rng)
+        let iterations = 150_000;
+        self.pem_encode_encrypted_with_options(passphrase, "AES-256/CBC", "SHA-512", iterations, rng)
     }
 
     /// PEM encode the key (encrypted), specifying cipher/hash options

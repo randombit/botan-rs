@@ -14,7 +14,7 @@ pub fn const_time_compare<T: Copy>(a: &[T], b: &[T]) -> bool {
     let bytes = mem::size_of::<T>() * a.len();
     let rc = unsafe { botan_constant_time_compare(a.as_ptr() as *const u8, b.as_ptr() as *const u8, bytes) };
 
-    return rc == 0;
+    rc == 0
 }
 
 /// Securely zeroize memory
