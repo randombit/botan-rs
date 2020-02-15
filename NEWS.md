@@ -1,4 +1,8 @@
 
+## 0.6.1 2020-02-15
+
+- Fix some warnings under latest beta/nightly versions of Rust
+
 ## 0.6.0 2019-08-19
 
 - Add time-based password key derivation
