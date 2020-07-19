@@ -18,5 +18,12 @@ travis-ci = { repository = "randombit/botan-rs" }
 [badges.maintenance]
 status = "actively-developed"
 
+[features]
+default = []
+vendored = ["botan-src"]
+
 [dependencies]
 cty = { version = "0.2" }
+
+[build-dependencies]
+botan-src = { version = "0.1", optional = true, path = "../botan-src" }

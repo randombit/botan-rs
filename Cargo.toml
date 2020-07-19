@@ -1,2 +1,2 @@
 [workspace]
-members = ["botan", "botan-sys"]
+members = ["botan", "botan-src", "botan-sys"]
