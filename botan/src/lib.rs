@@ -5,7 +5,7 @@
 
 //! A wrapper for the Botan cryptography library
 
-#![cfg_attr(feature = "no-std", feature(alloc))]
+#![cfg_attr(feature = "no-std", feature(alloc_prelude))]
 #![cfg_attr(feature = "no-std", no_std)]
 
 #[cfg(feature = "no-std")]

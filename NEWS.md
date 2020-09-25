@@ -1,4 +1,8 @@
 
+## 0.7.0 Not Yet Released
+
+- Fix a problem with no_std builds in Rust 1.36 and higher
+
 ## 0.6.1 2020-02-15
 
 - Fix some warnings under latest beta/nightly versions of Rust

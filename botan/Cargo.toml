@@ -21,7 +21,7 @@ status = "actively-developed"
 [dependencies]
 botan-sys = { version = "0.6.0", path = "../botan-sys" }
 cty = { version = "0.2" }
-cstr_core = { version = "0.1", optional = true }
+cstr_core = { version = "0.2", optional = true }
 
 [features]
 default = []

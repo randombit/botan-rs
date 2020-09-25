@@ -1,7 +1,7 @@
 use botan_sys::*;
 
 #[cfg(feature = "no-std")]
-pub(crate) use alloc::prelude::*;
+pub(crate) use alloc::prelude::v1::*;
 
 #[cfg(feature = "no-std")]
 pub(crate) use cstr_core::{CStr, CString};
