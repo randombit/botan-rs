@@ -15,14 +15,14 @@ fn test_hex() {
         assert_eq!(botan_hex_encode(bin.as_ptr(), bin.len(), out.as_mut_ptr(), 0), 0);
     }
 
-    assert_eq!(out[0], '4' as i8);
-    assert_eq!(out[1], '2' as i8);
-    assert_eq!(out[2], '2' as i8);
-    assert_eq!(out[3], '3' as i8);
-    assert_eq!(out[4], '4' as i8);
-    assert_eq!(out[5], '5' as i8);
-    assert_eq!(out[6], '8' as i8);
-    assert_eq!(out[7], 'F' as i8);
+    assert_eq!(out[0], '4' as _);
+    assert_eq!(out[1], '2' as _);
+    assert_eq!(out[2], '2' as _);
+    assert_eq!(out[3], '3' as _);
+    assert_eq!(out[4], '4' as _);
+    assert_eq!(out[5], '5' as _);
+    assert_eq!(out[6], '8' as _);
+    assert_eq!(out[7], 'F' as _);
 
     let mut decoded = vec![0; 1024];
     let mut out_len = decoded.len();
