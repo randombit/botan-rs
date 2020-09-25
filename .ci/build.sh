@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -ev
+
 if [ "x$FEATURES" = "x" ]; then
     cargo build --verbose
     cargo test --verbose

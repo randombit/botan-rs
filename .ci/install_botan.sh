@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -ev
+
 cd /tmp
 
 git clone --depth 1 https://github.com/randombit/botan.git
