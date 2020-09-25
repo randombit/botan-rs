@@ -137,7 +137,7 @@ impl MPI {
     /// Return value of self as decimal string
     pub fn to_string(&self) -> Result<String> {
         let bit_count = self.bit_count()? as f64;
-        let log_base = 3.3219; // log2(10)
+        let log_base = std::f64::consts::LOG2_10;
         let bn_digits = 1 + (bit_count / log_base) as usize;
 
         call_botan_ffi_returning_string(bn_digits, &|out_buf, out_len| {
