@@ -1,8 +1,15 @@
 #!/bin/sh
 
+set -ev
+
 if [ "x$FEATURES" = "x" ]; then
     cargo build --verbose
     cargo test --verbose
+
+    if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then
+        cargo clippy
+    fi
+
 else
     cd botan-sys
     cargo build --verbose
