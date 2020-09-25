@@ -1,13 +1,40 @@
-sudo: required
 language: rust
+os: linux
+dist: bionic
+
+branches:
+  only:
+    - master
 
 install:
   - ./.ci/install_botan.sh
 
-rust:
-  - stable
-  - beta
-  - nightly
+script:
+  - ./.ci/build.sh
+
+jobs:
+  include:
+    - name: "Stable x86-64"
+      rust: stable
+
+    - name: "Beta x86-64"
+      rust: beta
+
+    - name: "Nightly x86-64"
+      rust: nightly
+
+    - name: "Nightly x86-64 no_std"
+      rust: nightly
+      env:
+       - FEATURES="no-std"
+
+    - name: "Stable arm64"
+      arch: arm64
+      rust: stable
+
+    - name: "Stable ppc64le"
+      arch: ppc64le
+      rust: stable
 
 cache:
   directories:
