@@ -2,6 +2,8 @@
 ## 0.7.0 Not Yet Released
 
 - Fix a problem with no_std builds in Rust 1.36 and higher
+- Fix a build problem affecting machines with unsigned char
+- Minimum supported version of Rust increased to 1.36
 
 ## 0.6.1 2020-02-15
 
