@@ -8,6 +8,7 @@ branches:
 
 install:
   - ./.ci/install_botan.sh
+  - rustup component add clippy
 
 script:
   - ./.ci/build.sh
