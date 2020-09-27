@@ -1,6 +1,7 @@
 
-## 0.7.0 Not Yet Released
+## 0.7.0 2020-09-27
 
+- Add support for vendoring the Botan library via new botan-src crate
 - Fix a problem with no_std builds in Rust 1.36 and higher
 - Fix a build problem affecting machines with unsigned char
 - Minimum supported version of Rust increased to 1.36
