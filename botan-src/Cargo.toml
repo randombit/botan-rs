@@ -1,0 +1,23 @@
+[package]
+name = "botan-src"
+version = "0.21500.0"
+authors = ["Rodolphe Breard <rodolphe@what.tf>"]
+description = "Sources of for Botan cryptography library"
+license = "MIT"
+edition = "2018"
+homepage = "https://botan.randombit.net/"
+repository = "https://github.com/randombit/botan-rs"
+readme = "README.md"
+categories = ["cryptography"]
+
+[badges]
+travis-ci = { repository = "randombit/botan-rs" }
+
+[badges.maintenance]
+status = "actively-developed"
+
+[dependencies]
+
+[[example]]
+name = "build"
+path = "examples/build.rs"

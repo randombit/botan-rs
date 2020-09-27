@@ -26,3 +26,4 @@ cstr_core = { version = "0.2", optional = true }
 [features]
 default = []
 no-std = ["cstr_core/alloc"]
+vendored = ["botan-sys/vendored"]
