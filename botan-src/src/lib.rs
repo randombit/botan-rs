@@ -108,11 +108,14 @@ fn configure(build_dir: &str) {
     add_env_arg!(configure, "BOTAN_CONFIGURE_LIBDIR", "--libdir", false);
     add_env_arg!(configure, "BOTAN_CONFIGURE_MANDIR", "--mandir", false);
     add_env_arg!(configure, "BOTAN_CONFIGURE_INCLUDEDIR", "--includedir", false);
-    configure
+    let status = configure
         .spawn()
         .expect(BUILD_ERROR_MSG)
         .wait()
         .expect(BUILD_ERROR_MSG);
+    if !status.success() {
+        panic!("configure terminated unsuccessfully");
+    }
 }
 
 fn make(build_dir: &str) {
