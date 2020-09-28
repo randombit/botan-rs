@@ -108,21 +108,35 @@ fn configure(build_dir: &str) {
     add_env_arg!(configure, "BOTAN_CONFIGURE_LIBDIR", "--libdir", false);
     add_env_arg!(configure, "BOTAN_CONFIGURE_MANDIR", "--mandir", false);
     add_env_arg!(configure, "BOTAN_CONFIGURE_INCLUDEDIR", "--includedir", false);
-    configure
+    let status = configure
         .spawn()
         .expect(BUILD_ERROR_MSG)
         .wait()
         .expect(BUILD_ERROR_MSG);
+    if !status.success() {
+        panic!("configure terminated unsuccessfully");
+    }
 }
 
 fn make(build_dir: &str) {
-    Command::new("make")
-        .arg("-f")
+    let mut cmd = Command::new("make");
+    // Set MAKEFLAGS to the content of CARGO_MAKEFLAGS
+    // to give jobserver (parallel builds) support to the
+    // spawned sub-make.
+    if let Ok(val) = env::var("CARGO_MAKEFLAGS") {
+        cmd.env("MAKEFLAGS", val);
+    } else {
+        eprintln!("Can't set MAKEFLAGS as CARGO_MAKEFLAGS couldn't be read");
+    }
+    let status = cmd.arg("-f")
         .arg(format!("{}/Makefile", build_dir))
         .spawn()
         .expect(BUILD_ERROR_MSG)
         .wait()
         .expect(BUILD_ERROR_MSG);
+    if !status.success() {
+        panic!("make terminated unsuccessfully");
+    }
 }
 
 pub fn build() -> (String, String) {
