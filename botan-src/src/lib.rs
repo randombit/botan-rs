@@ -119,8 +119,16 @@ fn configure(build_dir: &str) {
 }
 
 fn make(build_dir: &str) {
-    Command::new("make")
-        .arg("-f")
+    let mut cmd = Command::new("make");
+    // Set MAKEFLAGS to the content of CARGO_MAKEFLAGS
+    // to give jobserver (parallel builds) support to the
+    // spawned sub-make.
+    if let Ok(val) = env::var("CARGO_MAKEFLAGS") {
+        cmd.env("MAKEFLAGS", val);
+    } else {
+        eprintln!("Can't set MAKEFLAGS as CARGO_MAKEFLAGS couldn't be read");
+    }
+    cmd.arg("-f")
         .arg(format!("{}/Makefile", build_dir))
         .spawn()
         .expect(BUILD_ERROR_MSG)
