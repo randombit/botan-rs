@@ -128,12 +128,15 @@ fn make(build_dir: &str) {
     } else {
         eprintln!("Can't set MAKEFLAGS as CARGO_MAKEFLAGS couldn't be read");
     }
-    cmd.arg("-f")
+    let status = cmd.arg("-f")
         .arg(format!("{}/Makefile", build_dir))
         .spawn()
         .expect(BUILD_ERROR_MSG)
         .wait()
         .expect(BUILD_ERROR_MSG);
+    if !status.success() {
+        panic!("make terminated unsuccessfully");
+    }
 }
 
 pub fn build() -> (String, String) {
