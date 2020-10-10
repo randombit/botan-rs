@@ -1,6 +1,6 @@
 [package]
 name = "botan-src"
-version = "0.21500.0"
+version = "0.21600.0"
 authors = ["Rodolphe Breard <rodolphe@what.tf>"]
 description = "Sources of for Botan cryptography library"
 license = "MIT"
