@@ -1,20 +1,21 @@
-use botan_sys::*;
 use crate::utils::*;
+use botan_sys::*;
 
 #[derive(Debug)]
 /// A cryptographic random number generator
 pub struct RandomNumberGenerator {
-    obj: botan_rng_t
+    obj: botan_rng_t,
 }
 
 impl Drop for RandomNumberGenerator {
     fn drop(&mut self) {
-        unsafe { botan_rng_destroy(self.obj); }
+        unsafe {
+            botan_rng_destroy(self.obj);
+        }
     }
 }
 
 impl RandomNumberGenerator {
-
     fn new_of_type(typ: &str) -> Result<RandomNumberGenerator> {
         let mut obj = ptr::null_mut();
         let typ = make_cstr(typ)?;
@@ -22,7 +23,9 @@ impl RandomNumberGenerator {
         Ok(RandomNumberGenerator { obj })
     }
 
-    pub(crate) fn handle(&self) -> botan_rng_t { self.obj }
+    pub(crate) fn handle(&self) -> botan_rng_t {
+        self.obj
+    }
 
     /// Create a new userspace RNG object
     ///
@@ -118,5 +121,4 @@ impl RandomNumberGenerator {
         call_botan! { botan_rng_add_entropy(self.obj, seed.as_ptr(), seed.len()) }
         Ok(())
     }
-
 }

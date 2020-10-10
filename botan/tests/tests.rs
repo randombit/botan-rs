@@ -20,15 +20,15 @@ fn test_version() -> Result<(), botan::Error> {
     assert!(botan::Version::supports_version(20180713));
     assert!(!botan::Version::supports_version(20180712));
 
-    assert!(version.at_least(2,8));
-    assert!(version.at_least(2,4));
-    assert!(version.at_least(1,100));
+    assert!(version.at_least(2, 8));
+    assert!(version.at_least(2, 4));
+    assert!(version.at_least(1, 100));
 
     /*
     We know we are not linked against Botan 3.x because botan-sys crate
     links to botan-2 and the library name will change in a new major release.
     */
-    assert!(!version.at_least(3,1));
+    assert!(!version.at_least(3, 1));
 
     Ok(())
 }
@@ -41,7 +41,7 @@ fn test_hash() -> Result<(), botan::Error> {
     assert_eq!(hash.block_size()?, 128);
     assert_eq!(hash.algo_name()?, "SHA-384");
 
-    assert!(hash.update(&[97,98]).is_ok());
+    assert!(hash.update(&[97, 98]).is_ok());
 
     let hash_dup = hash.duplicate()?;
 
@@ -50,7 +50,7 @@ fn test_hash() -> Result<(), botan::Error> {
 
     hash.clear()?;
 
-    hash.update(&[97,98,99])?;
+    hash.update(&[97, 98, 99])?;
 
     let digest = hash.finish()?;
 
@@ -65,7 +65,10 @@ fn test_hash() -> Result<(), botan::Error> {
     let bad_hash = botan::HashFunction::new("BunnyHash9000");
 
     assert_eq!(bad_hash.is_err(), true);
-    assert_eq!(*bad_hash.as_ref().unwrap_err(), botan::Error::NotImplemented);
+    assert_eq!(
+        *bad_hash.as_ref().unwrap_err(),
+        botan::Error::NotImplemented
+    );
     Ok(())
 }
 
@@ -104,7 +107,10 @@ fn test_block_cipher() -> Result<(), botan::Error> {
     assert!(key_spec.is_valid_keylength(20) == false);
     assert!(key_spec.is_valid_keylength(16));
 
-    assert_eq!(bc.set_key(&vec![0; 32]).unwrap_err(), botan::Error::InvalidKeyLength);
+    assert_eq!(
+        bc.set_key(&vec![0; 32]).unwrap_err(),
+        botan::Error::InvalidKeyLength
+    );
 
     bc.set_key(&vec![0; 16])?;
 
@@ -137,18 +143,23 @@ fn test_cipher() -> Result<(), botan::Error> {
     let zero16 = vec![0; 16];
     let zero12 = vec![0; 12];
 
-    assert!(cipher.set_associated_data(&[1,2,3]).is_err()); // trying to set AD before key is set
-    assert_eq!(cipher.set_key(&vec![0; 42]).unwrap_err(), botan::Error::InvalidKeyLength);
+    assert!(cipher.set_associated_data(&[1, 2, 3]).is_err()); // trying to set AD before key is set
+    assert_eq!(
+        cipher.set_key(&vec![0; 42]).unwrap_err(),
+        botan::Error::InvalidKeyLength
+    );
 
     cipher.set_key(&zero16)?;
 
-    cipher.set_associated_data(&[1,2,3])?;
+    cipher.set_associated_data(&[1, 2, 3])?;
     cipher.set_associated_data(&[])?;
 
     let ctext = cipher.process(&zero12, &zero16)?;
 
-    assert_eq!(botan::hex_encode(&ctext)?,
-               "0388DACE60B6A392F328C2B971B2FE78AB6E47D42CEC13BDF53A67B21257BDDF");
+    assert_eq!(
+        botan::hex_encode(&ctext)?,
+        "0388DACE60B6A392F328C2B971B2FE78AB6E47D42CEC13BDF53A67B21257BDDF"
+    );
 
     let cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Decrypt)?;
     cipher.set_key(&zero16)?;
@@ -161,9 +172,8 @@ fn test_cipher() -> Result<(), botan::Error> {
 
 #[test]
 fn test_incremental_cipher() -> Result<(), botan::Error> {
-
     // This test requires Botan 2.9 or higher to work correctly
-    if ! botan::Version::current()?.at_least(2,9) {
+    if !botan::Version::current()?.at_least(2, 9) {
         return Ok(());
     }
 
@@ -190,7 +200,11 @@ fn test_incremental_cipher() -> Result<(), botan::Error> {
     };
     let mut enc_out = vec![0; 0];
     while let Some((cnt, v)) = enc_iter.next() {
-        let mut res = if (cnt + 1) < chunks {cipher.update(&v)?} else {cipher.finish(&v)?};
+        let mut res = if (cnt + 1) < chunks {
+            cipher.update(&v)?
+        } else {
+            cipher.finish(&v)?
+        };
         enc_out.append(&mut res);
     }
 
@@ -209,14 +223,14 @@ fn test_incremental_cipher() -> Result<(), botan::Error> {
         output.len() / chunk_size + 1
     };
     let mut dec_out = vec![0; 0];
-    while let Some((cnt, v)) = dec_iter.next(){
+    while let Some((cnt, v)) = dec_iter.next() {
         let mut res = cipher.update(&v)?;
         dec_out.append(&mut res);
         if (cnt + 3) == chunks {
             break;
-         }
+        }
     }
-    let mut remain = vec![0;0];
+    let mut remain = vec![0; 0];
     let (_, v) = dec_iter.next().unwrap(); //  the one before last one
     remain.append(v.to_vec().as_mut());
     let (_, v) = dec_iter.next().unwrap(); //  last one
@@ -247,7 +261,7 @@ fn test_chacha() -> Result<(), botan::Error> {
 
     cipher.set_key(&key)?;
 
-    assert!(cipher.set_associated_data(&[1,2,3]).is_err()); // not an AEAD
+    assert!(cipher.set_associated_data(&[1, 2, 3]).is_err()); // not an AEAD
     assert!(cipher.set_associated_data(&[]).is_err());
 
     let iv = vec![];
@@ -261,13 +275,20 @@ fn test_chacha() -> Result<(), botan::Error> {
 
 #[test]
 fn test_kdf() -> Result<(), botan::Error> {
-
     let salt = botan::hex_decode("000102030405060708090A0B0C")?;
     let label = botan::hex_decode("F0F1F2F3F4F5F6F7F8F9")?;
     let secret = botan::hex_decode("0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B")?;
-    let expected_output = botan::hex_decode("3CB25F25FAACD57A90434F64D0362F2A2D2D0A90CF1A5A4C5DB02D56ECC4C5BF34007208D5B887185865")?;
+    let expected_output = botan::hex_decode(
+        "3CB25F25FAACD57A90434F64D0362F2A2D2D0A90CF1A5A4C5DB02D56ECC4C5BF34007208D5B887185865",
+    )?;
 
-    let output = botan::kdf("HKDF(SHA-256)", expected_output.len(), &secret, &salt, &label)?;
+    let output = botan::kdf(
+        "HKDF(SHA-256)",
+        expected_output.len(),
+        &secret,
+        &salt,
+        &label,
+    )?;
 
     assert_eq!(output, expected_output);
     Ok(())
@@ -275,13 +296,19 @@ fn test_kdf() -> Result<(), botan::Error> {
 
 #[test]
 fn test_pbkdf() -> Result<(), botan::Error> {
-
     let salt = botan::hex_decode("0001020304050607")?;
     let iterations = 10000;
     let passphrase = "xyz";
-    let expected_output = botan::hex_decode("DEFD2987FA26A4672F4D16D98398432AD95E896BF619F6A6B8D4ED")?;
+    let expected_output =
+        botan::hex_decode("DEFD2987FA26A4672F4D16D98398432AD95E896BF619F6A6B8D4ED")?;
 
-    let output = botan::pbkdf("PBKDF2(SHA-256)", expected_output.len(), passphrase, &salt, iterations)?;
+    let output = botan::pbkdf(
+        "PBKDF2(SHA-256)",
+        expected_output.len(),
+        passphrase,
+        &salt,
+        iterations,
+    )?;
 
     assert_eq!(output, expected_output);
     Ok(())
@@ -289,13 +316,13 @@ fn test_pbkdf() -> Result<(), botan::Error> {
 
 #[test]
 fn test_scrypt() -> Result<(), botan::Error> {
-
     let salt = botan::hex_decode("4E61436C")?;
     let n = 1024;
     let r = 8;
     let p = 16;
     let passphrase = "password";
-    let expected_output = botan::hex_decode("fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622e")?;
+    let expected_output =
+        botan::hex_decode("fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622e")?;
 
     let output = botan::scrypt(expected_output.len(), passphrase, &salt, n, r, p)?;
 
@@ -308,7 +335,8 @@ fn test_pwdhash() -> Result<(), botan::Error> {
     let rng = botan::RandomNumberGenerator::new()?;
     let salt = rng.read(10)?;
     let msec = 30;
-    let (key,r,p,n) = botan::derive_key_from_password_timed("Scrypt", 32, "passphrase", &salt, msec)?;
+    let (key, r, p, n) =
+        botan::derive_key_from_password_timed("Scrypt", 32, "passphrase", &salt, msec)?;
     assert_eq!(key.len(), 32);
     let key2 = botan::derive_key_from_password("Scrypt", 32, "passphrase", &salt, n, r, p)?;
     assert_eq!(key, key2);
@@ -317,7 +345,7 @@ fn test_pwdhash() -> Result<(), botan::Error> {
 
 #[test]
 fn test_hex() -> Result<(), botan::Error> {
-    let raw = vec![1,2,3,255,42,23];
+    let raw = vec![1, 2, 3, 255, 42, 23];
     assert_eq!(botan::hex_encode(&raw)?, "010203FF2A17");
     assert_eq!(botan::hex_decode("010203FF2A17")?, raw);
     Ok(())
@@ -410,7 +438,10 @@ AzMCIEJSRDmXjX8TMTbSfoTLmhaYJnCL+AfHLZLdHlSLDIzh
 
     let result = ee.verify(&[], &[&ca], None, Some("no.hostname.com"), None)?;
     assert_eq!(result.success(), false);
-    assert_eq!(result.to_string(), "Certificate does not match provided name");
+    assert_eq!(
+        result.to_string(),
+        "Certificate does not match provided name"
+    );
 
     let result = ee.verify(&[], &[], None, None, None)?;
     assert_eq!(result.success(), false);
@@ -454,8 +485,10 @@ fn test_pubkey() -> Result<(), botan::Error> {
     assert_eq!(ecdsa_key.algo_name()?, "ECDSA");
 
     assert!(ecdsa_key.get_field("n").is_err());
-    assert_eq!(ecdsa_key.get_field("order"),
-               botan::MPI::from_str("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551"));
+    assert_eq!(
+        ecdsa_key.get_field("order"),
+        botan::MPI::from_str("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551")
+    );
 
     let pub_key = ecdsa_key.pubkey()?;
 
@@ -489,12 +522,15 @@ fn test_pubkey() -> Result<(), botan::Error> {
 
 #[test]
 fn test_x25519() -> Result<(), botan::Error> {
-
     // Test from RFC 8037
-    let a_pub_bits = botan::hex_decode("de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f")?;
-    let b_priv_bits = botan::hex_decode("77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a")?;
-    let b_pub_bits = botan::hex_decode("8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a")?;
-    let expected_shared = botan::hex_decode("4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742")?;
+    let a_pub_bits =
+        botan::hex_decode("de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f")?;
+    let b_priv_bits =
+        botan::hex_decode("77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a")?;
+    let b_pub_bits =
+        botan::hex_decode("8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a")?;
+    let expected_shared =
+        botan::hex_decode("4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742")?;
 
     let a_pub = botan::Pubkey::load_x25519(&a_pub_bits)?;
     assert_eq!(a_pub.get_x25519_key()?, a_pub_bits);
@@ -517,7 +553,7 @@ fn test_x25519() -> Result<(), botan::Error> {
 fn test_ed25519() -> Result<(), botan::Error> {
     let rng = botan::RandomNumberGenerator::new_system()?;
 
-    let msg = vec![23,42,69,6,66];
+    let msg = vec![23, 42, 69, 6, 66];
     let padding = "Pure";
 
     let ed_priv = botan::Privkey::create("Ed25519", "", &rng)?;
@@ -593,9 +629,8 @@ fn test_rsa() -> Result<(), botan::Error> {
 
 #[test]
 fn test_pubkey_encryption() -> Result<(), botan::Error> {
-
     let padding = "EMSA-PKCS1-v1_5(SHA-256)";
-    let msg = [1,2,3];
+    let msg = [1, 2, 3];
 
     let rng = botan::RandomNumberGenerator::new_system()?;
     let key = botan::Privkey::create("RSA", "1024", &rng)?;
@@ -631,7 +666,7 @@ fn test_pubkey_encryption() -> Result<(), botan::Error> {
 
 #[test]
 fn test_pubkey_sign() -> Result<(), botan::Error> {
-    let msg = vec![1,23,42];
+    let msg = vec![1, 23, 42];
 
     let rng = botan::RandomNumberGenerator::new_system()?;
 
@@ -664,7 +699,7 @@ fn test_pubkey_sign() -> Result<(), botan::Error> {
 
 #[test]
 fn test_pubkey_encrypt() -> Result<(), botan::Error> {
-    let msg = vec![1,23,42];
+    let msg = vec![1, 23, 42];
 
     let rng = botan::RandomNumberGenerator::new_system()?;
 
@@ -675,7 +710,7 @@ fn test_pubkey_encrypt() -> Result<(), botan::Error> {
     let encryptor = botan::Encryptor::new(&pub_key, "OAEP(SHA-256)")?;
 
     let ctext = encryptor.encrypt(&msg, &rng)?;
-    assert_eq!(ctext.len(), 2048/8);
+    assert_eq!(ctext.len(), 2048 / 8);
 
     let decryptor = botan::Decryptor::new(&priv_key, "OAEP(SHA-256)")?;
 
@@ -687,7 +722,6 @@ fn test_pubkey_encrypt() -> Result<(), botan::Error> {
 
 #[test]
 fn test_pubkey_key_agreement() -> Result<(), botan::Error> {
-
     let rng = botan::RandomNumberGenerator::new_system()?;
 
     let a_priv = botan::Privkey::create("ECDH", "secp384r1", &rng)?;
@@ -712,19 +746,23 @@ fn test_pubkey_key_agreement() -> Result<(), botan::Error> {
     let b_key = b_ka.agree(0, &a_pub, &vec![])?;
 
     assert_eq!(a_key, b_key);
-    assert_eq!(a_key.len(), 384/8);
+    assert_eq!(a_key.len(), 384 / 8);
     Ok(())
 }
 
 #[test]
 fn test_aes_key_wrap() -> Result<(), botan::Error> {
-    let kek = botan::hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F")?;
-    let key = botan::hex_decode("00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F")?;
+    let kek =
+        botan::hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F")?;
+    let key =
+        botan::hex_decode("00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F")?;
 
     let wrapped = botan::nist_key_wrap(&kek, &key)?;
 
-    assert_eq!(botan::hex_encode(&wrapped)?,
-               "28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21");
+    assert_eq!(
+        botan::hex_encode(&wrapped)?,
+        "28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21"
+    );
 
     let unwrapped = botan::nist_key_unwrap(&kek, &wrapped)?;
 
@@ -738,32 +776,34 @@ fn test_pkcs_hash_id() -> Result<(), botan::Error> {
 
     let id = botan::pkcs_hash_id("SHA-384")?;
 
-    assert_eq!(botan::hex_encode(&id)?,
-               "3041300D060960864801650304020205000430");
+    assert_eq!(
+        botan::hex_encode(&id)?,
+        "3041300D060960864801650304020205000430"
+    );
     Ok(())
 }
 
 #[test]
 fn test_ct_compare() -> Result<(), botan::Error> {
-    let a = vec![1,2,3];
+    let a = vec![1, 2, 3];
 
-    assert_eq!(botan::const_time_compare(&a, &[1,2,3]), true);
-    assert_eq!(botan::const_time_compare(&a, &[1,2,3,4]), false);
-    assert_eq!(botan::const_time_compare(&a, &[1,2,4]), false);
+    assert_eq!(botan::const_time_compare(&a, &[1, 2, 3]), true);
+    assert_eq!(botan::const_time_compare(&a, &[1, 2, 3, 4]), false);
+    assert_eq!(botan::const_time_compare(&a, &[1, 2, 4]), false);
     assert_eq!(botan::const_time_compare(&a, &a), true);
-    assert_eq!(botan::const_time_compare(&a, &vec![1,2,3]), true);
+    assert_eq!(botan::const_time_compare(&a, &vec![1, 2, 3]), true);
     Ok(())
 }
 
 #[test]
 fn test_scrub_mem() -> Result<(), botan::Error> {
-    let mut v = vec![1,2,3];
+    let mut v = vec![1, 2, 3];
     botan::scrub_mem(&mut v);
-    assert_eq!(v, vec![0,0,0]);
+    assert_eq!(v, vec![0, 0, 0]);
 
     let mut a = [1u32, 2u32, 3u32, 2049903u32];
     botan::scrub_mem(&mut a);
-    assert_eq!(a, [0,0,0,0]);
+    assert_eq!(a, [0, 0, 0, 0]);
     Ok(())
 }
 
@@ -873,8 +913,12 @@ fn test_hotp() -> Result<(), botan::Error> {
 
 #[test]
 fn test_totp() -> Result<(), botan::Error> {
-    let totp = botan::TOTP::new(b"1234567890123456789012345678901234567890123456789012345678901234",
-                                "SHA-512", 8, 30)?;
+    let totp = botan::TOTP::new(
+        b"1234567890123456789012345678901234567890123456789012345678901234",
+        "SHA-512",
+        8,
+        30,
+    )?;
 
     assert_eq!(totp.generate(59)?, 90693936);
     assert_eq!(totp.generate(1111111109)?, 25091201);
@@ -882,7 +926,7 @@ fn test_totp() -> Result<(), botan::Error> {
 
     assert!(totp.check(90693936, 59, 0)?);
     assert!(!totp.check(90693936, 60, 0)?);
-    assert!(totp.check(90693936, 59+30, 1)?);
-    assert!(!totp.check(90693936, 59+31, 1)?);
+    assert!(totp.check(90693936, 59 + 30, 1)?);
+    assert!(!totp.check(90693936, 59 + 31, 1)?);
     Ok(())
 }

@@ -1,10 +1,9 @@
-
-use botan_sys::*;
 use crate::utils::*;
+use botan_sys::*;
 
 use crate::rng::RandomNumberGenerator;
 
-const BCRYPT_SIZE : usize = 60;
+const BCRYPT_SIZE: usize = 60;
 
 /// Produce a bcrypt password hash
 ///
@@ -16,8 +15,7 @@ const BCRYPT_SIZE : usize = 60;
 /// let bcrypt2 = botan::bcrypt_hash("password", &rng, 10).unwrap();
 /// assert_ne!(bcrypt1, bcrypt2); // different salt each time
 /// ```
-pub fn bcrypt_hash(pass: &str, rng : &RandomNumberGenerator, workfactor: usize) -> Result<String> {
-
+pub fn bcrypt_hash(pass: &str, rng: &RandomNumberGenerator, workfactor: usize) -> Result<String> {
     let mut out = vec![0; BCRYPT_SIZE + 1];
     let mut out_len = out.len();
 
@@ -43,19 +41,13 @@ pub fn bcrypt_hash(pass: &str, rng : &RandomNumberGenerator, workfactor: usize) 
 /// assert_eq!(botan::bcrypt_verify("password", &bcrypt), Ok(true));
 /// ```
 pub fn bcrypt_verify(pass: &str, hash: &str) -> Result<bool> {
-
-    let rc = unsafe {
-        botan_bcrypt_is_valid(make_cstr(pass)?.as_ptr(),
-                              make_cstr(hash)?.as_ptr())
-    };
+    let rc = unsafe { botan_bcrypt_is_valid(make_cstr(pass)?.as_ptr(), make_cstr(hash)?.as_ptr()) };
 
     if rc == 0 {
         Ok(true)
-    }
-    else if rc == BOTAN_FFI_INVALID_VERIFIER {
+    } else if rc == BOTAN_FFI_INVALID_VERIFIER {
         Ok(false)
-    }
-    else {
+    } else {
         Err(Error::from(rc))
     }
 }

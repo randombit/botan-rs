@@ -1,6 +1,5 @@
-
-use botan_sys::*;
 use crate::utils::*;
+use botan_sys::*;
 
 #[derive(Debug)]
 /// Generate or check HOTP tokens
@@ -16,18 +15,21 @@ pub struct TOTP {
 
 impl Drop for HOTP {
     fn drop(&mut self) {
-        unsafe { botan_hotp_destroy(self.obj); }
+        unsafe {
+            botan_hotp_destroy(self.obj);
+        }
     }
 }
 
 impl Drop for TOTP {
     fn drop(&mut self) {
-        unsafe { botan_totp_destroy(self.obj); }
+        unsafe {
+            botan_totp_destroy(self.obj);
+        }
     }
 }
 
 impl HOTP {
-
     /// Instantiate a new HOTP instance with the given parameters
     ///
     /// # Examples
@@ -61,33 +63,27 @@ impl HOTP {
     }
 
     /// Check an HOTP code, allowing counter resync
-    pub fn check_with_resync(&self,
-                             code: u32,
-                             counter: u64,
-                             resync_range: usize) -> Result<(bool, u64)> {
-
+    pub fn check_with_resync(
+        &self,
+        code: u32,
+        counter: u64,
+        resync_range: usize,
+    ) -> Result<(bool, u64)> {
         let mut new_ctr = 0;
 
-        let rc = unsafe {
-            botan_hotp_check(self.obj, &mut new_ctr, code, counter, resync_range)
-        };
+        let rc = unsafe { botan_hotp_check(self.obj, &mut new_ctr, code, counter, resync_range) };
 
         if rc == 0 {
             Ok((true, new_ctr))
-        }
-        else if rc == 1 {
+        } else if rc == 1 {
             Ok((false, counter))
-        }
-        else {
+        } else {
             Err(Error::from(rc))
         }
     }
-
-
 }
 
 impl TOTP {
-
     /// Instantiate a new TOTP instance with the given parameters
     ///
     /// # Examples
@@ -115,22 +111,14 @@ impl TOTP {
     }
 
     /// Check an TOTP code
-    pub fn check(&self,
-                 code: u32,
-                 timestamp: u64,
-                 allowed_drift: usize) -> Result<bool> {
-
-        let rc = unsafe {
-            botan_totp_check(self.obj, code, timestamp, allowed_drift)
-        };
+    pub fn check(&self, code: u32, timestamp: u64, allowed_drift: usize) -> Result<bool> {
+        let rc = unsafe { botan_totp_check(self.obj, code, timestamp, allowed_drift) };
 
         if rc == 0 {
             Ok(true)
-        }
-        else if rc == 1 {
+        } else if rc == 1 {
             Ok(false)
-        }
-        else {
+        } else {
             Err(Error::from(rc))
         }
     }

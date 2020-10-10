@@ -1,6 +1,5 @@
-
-use botan_sys::*;
 use crate::utils::*;
+use botan_sys::*;
 
 #[derive(Debug)]
 /// A raw block cipher interface (ie ECB mode)
@@ -16,7 +15,9 @@ pub struct BlockCipher {
 
 impl Drop for BlockCipher {
     fn drop(&mut self) {
-        unsafe { botan_block_cipher_destroy(self.obj); }
+        unsafe {
+            botan_block_cipher_destroy(self.obj);
+        }
     }
 }
 
@@ -46,7 +47,13 @@ impl BlockCipher {
         let mut mod_keylen = 0;
         call_botan! { botan_block_cipher_get_keyspec(obj, &mut min_keylen, &mut max_keylen, &mut mod_keylen) };
 
-        Ok(BlockCipher { obj, block_size: block_size as usize, min_keylen, max_keylen, mod_keylen })
+        Ok(BlockCipher {
+            obj,
+            block_size: block_size as usize,
+            min_keylen,
+            max_keylen,
+            mod_keylen,
+        })
     }
 
     /// Return the block size of the cipher, in bytes
@@ -71,8 +78,8 @@ impl BlockCipher {
     /// assert_eq!(cipher.algo_name().unwrap(), "AES-128");
     /// ```
     pub fn algo_name(&self) -> Result<String> {
-        call_botan_ffi_returning_string(32, &|out_buf, out_len| {
-            unsafe { botan_block_cipher_name(self.obj, out_buf as *mut c_char, out_len) }
+        call_botan_ffi_returning_string(32, &|out_buf, out_len| unsafe {
+            botan_block_cipher_name(self.obj, out_buf as *mut c_char, out_len)
         })
     }
 

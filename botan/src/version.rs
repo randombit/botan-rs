@@ -1,5 +1,5 @@
-use botan_sys::*;
 use crate::utils::*;
+use botan_sys::*;
 
 #[derive(Debug)]
 /// Information about the library version
@@ -20,12 +20,12 @@ pub struct Version {
 }
 
 impl Version {
-
     /// Read the version information of the currently linked lib
     pub fn current() -> Result<Version> {
-
         unsafe {
-            let version_str = CStr::from_ptr(botan_version_string()).to_str().map_err(|_| Error::ConversionError)?;
+            let version_str = CStr::from_ptr(botan_version_string())
+                .to_str()
+                .map_err(|_| Error::ConversionError)?;
 
             Ok(Version {
                 major: botan_version_major(),
@@ -59,5 +59,4 @@ impl Version {
         let rc = unsafe { botan_ffi_supports_api(version) };
         rc == 0
     }
-
 }

@@ -1,11 +1,11 @@
-use botan_sys::*;
 use crate::utils::*;
+use botan_sys::*;
 
 #[derive(Debug)]
 /// A hash function object
 pub struct HashFunction {
     obj: botan_hash_t,
-    output_length: usize
+    output_length: usize,
 }
 
 impl Clone for HashFunction {
@@ -16,7 +16,9 @@ impl Clone for HashFunction {
 
 impl Drop for HashFunction {
     fn drop(&mut self) {
-        unsafe { botan_hash_destroy(self.obj); }
+        unsafe {
+            botan_hash_destroy(self.obj);
+        }
     }
 }
 
@@ -50,8 +52,8 @@ impl HashFunction {
     /// assert_eq!(hash.algo_name().unwrap(), "SHA-384");
     /// ```
     pub fn algo_name(&self) -> Result<String> {
-        call_botan_ffi_returning_string(32, &|out_buf, out_len| {
-            unsafe { botan_hash_name(self.obj, out_buf as *mut c_char, out_len) }
+        call_botan_ffi_returning_string(32, &|out_buf, out_len| unsafe {
+            botan_hash_name(self.obj, out_buf as *mut c_char, out_len)
         })
     }
 
@@ -134,6 +136,9 @@ impl HashFunction {
     pub fn duplicate(&self) -> Result<HashFunction> {
         let mut obj = ptr::null_mut();
         call_botan! { botan_hash_copy_state(&mut obj, self.obj) };
-        Ok(HashFunction { obj, output_length: self.output_length })
+        Ok(HashFunction {
+            obj,
+            output_length: self.output_length,
+        })
     }
 }
