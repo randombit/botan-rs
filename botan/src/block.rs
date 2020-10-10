@@ -131,6 +131,18 @@ impl BlockCipher {
         Ok(output)
     }
 
+    /// Encrypt in place
+    pub fn encrypt_in_place(&self, buf: &mut [u8]) -> Result<()> {
+        if buf.len() % self.block_size != 0 {
+            return Err(Error::InvalidInput);
+        }
+
+        let blocks = buf.len() / self.block_size;
+
+        call_botan! { botan_block_cipher_encrypt_blocks(self.obj, buf.as_ptr(), buf.as_mut_ptr(), blocks) };
+        Ok(())
+    }
+
     /// Decrypt some blocks of data
     ///
     /// # Errors
@@ -161,6 +173,18 @@ impl BlockCipher {
 
         call_botan! { botan_block_cipher_decrypt_blocks(self.obj, input.as_ptr(), output.as_mut_ptr(), blocks) };
         Ok(output)
+    }
+
+    /// Decrypt in place
+    pub fn decrypt_in_place(&self, buf: &mut [u8]) -> Result<()> {
+        if buf.len() % self.block_size != 0 {
+            return Err(Error::InvalidInput);
+        }
+
+        let blocks = buf.len() / self.block_size;
+
+        call_botan! { botan_block_cipher_decrypt_blocks(self.obj, buf.as_ptr(), buf.as_mut_ptr(), blocks) };
+        Ok(())
     }
 
     /// Clear the key set on the cipher from memory. After this, the
