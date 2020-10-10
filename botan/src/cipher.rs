@@ -1,6 +1,5 @@
-
-use botan_sys::*;
 use crate::utils::*;
+use botan_sys::*;
 
 #[derive(Debug)]
 /// A symmetric cipher
@@ -12,7 +11,7 @@ pub struct Cipher {
     default_nonce_length: usize,
     min_keylen: usize,
     max_keylen: usize,
-    mod_keylen: usize
+    mod_keylen: usize,
 }
 
 #[derive(PartialEq, Debug, Copy, Clone)]
@@ -21,12 +20,14 @@ pub enum CipherDirection {
     /// Encrypt
     Encrypt,
     /// Decrypt
-    Decrypt
+    Decrypt,
 }
 
 impl Drop for Cipher {
     fn drop(&mut self) {
-        unsafe { botan_cipher_destroy(self.obj); }
+        unsafe {
+            botan_cipher_destroy(self.obj);
+        }
     }
 }
 
@@ -39,7 +40,11 @@ impl Cipher {
     /// ```
     pub fn new(name: &str, direction: CipherDirection) -> Result<Cipher> {
         let mut obj = ptr::null_mut();
-        let flag = if direction == CipherDirection::Encrypt { 0u32 } else { 1u32 };
+        let flag = if direction == CipherDirection::Encrypt {
+            0u32
+        } else {
+            1u32
+        };
         call_botan! { botan_cipher_init(&mut obj, make_cstr(name)?.as_ptr(), flag) };
 
         let mut tag_length = 0;
@@ -78,8 +83,8 @@ impl Cipher {
     /// assert_eq!(cipher.algo_name().unwrap(), "AES-128/GCM(16)");
     /// ```
     pub fn algo_name(&self) -> Result<String> {
-        call_botan_ffi_returning_string(32, &|out_buf, out_len| {
-            unsafe { botan_cipher_name(self.obj, out_buf as *mut c_char, out_len) }
+        call_botan_ffi_returning_string(32, &|out_buf, out_len| unsafe {
+            botan_cipher_name(self.obj, out_buf as *mut c_char, out_len)
         })
     }
 
@@ -108,11 +113,9 @@ impl Cipher {
 
         if rc == 1 {
             Ok(true)
-        }
-        else if rc == 0 {
+        } else if rc == 0 {
             Ok(false)
-        }
-        else {
+        } else {
             Err(Error::from(rc))
         }
     }
@@ -222,7 +225,7 @@ impl Cipher {
     }
 
     /// start function
-    pub fn start(&self, nonce: &[u8]) -> Result<()>{
+    pub fn start(&self, nonce: &[u8]) -> Result<()> {
         call_botan! { botan_cipher_start(self.obj, nonce.as_ptr(), nonce.len()) }
         Ok(())
     }
@@ -230,8 +233,8 @@ impl Cipher {
     /// Encrypt or decrypt a message with the provided nonce. The key must
     /// incremental update
     fn _update(&self, msg: &[u8], end: bool) -> Result<Vec<u8>> {
-        let flags = if end {1} else {0}; 
-        let mut output = vec![0; msg.len() + if end {self.tag_length()} else {0}];
+        let flags = if end { 1 } else { 0 };
+        let mut output = vec![0; msg.len() + if end { self.tag_length() } else { 0 }];
         let mut output_written = 0;
         let mut input_consumed = 0;
 

@@ -1,6 +1,5 @@
-
-use botan_sys::*;
 use crate::utils::*;
+use botan_sys::*;
 
 /// Password based key derivation function
 ///
@@ -18,8 +17,8 @@ pub fn derive_key_from_password(
     salt: &[u8],
     param1: usize,
     param2: usize,
-    param3: usize) -> Result<Vec<u8>> {
-
+    param3: usize,
+) -> Result<Vec<u8>> {
     let algo = make_cstr(algo)?;
     let passphrase = make_cstr(passphrase)?;
 
@@ -58,8 +57,8 @@ pub fn derive_key_from_password_timed(
     out_len: usize,
     passphrase: &str,
     salt: &[u8],
-    msec: u32) -> Result<(Vec<u8>, usize, usize, usize)> {
-
+    msec: u32,
+) -> Result<(Vec<u8>, usize, usize, usize)> {
     let algo = make_cstr(algo)?;
     let passphrase = make_cstr(passphrase)?;
 
@@ -97,12 +96,13 @@ pub fn derive_key_from_password_timed(
 /// let key = botan::pbkdf("PBKDF2(SHA-256)", 32, "passphrase", &salt, 10000).unwrap();
 /// assert_eq!(key.len(), 32);
 /// ```
-pub fn pbkdf(algo: &str,
-             out_len: usize,
-             passphrase: &str,
-             salt: &[u8],
-             iterations: usize) -> Result<Vec<u8>> {
-
+pub fn pbkdf(
+    algo: &str,
+    out_len: usize,
+    passphrase: &str,
+    salt: &[u8],
+    iterations: usize,
+) -> Result<Vec<u8>> {
     derive_key_from_password(algo, out_len, passphrase, salt, iterations, 0, 0)
 }
 
@@ -121,12 +121,13 @@ pub fn pbkdf(algo: &str,
 /// let key = botan::scrypt(32, "passphrase", &salt, n, r, p).unwrap();
 /// assert_eq!(key.len(), 32);
 /// ```
-pub fn scrypt(out_len: usize,
-              passphrase: &str,
-              salt: &[u8],
-              n: usize,
-              r: usize,
-              p: usize) -> Result<Vec<u8>> {
-
+pub fn scrypt(
+    out_len: usize,
+    passphrase: &str,
+    salt: &[u8],
+    n: usize,
+    r: usize,
+    p: usize,
+) -> Result<Vec<u8>> {
     derive_key_from_password("Scrypt", out_len, passphrase, salt, n, r, p)
 }

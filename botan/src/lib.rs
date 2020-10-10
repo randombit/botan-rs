@@ -1,5 +1,4 @@
 #![deny(warnings)]
-
 #![warn(missing_docs)]
 #![deny(missing_docs)]
 
@@ -24,7 +23,7 @@ macro_rules! call_botan {
         if rc != 0 {
             return Err(Error::from(rc));
         }
-    }
+    };
 }
 
 mod bcrypt;
@@ -32,8 +31,8 @@ mod block;
 mod cipher;
 mod fpe;
 mod hash;
-mod keywrap;
 mod kdf;
+mod keywrap;
 mod mac;
 mod memutils;
 mod mp;
@@ -42,10 +41,13 @@ mod pbkdf;
 mod pk_ops;
 mod pubkey;
 mod rng;
-mod x509;
-mod version;
 mod utils;
+mod version;
+mod x509;
 
+pub use crate::mp::*;
+pub use crate::rng::*;
+pub use crate::utils::*;
 pub use bcrypt::*;
 pub use block::*;
 pub use cipher::*;
@@ -55,12 +57,9 @@ pub use kdf::*;
 pub use keywrap::*;
 pub use mac::*;
 pub use memutils::*;
-pub use crate::mp::*;
 pub use otp::*;
 pub use pbkdf::*;
 pub use pk_ops::*;
 pub use pubkey::*;
-pub use crate::rng::*;
-pub use x509::*;
 pub use version::*;
-pub use crate::utils::*;
+pub use x509::*;

@@ -1,6 +1,5 @@
-
-use botan_sys::*;
 use crate::utils::*;
+use botan_sys::*;
 
 #[derive(Debug)]
 /// Message authentication code
@@ -14,7 +13,9 @@ pub struct MsgAuthCode {
 
 impl Drop for MsgAuthCode {
     fn drop(&mut self) {
-        unsafe { botan_mac_destroy(self.obj); }
+        unsafe {
+            botan_mac_destroy(self.obj);
+        }
     }
 }
 
@@ -40,7 +41,13 @@ impl MsgAuthCode {
         let mut mod_keylen = 0;
         call_botan! { botan_mac_get_keyspec(obj, &mut min_keylen, &mut max_keylen, &mut mod_keylen) };
 
-        Ok(MsgAuthCode { obj, output_length, min_keylen, max_keylen, mod_keylen })
+        Ok(MsgAuthCode {
+            obj,
+            output_length,
+            min_keylen,
+            max_keylen,
+            mod_keylen,
+        })
     }
 
     /// Return the name of this algorithm which may or may not exactly
@@ -53,8 +60,8 @@ impl MsgAuthCode {
     /// assert_eq!(mac.algo_name().unwrap(), "HMAC(SHA-384)");
     /// ```
     pub fn algo_name(&self) -> Result<String> {
-        call_botan_ffi_returning_string(32, &|out_buf, out_len| {
-            unsafe { botan_mac_name(self.obj, out_buf as *mut c_char, out_len) }
+        call_botan_ffi_returning_string(32, &|out_buf, out_len| unsafe {
+            botan_mac_name(self.obj, out_buf as *mut c_char, out_len)
         })
     }
 

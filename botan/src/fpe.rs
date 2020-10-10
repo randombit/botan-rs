@@ -1,5 +1,5 @@
-use botan_sys::*;
 use crate::utils::*;
+use botan_sys::*;
 
 use crate::mp::MPI;
 
@@ -23,12 +23,14 @@ use crate::mp::MPI;
 /// assert_eq!(ptext, input);
 /// ```
 pub struct FPE {
-    obj: botan_fpe_t
+    obj: botan_fpe_t,
 }
 
 impl Drop for FPE {
     fn drop(&mut self) {
-        unsafe { botan_fpe_destroy(self.obj); }
+        unsafe {
+            botan_fpe_destroy(self.obj);
+        }
     }
 }
 
@@ -68,5 +70,4 @@ impl FPE {
 
         Ok(r)
     }
-
 }

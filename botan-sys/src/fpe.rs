@@ -1,4 +1,4 @@
-use cty::{c_int};
+use cty::c_int;
 
 use mp::botan_mp_t;
 
@@ -13,18 +13,23 @@ extern "C" {
         key: *const u8,
         key_len: usize,
         rounds: usize,
-        flags: u32) -> c_int;
+        flags: u32,
+    ) -> c_int;
 
     pub fn botan_fpe_destroy(fpe: botan_fpe_t) -> c_int;
 
-    pub fn botan_fpe_encrypt(fpe: botan_fpe_t,
-                             x: botan_mp_t,
-                             tweak: *const u8,
-                             tweak_len: usize) -> c_int;
+    pub fn botan_fpe_encrypt(
+        fpe: botan_fpe_t,
+        x: botan_mp_t,
+        tweak: *const u8,
+        tweak_len: usize,
+    ) -> c_int;
 
-    pub fn botan_fpe_decrypt(fpe: botan_fpe_t,
-                             x: botan_mp_t,
-                             tweak: *const u8,
-                             tweak_len: usize) -> c_int;
+    pub fn botan_fpe_decrypt(
+        fpe: botan_fpe_t,
+        x: botan_mp_t,
+        tweak: *const u8,
+        tweak_len: usize,
+    ) -> c_int;
 
 }

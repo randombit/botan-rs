@@ -1,6 +1,5 @@
-
-use botan_sys::*;
 use crate::utils::*;
+use botan_sys::*;
 
 /// Wrap a key using NIST's AES key wrap algorithm.
 ///
@@ -16,7 +15,6 @@ use crate::utils::*;
 /// let wrapped = botan::nist_key_wrap(&kek, &key).unwrap();
 /// ```
 pub fn nist_key_wrap(kek: &[u8], key: &[u8]) -> Result<Vec<u8>> {
-
     if kek.len() != 16 && kek.len() != 24 && kek.len() != 32 {
         return Err(Error::InvalidKeyLength);
     }
@@ -51,7 +49,6 @@ pub fn nist_key_wrap(kek: &[u8], key: &[u8]) -> Result<Vec<u8>> {
 /// assert_eq!(unwrapped, key);
 /// ```
 pub fn nist_key_unwrap(kek: &[u8], wrapped: &[u8]) -> Result<Vec<u8>> {
-
     if kek.len() != 16 && kek.len() != 24 && kek.len() != 32 {
         return Err(Error::InvalidKeyLength);
     }
@@ -72,5 +69,4 @@ pub fn nist_key_unwrap(kek: &[u8], wrapped: &[u8]) -> Result<Vec<u8>> {
     output.resize(output_len, 0);
 
     Ok(output)
-
 }

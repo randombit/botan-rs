@@ -1,6 +1,5 @@
-
-use botan_sys::*;
 use crate::utils::*;
+use botan_sys::*;
 
 use crate::pubkey::{Privkey, Pubkey};
 use crate::rng::RandomNumberGenerator;
@@ -29,7 +28,6 @@ impl Drop for Signer {
 }
 
 impl Signer {
-
     /// Create a new signature operator
     pub fn new(key: &Privkey, padding: &str) -> Result<Signer> {
         let padding = make_cstr(padding)?;
@@ -48,8 +46,8 @@ impl Signer {
 
     /// Complete and return the signature
     pub fn finish(&self, rng: &RandomNumberGenerator) -> Result<Vec<u8>> {
-        call_botan_ffi_returning_vec_u8(self.sig_len, &|out_buf, out_len| {
-            unsafe { botan_pk_op_sign_finish(self.obj, rng.handle(), out_buf, out_len) }
+        call_botan_ffi_returning_vec_u8(self.sig_len, &|out_buf, out_len| unsafe {
+            botan_pk_op_sign_finish(self.obj, rng.handle(), out_buf, out_len)
         })
     }
 }
@@ -57,7 +55,7 @@ impl Signer {
 #[derive(Debug)]
 /// An object that can perform public key decryption
 pub struct Decryptor {
-    obj: botan_pk_op_decrypt_t
+    obj: botan_pk_op_decrypt_t,
 }
 
 impl Drop for Decryptor {
@@ -67,7 +65,6 @@ impl Drop for Decryptor {
 }
 
 impl Decryptor {
-
     /// Create a new decryption object
     pub fn new(key: &Privkey, padding: &str) -> Result<Decryptor> {
         let padding = make_cstr(padding)?;
@@ -82,8 +79,8 @@ impl Decryptor {
 
         call_botan! { botan_pk_op_decrypt_output_length(self.obj, ctext.len(), &mut ptext_len) };
 
-        call_botan_ffi_returning_vec_u8(ptext_len, &|out_buf, out_len| {
-            unsafe { botan_pk_op_decrypt(self.obj, out_buf, out_len, ctext.as_ptr(), ctext.len()) }
+        call_botan_ffi_returning_vec_u8(ptext_len, &|out_buf, out_len| unsafe {
+            botan_pk_op_decrypt(self.obj, out_buf, out_len, ctext.as_ptr(), ctext.len())
         })
     }
 }
@@ -91,7 +88,7 @@ impl Decryptor {
 #[derive(Debug)]
 /// An object that can perform public key signature verification
 pub struct Verifier {
-    obj: botan_pk_op_verify_t
+    obj: botan_pk_op_verify_t,
 }
 
 impl Drop for Verifier {
@@ -101,7 +98,6 @@ impl Drop for Verifier {
 }
 
 impl Verifier {
-
     /// Create a new verifier object
     pub fn new(key: &Pubkey, padding: &str) -> Result<Verifier> {
         let padding = make_cstr(padding)?;
@@ -118,20 +114,17 @@ impl Verifier {
 
     /// Verify the provided signature and return true if valid
     pub fn finish(&self, signature: &[u8]) -> Result<bool> {
-
-        let rc = unsafe { botan_pk_op_verify_finish(self.obj, signature.as_ptr(), signature.len()) };
+        let rc =
+            unsafe { botan_pk_op_verify_finish(self.obj, signature.as_ptr(), signature.len()) };
 
         if rc == 0 {
             Ok(true)
-        }
-        else if rc == BOTAN_FFI_INVALID_VERIFIER {
+        } else if rc == BOTAN_FFI_INVALID_VERIFIER {
             Ok(false)
-        }
-        else {
+        } else {
             Err(Error::from(rc))
         }
     }
-
 }
 
 #[derive(Debug)]
@@ -147,7 +140,7 @@ impl Verifier {
 /// let ctext = enc.encrypt(&[1,2,3], &rng).unwrap();
 /// ```
 pub struct Encryptor {
-    obj: botan_pk_op_encrypt_t
+    obj: botan_pk_op_encrypt_t,
 }
 
 impl Drop for Encryptor {
@@ -157,7 +150,6 @@ impl Drop for Encryptor {
 }
 
 impl Encryptor {
-
     /// Create a new public key encryptor object
     pub fn new(key: &Pubkey, padding: &str) -> Result<Encryptor> {
         let padding = make_cstr(padding)?;
@@ -172,8 +164,15 @@ impl Encryptor {
 
         call_botan! { botan_pk_op_encrypt_output_length(self.obj, ptext.len(), &mut ctext_len) };
 
-        call_botan_ffi_returning_vec_u8(ctext_len, &|out_buf, out_len| {
-            unsafe { botan_pk_op_encrypt(self.obj, rng.handle(), out_buf, out_len, ptext.as_ptr(), ptext.len()) }
+        call_botan_ffi_returning_vec_u8(ctext_len, &|out_buf, out_len| unsafe {
+            botan_pk_op_encrypt(
+                self.obj,
+                rng.handle(),
+                out_buf,
+                out_len,
+                ptext.as_ptr(),
+                ptext.len(),
+            )
         })
     }
 }
@@ -181,7 +180,7 @@ impl Encryptor {
 #[derive(Debug)]
 /// An object that performs key agreement
 pub struct KeyAgreement {
-    obj: botan_pk_op_ka_t
+    obj: botan_pk_op_ka_t,
 }
 
 impl Drop for KeyAgreement {
@@ -191,7 +190,6 @@ impl Drop for KeyAgreement {
 }
 
 impl KeyAgreement {
-
     /// Create a new key agreement operator
     pub fn new(key: &Privkey, kdf: &str) -> Result<KeyAgreement> {
         let kdf = make_cstr(kdf)?;
@@ -201,19 +199,28 @@ impl KeyAgreement {
     }
 
     /// Perform key agreement operation
-    pub fn agree(&self, requested_output: usize, counterparty_key: &[u8], salt: &[u8]) -> Result<Vec<u8>> {
-
+    pub fn agree(
+        &self,
+        requested_output: usize,
+        counterparty_key: &[u8],
+        salt: &[u8],
+    ) -> Result<Vec<u8>> {
         let mut ka_len = requested_output;
 
         if ka_len == 0 {
             call_botan! { botan_pk_op_key_agreement_size(self.obj, &mut ka_len) };
         }
 
-        call_botan_ffi_returning_vec_u8(ka_len, &|out_buf, out_len| {
-            unsafe { botan_pk_op_key_agreement(self.obj, out_buf, out_len,
-                                               counterparty_key.as_ptr(), counterparty_key.len(),
-                                               salt.as_ptr(), salt.len()) }
+        call_botan_ffi_returning_vec_u8(ka_len, &|out_buf, out_len| unsafe {
+            botan_pk_op_key_agreement(
+                self.obj,
+                out_buf,
+                out_len,
+                counterparty_key.as_ptr(),
+                counterparty_key.len(),
+                salt.as_ptr(),
+                salt.len(),
+            )
         })
     }
 }
-

@@ -1,4 +1,4 @@
-use cty::{c_int, c_char};
+use cty::{c_char, c_int};
 
 pub type BOTAN_FFI_ERROR = c_int;
 

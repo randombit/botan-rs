@@ -1,5 +1,5 @@
-use botan_sys::*;
 use crate::utils::*;
+use botan_sys::*;
 
 use crate::rng::RandomNumberGenerator;
 
@@ -7,14 +7,10 @@ use core::cmp::{Eq, Ord, Ordering};
 use core::fmt;
 use core::str::FromStr;
 
-use core::ops::{Add, AddAssign,
-               Sub, SubAssign,
-               Mul, MulAssign,
-               Div, DivAssign,
-               Rem, RemAssign,
-               Shl, ShlAssign,
-               Shr, ShrAssign,
-               Neg};
+use core::ops::{
+    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Shl, ShlAssign, Shr,
+    ShrAssign, Sub, SubAssign,
+};
 
 /// A big integer type
 pub struct MPI {
@@ -23,7 +19,9 @@ pub struct MPI {
 
 impl Drop for MPI {
     fn drop(&mut self) {
-        unsafe { botan_mp_destroy(self.obj); }
+        unsafe {
+            botan_mp_destroy(self.obj);
+        }
     }
 }
 
@@ -34,8 +32,9 @@ impl Clone for MPI {
 }
 
 impl MPI {
-
-    pub(crate) fn handle(&self) -> botan_mp_t { self.obj }
+    pub(crate) fn handle(&self) -> botan_mp_t {
+        self.obj
+    }
 
     /// Crate a new (zero-valued) MPI
     pub fn new() -> Result<MPI> {
@@ -115,7 +114,7 @@ impl MPI {
         match rc {
             0 => Ok(false),
             1 => Ok(true),
-            e => Err(Error::from(e))
+            e => Err(Error::from(e)),
         }
     }
 
@@ -126,10 +125,12 @@ impl MPI {
     }
 
     /// Randomize self to an integer within specified range
-    pub fn random_range(&mut self,
-                        rng: &RandomNumberGenerator,
-                        lower: &MPI,
-                        upper: &MPI) -> Result<()> {
+    pub fn random_range(
+        &mut self,
+        rng: &RandomNumberGenerator,
+        lower: &MPI,
+        upper: &MPI,
+    ) -> Result<()> {
         call_botan! { botan_mp_rand_range(self.obj, rng.handle(), lower.handle(), upper.handle()) }
         Ok(())
     }
@@ -140,8 +141,8 @@ impl MPI {
         let log_base = core::f64::consts::LOG2_10;
         let bn_digits = 1 + (bit_count / log_base) as usize;
 
-        call_botan_ffi_returning_string(bn_digits, &|out_buf, out_len| {
-            unsafe { botan_mp_to_str(self.obj, 10, out_buf as *mut c_char, out_len) }
+        call_botan_ffi_returning_string(bn_digits, &|out_buf, out_len| unsafe {
+            botan_mp_to_str(self.obj, 10, out_buf as *mut c_char, out_len)
         })
     }
 
@@ -149,8 +150,8 @@ impl MPI {
     pub fn to_hex(&self) -> Result<String> {
         let byte_count = self.byte_count()?;
 
-        call_botan_ffi_returning_string(byte_count*2 + 1, &|out_buf, out_len| {
-            unsafe { botan_mp_to_str(self.obj, 16, out_buf as *mut c_char, out_len) }
+        call_botan_ffi_returning_string(byte_count * 2 + 1, &|out_buf, out_len| unsafe {
+            botan_mp_to_str(self.obj, 16, out_buf as *mut c_char, out_len)
         })
     }
 
@@ -188,7 +189,7 @@ impl MPI {
         match unsafe { botan_mp_is_positive(self.obj) } {
             0 => Ok(false),
             1 => Ok(true),
-            e => Err(Error::from(e))
+            e => Err(Error::from(e)),
         }
     }
 
@@ -197,7 +198,7 @@ impl MPI {
         match unsafe { botan_mp_is_negative(self.obj) } {
             0 => Ok(false),
             1 => Ok(true),
-            e => Err(Error::from(e))
+            e => Err(Error::from(e)),
         }
     }
 
@@ -206,7 +207,7 @@ impl MPI {
         match unsafe { botan_mp_is_zero(self.obj) } {
             0 => Ok(false),
             1 => Ok(true),
-            e => Err(Error::from(e))
+            e => Err(Error::from(e)),
         }
     }
 
@@ -215,7 +216,7 @@ impl MPI {
         match unsafe { botan_mp_is_odd(self.obj) } {
             0 => Ok(false),
             1 => Ok(true),
-            e => Err(Error::from(e))
+            e => Err(Error::from(e)),
         }
     }
 
@@ -224,7 +225,7 @@ impl MPI {
         match unsafe { botan_mp_is_even(self.obj) } {
             0 => Ok(false),
             1 => Ok(true),
-            e => Err(Error::from(e))
+            e => Err(Error::from(e)),
         }
     }
 
@@ -233,7 +234,7 @@ impl MPI {
         match unsafe { botan_mp_equal(self.obj, other.obj) } {
             0 => Ok(false),
             1 => Ok(true),
-            e => Err(Error::from(e))
+            e => Err(Error::from(e)),
         }
     }
 
@@ -247,7 +248,7 @@ impl MPI {
             -1 => Ok(Ordering::Less),
             0 => Ok(Ordering::Equal),
             1 => Ok(Ordering::Greater),
-            _ => Err(Error::ConversionError)
+            _ => Err(Error::ConversionError),
         }
     }
 
@@ -355,7 +356,7 @@ impl MPI {
 
         call_botan! { botan_mp_div(q.obj, r.obj, self.obj, z.obj) };
 
-        Ok((q,r))
+        Ok((q, r))
     }
 
     /// Swap two MPI values
@@ -379,7 +380,7 @@ impl MPI {
         match rc {
             0 => Ok(false),
             1 => Ok(true),
-            e => Err(Error::from(e))
+            e => Err(Error::from(e)),
         }
     }
 
@@ -411,7 +412,6 @@ impl MPI {
         call_botan! { botan_mp_powmod(r.obj, x.obj, e.obj, m.obj) };
         Ok(r)
     }
-
 }
 
 impl PartialOrd for MPI {
@@ -429,12 +429,10 @@ impl PartialEq for MPI {
 impl Eq for MPI {}
 
 impl Ord for MPI {
-
     fn cmp(&self, other: &MPI) -> Ordering {
         self.compare(other).expect("botan_mp_cmp should succeed")
     }
 }
-
 
 impl FromStr for MPI {
     type Err = Error;
@@ -483,12 +481,13 @@ impl<'a> Add<&'a MPI> for MPI {
     type Output = MPI;
 
     fn add(mut self, other: &MPI) -> MPI {
-        self.mp_add_assign(other).expect("MPI::mp_add_assign succeeded");
+        self.mp_add_assign(other)
+            .expect("MPI::mp_add_assign succeeded");
         self
     }
 }
 
-impl<'a,'b> Add<&'a MPI> for &'b MPI {
+impl<'a, 'b> Add<&'a MPI> for &'b MPI {
     type Output = MPI;
 
     fn add(self, other: &MPI) -> MPI {
@@ -500,7 +499,8 @@ impl Add<u32> for MPI {
     type Output = MPI;
 
     fn add(mut self, other: u32) -> MPI {
-        self.mp_add_u32_assign(other).expect("MPI::mp_add_u32_assign succeeded");
+        self.mp_add_u32_assign(other)
+            .expect("MPI::mp_add_u32_assign succeeded");
         self
     }
 }
@@ -515,13 +515,15 @@ impl<'a> Add<u32> for &'a MPI {
 
 impl<'a> AddAssign<&'a MPI> for MPI {
     fn add_assign(&mut self, other: &MPI) {
-        self.mp_add_assign(&other).expect("MPI::mp_add_assign succeeded");
+        self.mp_add_assign(&other)
+            .expect("MPI::mp_add_assign succeeded");
     }
 }
 
 impl AddAssign<u32> for MPI {
     fn add_assign(&mut self, other: u32) {
-        self.mp_add_u32_assign(other).expect("MPI::mp_add_u32_assign succeeded");
+        self.mp_add_u32_assign(other)
+            .expect("MPI::mp_add_u32_assign succeeded");
     }
 }
 
@@ -529,12 +531,13 @@ impl<'a> Sub<&'a MPI> for MPI {
     type Output = MPI;
 
     fn sub(mut self, other: &MPI) -> MPI {
-        self.mp_sub_assign(other).expect("MPI::mp_sub_assign succeeded");
+        self.mp_sub_assign(other)
+            .expect("MPI::mp_sub_assign succeeded");
         self
     }
 }
 
-impl<'a,'b> Sub<&'a MPI> for &'b MPI {
+impl<'a, 'b> Sub<&'a MPI> for &'b MPI {
     type Output = MPI;
 
     fn sub(self, other: &MPI) -> MPI {
@@ -546,7 +549,8 @@ impl Sub<u32> for MPI {
     type Output = MPI;
 
     fn sub(mut self, other: u32) -> MPI {
-        self.mp_sub_u32_assign(other).expect("MPI::mp_sub_u32_assign succeeded");
+        self.mp_sub_u32_assign(other)
+            .expect("MPI::mp_sub_u32_assign succeeded");
         self
     }
 }
@@ -561,27 +565,29 @@ impl<'a> Sub<u32> for &'a MPI {
 
 impl<'a> SubAssign<&'a MPI> for MPI {
     fn sub_assign(&mut self, other: &MPI) {
-        self.mp_sub_assign(&other).expect("MPI::mp_sub_assign succeeded");
+        self.mp_sub_assign(&other)
+            .expect("MPI::mp_sub_assign succeeded");
     }
 }
 
 impl SubAssign<u32> for MPI {
     fn sub_assign(&mut self, other: u32) {
-        self.mp_sub_u32_assign(other).expect("MPI::mp_sub_u32_assign succeeded");
+        self.mp_sub_u32_assign(other)
+            .expect("MPI::mp_sub_u32_assign succeeded");
     }
 }
-
 
 impl<'a> Mul<&'a MPI> for MPI {
     type Output = MPI;
 
     fn mul(mut self, other: &MPI) -> MPI {
-        self.mp_mul_assign(other).expect("MPI::mp_mul_assign succeeded");
+        self.mp_mul_assign(other)
+            .expect("MPI::mp_mul_assign succeeded");
         self
     }
 }
 
-impl<'a,'b> Mul<&'a MPI> for &'b MPI {
+impl<'a, 'b> Mul<&'a MPI> for &'b MPI {
     type Output = MPI;
 
     fn mul(self, other: &MPI) -> MPI {
@@ -591,11 +597,12 @@ impl<'a,'b> Mul<&'a MPI> for &'b MPI {
 
 impl<'a> MulAssign<&'a MPI> for MPI {
     fn mul_assign(&mut self, other: &MPI) {
-        self.mp_mul_assign(&other).expect("MPI::mp_mul_assign succeeded");
+        self.mp_mul_assign(&other)
+            .expect("MPI::mp_mul_assign succeeded");
     }
 }
 
-impl<'a,'b> Div<&'b MPI> for &'a MPI {
+impl<'a, 'b> Div<&'b MPI> for &'a MPI {
     type Output = MPI;
 
     #[inline]
@@ -611,7 +618,7 @@ impl<'a> DivAssign<&'a MPI> for MPI {
     }
 }
 
-impl<'a,'b> Rem<&'b MPI> for &'a MPI {
+impl<'a, 'b> Rem<&'b MPI> for &'a MPI {
     type Output = MPI;
 
     fn rem(self, other: &MPI) -> MPI {
@@ -635,9 +642,9 @@ impl<'a> Shl<usize> for &'a MPI {
 }
 
 impl ShlAssign<usize> for MPI {
-
     fn shl_assign(&mut self, shift: usize) {
-        self.mp_shl_assign(shift).expect("MPI::mp_shl_assign succeeded")
+        self.mp_shl_assign(shift)
+            .expect("MPI::mp_shl_assign succeeded")
     }
 }
 
@@ -650,9 +657,9 @@ impl<'a> Shr<usize> for &'a MPI {
 }
 
 impl ShrAssign<usize> for MPI {
-
     fn shr_assign(&mut self, shift: usize) {
-        self.mp_shr_assign(shift).expect("MPI::mp_shr_assign succeeded")
+        self.mp_shr_assign(shift)
+            .expect("MPI::mp_shr_assign succeeded")
     }
 }
 

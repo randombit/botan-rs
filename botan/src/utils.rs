@@ -9,9 +9,9 @@ pub(crate) use cstr_core::{CStr, CString};
 #[cfg(not(feature = "no-std"))]
 pub(crate) use std::ffi::{CStr, CString};
 
-pub(crate) use cty::{c_char, c_int, c_void};
-pub(crate) use core::ptr;
 pub(crate) use core::mem;
+pub(crate) use core::ptr;
+pub(crate) use cty::{c_char, c_int, c_void};
 
 /// The result of calling an operation on the library
 pub type Result<T> = ::core::result::Result<T, Error>;
@@ -23,8 +23,8 @@ pub(crate) fn make_cstr(input: &str) -> Result<CString> {
 
 pub(crate) fn call_botan_ffi_returning_vec_u8(
     initial_size: usize,
-    cb: &dyn Fn(*mut u8, *mut usize) -> c_int) -> Result<Vec<u8>> {
-
+    cb: &dyn Fn(*mut u8, *mut usize) -> c_int,
+) -> Result<Vec<u8>> {
     let mut output = vec![0; initial_size];
     let mut out_len = output.len();
 
@@ -33,8 +33,7 @@ pub(crate) fn call_botan_ffi_returning_vec_u8(
         assert!(out_len <= output.len());
         output.resize(out_len, 0);
         return Ok(output);
-    }
-    else if rc != BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE {
+    } else if rc != BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE {
         return Err(Error::from(rc));
     }
 
@@ -51,16 +50,19 @@ pub(crate) fn call_botan_ffi_returning_vec_u8(
 
 pub(crate) fn call_botan_ffi_returning_string(
     initial_size: usize,
-    cb: &dyn Fn(*mut u8, *mut usize) -> c_int) -> Result<String> {
-
+    cb: &dyn Fn(*mut u8, *mut usize) -> c_int,
+) -> Result<String> {
     let v = call_botan_ffi_returning_vec_u8(initial_size, cb)?;
 
     let cstr = CStr::from_bytes_with_nul(&v).map_err(|_| Error::ConversionError)?;
-    let ostr = cstr.to_str().map_err(|_| Error::ConversionError)?.to_owned();
+    let ostr = cstr
+        .to_str()
+        .map_err(|_| Error::ConversionError)?
+        .to_owned();
     Ok(ostr)
 }
 
-#[derive(Clone,Debug,PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 /// Possible errors
 pub enum Error {
     /// A provided authentication code was incorrect
@@ -140,7 +142,6 @@ pub struct KeySpec {
 }
 
 impl KeySpec {
-
     pub(crate) fn new(min_keylen: usize, max_keylen: usize, mod_keylen: usize) -> Result<KeySpec> {
         if min_keylen > max_keylen {
             return Err(Error::ConversionError);
@@ -149,7 +150,11 @@ impl KeySpec {
             return Err(Error::ConversionError);
         }
 
-        Ok(KeySpec { min_keylen, max_keylen, mod_keylen })
+        Ok(KeySpec {
+            min_keylen,
+            max_keylen,
+            mod_keylen,
+        })
     }
 
     /// Return true if the specified key length is valid for this object
@@ -177,5 +182,4 @@ impl KeySpec {
     pub fn keylength_multiple(&self) -> usize {
         self.mod_keylen
     }
-
 }

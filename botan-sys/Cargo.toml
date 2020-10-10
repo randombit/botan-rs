@@ -26,4 +26,4 @@ vendored = ["botan-src"]
 cty = { version = "0.2" }
 
 [build-dependencies]
-botan-src = { version = "0.21500", optional = true, path = "../botan-src" }
+botan-src = { version = "0.21600", optional = true, path = "../botan-src" }
