@@ -1,4 +1,4 @@
-use cty::{c_int, c_char};
+use cty::{c_char, c_int};
 
 extern "C" {
 
@@ -13,4 +13,3 @@ extern "C" {
     pub fn botan_version_patch() -> u32;
     pub fn botan_version_datestamp() -> u32;
 }
-

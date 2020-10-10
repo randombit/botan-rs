@@ -6,13 +6,15 @@ use botan_sys::*;
 
 #[test]
 fn test_hex() {
-
     let bin = vec![0x42, 0x23, 0x45, 0x8F];
     let mut out = Vec::new();
-    out.resize(bin.len()*2, 0);
+    out.resize(bin.len() * 2, 0);
 
     unsafe {
-        assert_eq!(botan_hex_encode(bin.as_ptr(), bin.len(), out.as_mut_ptr(), 0), 0);
+        assert_eq!(
+            botan_hex_encode(bin.as_ptr(), bin.len(), out.as_mut_ptr(), 0),
+            0
+        );
     }
 
     assert_eq!(out[0], '4' as _);
@@ -28,7 +30,10 @@ fn test_hex() {
     let mut out_len = decoded.len();
 
     unsafe {
-        assert_eq!(botan_hex_decode(out.as_ptr(), out.len(), decoded.as_mut_ptr(), &mut out_len), 0);
+        assert_eq!(
+            botan_hex_decode(out.as_ptr(), out.len(), decoded.as_mut_ptr(), &mut out_len),
+            0
+        );
     }
 
     assert_eq!(out_len, bin.len());
@@ -38,12 +43,14 @@ fn test_hex() {
 
 #[test]
 fn test_hash() {
-
     unsafe {
         let mut hash = std::ptr::null_mut();
-        assert_eq!(botan_hash_init(&mut hash, CString::new("SHA-384").unwrap().as_ptr(), 0u32), 0);
+        assert_eq!(
+            botan_hash_init(&mut hash, CString::new("SHA-384").unwrap().as_ptr(), 0u32),
+            0
+        );
 
-        let input = vec![97,98,99];
+        let input = vec![97, 98, 99];
         assert_eq!(botan_hash_update(hash, input.as_ptr(), input.len()), 0);
         assert_eq!(botan_hash_update(hash, input.as_ptr(), input.len()), 0);
 
@@ -64,7 +71,6 @@ fn test_hash() {
 
 #[test]
 fn test_version() {
-
     unsafe {
         let api_version = botan_ffi_api_version();
 
@@ -93,4 +99,3 @@ fn test_rng() {
         assert_eq!(botan_rng_destroy(rng), 0);
     }
 }
-

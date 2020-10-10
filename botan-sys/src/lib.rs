@@ -1,6 +1,5 @@
 #![deny(warnings)]
 #![allow(non_camel_case_types)]
-
 #![no_std]
 
 extern crate cty;
@@ -28,8 +27,8 @@ pub use cipher::*;
 pub use errors::*;
 pub use fpe::*;
 pub use hash::*;
-pub use keywrap::*;
 pub use kdf::*;
+pub use keywrap::*;
 pub use mac::*;
 pub use mp::*;
 pub use otp::*;

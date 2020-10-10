@@ -1,6 +1,6 @@
-use cty::{c_int, c_char, c_uint};
+use cty::{c_char, c_int, c_uint};
 
-use pubkey::{botan_pubkey_t, botan_privkey_t};
+use pubkey::{botan_privkey_t, botan_pubkey_t};
 use rng::botan_rng_t;
 
 pub enum botan_x509_cert_struct {}
@@ -26,10 +26,7 @@ extern "C" {
         cert: *const u8,
         cert_len: usize,
     ) -> c_int;
-    pub fn botan_x509_cert_dup(
-        cert_obj: *mut botan_x509_cert_t,
-        cert: botan_x509_cert_t,
-    ) -> c_int;
+    pub fn botan_x509_cert_dup(cert_obj: *mut botan_x509_cert_t, cert: botan_x509_cert_t) -> c_int;
     pub fn botan_x509_cert_load_file(
         cert_obj: *mut botan_x509_cert_t,
         filename: *const c_char,
@@ -102,10 +99,7 @@ extern "C" {
         out_len: *mut usize,
     ) -> c_int;
 
-    pub fn botan_x509_cert_allowed_usage(
-        cert: botan_x509_cert_t,
-        key_usage: c_uint,
-    ) -> c_int;
+    pub fn botan_x509_cert_allowed_usage(cert: botan_x509_cert_t, key_usage: c_uint) -> c_int;
     pub fn botan_x509_cert_hostname_match(
         cert: botan_x509_cert_t,
         hostname: *const c_char,
@@ -121,7 +115,8 @@ extern "C" {
         trusted_path: *const c_char,
         required_key_strength: usize,
         hostname: *const c_char,
-        reference_time: u64) -> c_int;
+        reference_time: u64,
+    ) -> c_int;
 
     pub fn botan_x509_cert_validation_status(code: c_int) -> *const c_char;
 }

@@ -1,13 +1,11 @@
-use cty::{c_int, c_char};
+use cty::{c_char, c_int};
 
 pub enum botan_hash_struct {}
 pub type botan_hash_t = *mut botan_hash_struct;
 
 extern "C" {
 
-    pub fn botan_hash_init(hash: *mut botan_hash_t,
-                           hash_name: *const c_char,
-                           flags: u32) -> c_int;
+    pub fn botan_hash_init(hash: *mut botan_hash_t, hash_name: *const c_char, flags: u32) -> c_int;
 
     pub fn botan_hash_copy_state(dest: *mut botan_hash_t, source: botan_hash_t) -> c_int;
 

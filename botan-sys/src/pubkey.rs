@@ -1,4 +1,4 @@
-use cty::{c_int, c_char};
+use cty::{c_char, c_int};
 
 use mp::botan_mp_t;
 use rng::botan_rng_t;
@@ -16,11 +16,7 @@ extern "C" {
         algo_params: *const c_char,
         rng: botan_rng_t,
     ) -> c_int;
-    pub fn botan_privkey_check_key(
-        key: botan_privkey_t,
-        rng: botan_rng_t,
-        flags: u32,
-    ) -> c_int;
+    pub fn botan_privkey_check_key(key: botan_privkey_t, rng: botan_rng_t, flags: u32) -> c_int;
     pub fn botan_privkey_create_rsa(
         key: *mut botan_privkey_t,
         rng: botan_rng_t,
@@ -106,15 +102,8 @@ extern "C" {
         flags: u32,
     ) -> c_int;
 
-    pub fn botan_pubkey_load(
-        key: *mut botan_pubkey_t,
-        bits: *const u8,
-        len: usize,
-    ) -> c_int;
-    pub fn botan_privkey_export_pubkey(
-        out: *mut botan_pubkey_t,
-        in_: botan_privkey_t,
-    ) -> c_int;
+    pub fn botan_pubkey_load(key: *mut botan_pubkey_t, bits: *const u8, len: usize) -> c_int;
+    pub fn botan_privkey_export_pubkey(out: *mut botan_pubkey_t, in_: botan_privkey_t) -> c_int;
     pub fn botan_pubkey_export(
         key: botan_pubkey_t,
         out: *mut u8,
@@ -131,15 +120,8 @@ extern "C" {
         out: *mut c_char,
         out_len: *mut usize,
     ) -> c_int;
-    pub fn botan_pubkey_check_key(
-        key: botan_pubkey_t,
-        rng: botan_rng_t,
-        flags: u32,
-    ) -> c_int;
-    pub fn botan_pubkey_estimated_strength(
-        key: botan_pubkey_t,
-        estimate: *mut usize,
-    ) -> c_int;
+    pub fn botan_pubkey_check_key(key: botan_pubkey_t, rng: botan_rng_t, flags: u32) -> c_int;
+    pub fn botan_pubkey_estimated_strength(key: botan_pubkey_t, estimate: *mut usize) -> c_int;
     pub fn botan_pubkey_fingerprint(
         key: botan_pubkey_t,
         hash: *const c_char,
@@ -166,32 +148,14 @@ extern "C" {
     pub fn botan_privkey_load_rsa_pkcs1(
         key: *mut botan_privkey_t,
         bits: *const u8,
-        len: usize) -> c_int;
-    pub fn botan_privkey_rsa_get_p(
-        p: botan_mp_t,
-        rsa_key: botan_privkey_t,
+        len: usize,
     ) -> c_int;
-    pub fn botan_privkey_rsa_get_q(
-        q: botan_mp_t,
-        rsa_key: botan_privkey_t,
-    ) -> c_int;
-    pub fn botan_privkey_rsa_get_d(
-        d: botan_mp_t,
-        rsa_key: botan_privkey_t,
-    ) -> c_int;
-    pub fn botan_privkey_rsa_get_n(
-        n: botan_mp_t,
-        rsa_key: botan_privkey_t,
-    ) -> c_int;
-    pub fn botan_privkey_rsa_get_e(
-        e: botan_mp_t,
-        rsa_key: botan_privkey_t,
-    ) -> c_int;
-    pub fn botan_pubkey_load_rsa(
-        key: *mut botan_pubkey_t,
-        n: botan_mp_t,
-        e: botan_mp_t,
-    ) -> c_int;
+    pub fn botan_privkey_rsa_get_p(p: botan_mp_t, rsa_key: botan_privkey_t) -> c_int;
+    pub fn botan_privkey_rsa_get_q(q: botan_mp_t, rsa_key: botan_privkey_t) -> c_int;
+    pub fn botan_privkey_rsa_get_d(d: botan_mp_t, rsa_key: botan_privkey_t) -> c_int;
+    pub fn botan_privkey_rsa_get_n(n: botan_mp_t, rsa_key: botan_privkey_t) -> c_int;
+    pub fn botan_privkey_rsa_get_e(e: botan_mp_t, rsa_key: botan_privkey_t) -> c_int;
+    pub fn botan_pubkey_load_rsa(key: *mut botan_pubkey_t, n: botan_mp_t, e: botan_mp_t) -> c_int;
     pub fn botan_pubkey_rsa_get_e(e: botan_mp_t, rsa_key: botan_pubkey_t) -> c_int;
     pub fn botan_pubkey_rsa_get_n(n: botan_mp_t, rsa_key: botan_pubkey_t) -> c_int;
     pub fn botan_privkey_load_dsa(
@@ -237,39 +201,15 @@ extern "C" {
         g: botan_mp_t,
         x: botan_mp_t,
     ) -> c_int;
-    pub fn botan_privkey_load_ed25519(
-        key: *mut botan_privkey_t,
-        privkey: *const u8,
-    ) -> c_int;
-    pub fn botan_pubkey_load_ed25519(
-        key: *mut botan_pubkey_t,
-        pubkey: *const u8,
-    ) -> c_int;
-    pub fn botan_privkey_ed25519_get_privkey(
-        key: botan_privkey_t,
-        output: *mut u8,
-    ) -> c_int;
-    pub fn botan_pubkey_ed25519_get_pubkey(
-        key: botan_pubkey_t,
-        pubkey: *mut u8,
-    ) -> c_int;
+    pub fn botan_privkey_load_ed25519(key: *mut botan_privkey_t, privkey: *const u8) -> c_int;
+    pub fn botan_pubkey_load_ed25519(key: *mut botan_pubkey_t, pubkey: *const u8) -> c_int;
+    pub fn botan_privkey_ed25519_get_privkey(key: botan_privkey_t, output: *mut u8) -> c_int;
+    pub fn botan_pubkey_ed25519_get_pubkey(key: botan_pubkey_t, pubkey: *mut u8) -> c_int;
 
-    pub fn botan_privkey_load_x25519(
-        key: *mut botan_privkey_t,
-        privkey: *const u8,
-    ) -> c_int;
-    pub fn botan_pubkey_load_x25519(
-        key: *mut botan_pubkey_t,
-        pubkey: *const u8,
-    ) -> c_int;
-    pub fn botan_privkey_x25519_get_privkey(
-        key: botan_privkey_t,
-        output: *mut u8,
-    ) -> c_int;
-    pub fn botan_pubkey_x25519_get_pubkey(
-        key: botan_pubkey_t,
-        pubkey: *mut u8,
-    ) -> c_int;
+    pub fn botan_privkey_load_x25519(key: *mut botan_privkey_t, privkey: *const u8) -> c_int;
+    pub fn botan_pubkey_load_x25519(key: *mut botan_pubkey_t, pubkey: *const u8) -> c_int;
+    pub fn botan_privkey_x25519_get_privkey(key: botan_privkey_t, output: *mut u8) -> c_int;
+    pub fn botan_pubkey_x25519_get_pubkey(key: botan_pubkey_t, pubkey: *mut u8) -> c_int;
 
     pub fn botan_privkey_load_ecdsa(
         key: *mut botan_privkey_t,
