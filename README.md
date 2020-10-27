@@ -1,6 +1,6 @@
 # botan-rs
 
-[![Build status](https://travis-ci.org/randombit/botan-rs.svg?branch=master)](https://travis-ci.org/randombit/botan-rs)
+[![Build status](https://api.travis-ci.com/randombit/botan-rs.svg?branch=master)](https://travis-ci.com/github/randombit/botan-rs)
 [![crates.io](https://img.shields.io/crates/v/botan.svg)](https://crates.io/crates/botan)
 [![docs.rs](https://docs.rs/botan/badge.svg)](https://docs.rs/botan)
 
