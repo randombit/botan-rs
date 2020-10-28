@@ -18,6 +18,14 @@ jobs:
     - name: "Stable x86-64"
       rust: stable
 
+    - name: "Stable arm64"
+      arch: arm64
+      rust: stable
+
+    - name: "Stable ppc64le"
+      arch: ppc64le
+      rust: stable
+
     - name: "Beta x86-64"
       rust: beta
 
@@ -28,14 +36,6 @@ jobs:
       rust: nightly
       env:
        - FEATURES="no-std"
-
-    - name: "Stable arm64"
-      arch: arm64
-      rust: stable
-
-    - name: "Stable ppc64le"
-      arch: ppc64le
-      rust: stable
 
 cache:
   directories:
