@@ -2,11 +2,11 @@
 
 set -ev
 
+sudo apt-get install ccache
+
 cd /tmp
 
 git clone --depth 1 https://github.com/randombit/botan.git
-
-sudo apt-get install ccache
 
 cd botan
 CXX='ccache g++' CXXFLAGS=-O ./configure.py --disable-static --without-documentation --with-debug-info
