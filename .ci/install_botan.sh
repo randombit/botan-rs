@@ -2,6 +2,8 @@
 
 set -ev
 
+sudo apt-get install ccache
+
 cd /tmp
 
 git clone --depth 1 https://github.com/randombit/botan.git
