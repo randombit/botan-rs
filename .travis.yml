@@ -1,6 +1,6 @@
 language: rust
 os: linux
-dist: bionic
+dist: focal
 
 branches:
   only:
