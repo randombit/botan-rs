@@ -7,11 +7,11 @@ branches:
     - master
 
 install:
-  - ./.ci/install_botan.sh
+  - sudo apt-get install ccache
   - rustup component add clippy
 
 script:
-  - ./.ci/build.sh
+  - ./.ci/build.sh $FEATURES
 
 jobs:
   include:
@@ -29,8 +29,15 @@ jobs:
     - name: "Beta x86-64"
       rust: beta
 
-    - name: "Nightly x86-64"
+    - name: "Nightly ppc64le"
+      arch: ppc64le
       rust: nightly
+
+#    - name: "Stable arm64 vendored"
+#      arch: arm64
+#      rust: stable
+#      env:
+#       - FEATURES="vendored"
 
     - name: "Nightly x86-64 no_std"
       rust: nightly

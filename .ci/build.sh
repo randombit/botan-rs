@@ -1,6 +1,20 @@
-#!/bin/sh
+#!/bin/bash
 
 set -ev
+
+if [ "x$FEATURES" != "xvendored" ]; then
+    pushd /tmp
+
+    git clone --branch release-2 --depth 1 https://github.com/randombit/botan.git
+
+    cd botan
+    CXX='ccache g++' CXXFLAGS=-O ./configure.py --disable-static --without-documentation --with-debug-info
+    make -j$(nproc) libs cli
+    sudo make install
+    sudo ldconfig
+
+    popd
+fi
 
 if [ "x$FEATURES" = "x" ]; then
     cargo build --verbose
