@@ -1,5 +1,5 @@
 
-## 0.7.1 Not Yet Released
+## 0.8.0 Not Yet Released
 
 - Update botan-src to upstream 2.17.1 release
 - Add ability to encrypt in place in raw block cipher API
