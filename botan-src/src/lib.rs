@@ -14,14 +14,19 @@ macro_rules! pathbuf_to_string {
 }
 
 macro_rules! add_env_arg {
-    ($cnf: ident, $env_name: expr, $arg_name: expr, $is_flag: expr) => {
+    ($cnf: ident, $env_name: expr, $arg_name: expr) => {
         if let Ok(val) = env::var($env_name) {
-            let arg = if $is_flag {
-                format!("{}", $arg_name)
-            } else {
-                format!("{}={}", $arg_name, val)
-            };
+            let arg = format!("{}={}", $arg_name, val);
             $cnf.arg(&arg);
+        }
+    };
+}
+
+macro_rules! add_env_flag {
+    ($cnf: ident, $env_name: expr, $arg_name: expr) => {
+        if let Ok(_) = env::var($env_name) {
+            let flag = format!("{}", $arg_name);
+            $cnf.arg(&flag);
         }
     };
 }
@@ -36,41 +41,42 @@ fn configure(build_dir: &str) {
     configure.arg("--distribution-info=https://crates.io/crates/botan-src");
     #[cfg(debug_assertions)]
     configure.arg("--with-debug-info");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_OS", "--os", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_CPU", "--cpu", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_CC", "--cc", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_CC_MIN_VERSION", "--cc-min-version", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_CC_BIN", "--cc-bin", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_CC_API_FLAGS", "--cc-abi-flags", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_CXXFLAGS", "--cxxflags", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_EXTRA_CXXFLAGS", "--extra-cxxflags", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_LDFLAGS", "--ldflags", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_AR_COMMAND", "--ar-command", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_AR_OPTIONS", "--ar-options", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_MSVC_RUNTIME", "--msvc-runtime", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_ENDIAN", "--with-endian", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_OS_FEATURES", "--with-os-features", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITHOUT_OS_FEATURES", "--without-os-features", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_OPTIMIZE_FOR_SIZE", "--optimize-for-size", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_NO_OPTIMIZATIONS", "--no-optimizations", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_AMALGAMATION", "--amalgamation", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_SYSTEM_CERT_BUNDLE", "--system-cert-bundle", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_LOCAL_CONFIG", "--with-local-config", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_BOOST_LIBRARY_NAME", "--boost-library-name", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_MODULE_POLICY", "--module-policy", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_ENABLE_MODULES", "--enable-modules", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_MODULES", "--disable-modules", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_MINIMIZED_BUILD", "--minimized-build", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_OPENSSL", "--with-openssl", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_COMMONCRYPTO", "--with-commoncrypto", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_SQLITE3", "--with-sqlite3", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_PROGRAM_SUFFIX", "--program-suffix", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_LIBRARY_SUFFIX", "--library-suffix", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_PREFIX", "--prefix", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_BINDIR", "--bindir", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_LIBDIR", "--libdir", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_MANDIR", "--mandir", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_INCLUDEDIR", "--includedir", false);
+    add_env_arg!(configure, "BOTAN_CONFIGURE_OS", "--os");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_CPU", "--cpu");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_COMPILER_CACHE", "--compiler-cache");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_CC", "--cc");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_CC_MIN_VERSION", "--cc-min-version");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_CC_BIN", "--cc-bin");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_CC_API_FLAGS", "--cc-abi-flags");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_CXXFLAGS", "--cxxflags");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_EXTRA_CXXFLAGS", "--extra-cxxflags");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_LDFLAGS", "--ldflags");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_AR_COMMAND", "--ar-command");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_AR_OPTIONS", "--ar-options");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_MSVC_RUNTIME", "--msvc-runtime");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_ENDIAN", "--with-endian");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_OS_FEATURES", "--with-os-features");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_WITHOUT_OS_FEATURES", "--without-os-features");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_SYSTEM_CERT_BUNDLE", "--system-cert-bundle");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_LOCAL_CONFIG", "--with-local-config");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_BOOST_LIBRARY_NAME", "--boost-library-name");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_MODULE_POLICY", "--module-policy");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_ENABLE_MODULES", "--enable-modules");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_MODULES", "--disable-modules");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_LIBRARY_SUFFIX", "--library-suffix");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_PREFIX", "--prefix");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_LIBDIR", "--libdir");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_MANDIR", "--mandir");
+    add_env_arg!(configure, "BOTAN_CONFIGURE_INCLUDEDIR", "--includedir");
+
+    add_env_flag!(configure, "BOTAN_CONFIGURE_OPTIMIZE_FOR_SIZE", "--optimize-for-size");
+    add_env_flag!(configure, "BOTAN_CONFIGURE_NO_OPTIMIZATIONS", "--no-optimizations");
+    add_env_flag!(configure, "BOTAN_CONFIGURE_AMALGAMATION", "--amalgamation");
+    add_env_flag!(configure, "BOTAN_CONFIGURE_MINIMIZED_BUILD", "--minimized-build");
+    add_env_flag!(configure, "BOTAN_CONFIGURE_WITH_OPENSSL", "--with-openssl");
+    add_env_flag!(configure, "BOTAN_CONFIGURE_WITH_COMMONCRYPTO", "--with-commoncrypto");
+    add_env_flag!(configure, "BOTAN_CONFIGURE_WITH_SQLITE3", "--with-sqlite3");
+
     let status = configure
         .spawn()
         .expect(BUILD_ERROR_MSG)
