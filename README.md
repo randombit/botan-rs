@@ -5,10 +5,14 @@
 [![docs.rs](https://docs.rs/botan/badge.svg)](https://docs.rs/botan)
 
 This crate wraps the C API exposed by the [Botan](https://botan.randombit.net/)
-cryptography library. Botan 2.8.0 or higher is required.
+cryptography library. The current version requires Botan 2.8.0 or higher
+and Rust 1.36.0 or higher.
 
-Rust 1.36.0 or later are supported.  `no_std` builds are supported,
-just use feature `no-std`.
+The following features are supported:
+
+* `no-std`: Enable a no-std build. (Still uses `alloc`)
+* `vendored`: Build a copy of the C++ library directly, without
+  relying on a system installed version.
 
 Currently the crate exposes ciphers, hashes, MACs, KDFs, password based
 key derivation (PBKDF2, Scrypt, Argon2, etc), bcrypt password hashes,
