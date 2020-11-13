@@ -32,6 +32,8 @@ fn configure(build_dir: &str) {
     configure.arg(format!("--with-build-dir={}", build_dir));
     configure.arg("--build-targets=static");
     configure.arg("--without-documentation");
+    configure.arg("--no-install-python-module");
+    configure.arg("--distribution-info=https://crates.io/crates/botan-src");
     #[cfg(debug_assertions)]
     configure.arg("--debug-mode");
     add_env_arg!(configure, "BOTAN_CONFIGURE_OS", "--os", false);
@@ -49,58 +51,19 @@ fn configure(build_dir: &str) {
     add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_ENDIAN", "--with-endian", false);
     add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_OS_FEATURES", "--with-os-features", false);
     add_env_arg!(configure, "BOTAN_CONFIGURE_WITHOUT_OS_FEATURES", "--without-os-features", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_SSE2", "--disable-sse2", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_SSE3", "--disable-sse3", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_SSE4-1", "--disable-sse4.1", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_SSE4-2", "--disable-sse4.2", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_AVX2", "--disable-avx2", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_BMI2", "--disable-bmi2", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_RDRAND", "--disable-rdrand", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_RDSEED", "--disable-rdseed", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_AES_NI", "--disable-aes-ni", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_SHA_NI", "--disable-sha-ni", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_ALTIVEC", "--disable-altivec", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_NEON", "--disable-neon", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_ARMV8CRYPTO", "--disable-armv8crypto", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_POWERCRYPTO", "--disable-powercrypto", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_SANITIZERS", "--with-sanitizers", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_ENABLE_SANITIZERS", "--enable-sanitizers", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITHOUT_STACK_PROTECTOR", "--without-stack-protector", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_COVERAGE", "--with-coverage", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_COVERAGE_INFO", "--with-coverage-info", true);
     add_env_arg!(configure, "BOTAN_CONFIGURE_OPTIMIZE_FOR_SIZE", "--optimize-for-size", true);
     add_env_arg!(configure, "BOTAN_CONFIGURE_NO_OPTIMIZATIONS", "--no-optimizations", true);
     add_env_arg!(configure, "BOTAN_CONFIGURE_AMALGAMATION", "--amalgamation", true);
     add_env_arg!(configure, "BOTAN_CONFIGURE_SYSTEM_CERT_BUNDLE", "--system-cert-bundle", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_EXTERNAL_INCLUDEDIR", "--with-external-includedir", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_EXTERNAL_LIBDIR", "--with-external-libdir", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DEFINE_BUILD_MACRO", "--define-build-macro", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_SYSROOT_DIR", "--with-sysroot-dir", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_OPENMP", "--with-openmp", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_LINK_METHOD", "--link-method", false);
     add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_LOCAL_CONFIG", "--with-local-config", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISTRIBUTION_INFO", "--distribution-info", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_MAINTAINER_MODE", "--maintainer-mode", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WERROR_MODE", "--werror-mode", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_NO_INSTALL_PYTHON_MODULE", "--no-install-python-module", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_PYTHON_VERSIONS", "--with-python-versions", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_VALGRIND", "--with-valgrind", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_UNSAFE_FUZZER_MODE", "--unsafe-fuzzer-mode", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_BUILD_FUZZERS", "--build-fuzzers", false);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_FUZZER_LIB", "--with-fuzzer-lib", false);
     add_env_arg!(configure, "BOTAN_CONFIGURE_BOOST_LIBRARY_NAME", "--boost-library-name", false);
     add_env_arg!(configure, "BOTAN_CONFIGURE_MODULE_POLICY", "--module-policy", false);
     add_env_arg!(configure, "BOTAN_CONFIGURE_ENABLE_MODULES", "--enable-modules", false);
     add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_MODULES", "--disable-modules", false);
     add_env_arg!(configure, "BOTAN_CONFIGURE_MINIMIZED_BUILD", "--minimized-build", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_BOOST", "--with-boost", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_BZIP2", "--with-bzip2", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_LZMA", "--with-lzma", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_ZLIB", "--with-zlib", true);
     add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_OPENSSL", "--with-openssl", true);
     add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_COMMONCRYPTO", "--with-commoncrypto", true);
     add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_SQLITE3", "--with-sqlite3", true);
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_TPM", "--with-tpm", true);
     add_env_arg!(configure, "BOTAN_CONFIGURE_PROGRAM_SUFFIX", "--program-suffix", false);
     add_env_arg!(configure, "BOTAN_CONFIGURE_LIBRARY_SUFFIX", "--library-suffix", false);
     add_env_arg!(configure, "BOTAN_CONFIGURE_PREFIX", "--prefix", false);
@@ -130,6 +93,7 @@ fn make(build_dir: &str) {
     }
     let status = cmd.arg("-f")
         .arg(format!("{}/Makefile", build_dir))
+        .arg("libs")
         .spawn()
         .expect(BUILD_ERROR_MSG)
         .wait()
