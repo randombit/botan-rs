@@ -2,6 +2,9 @@ language: rust
 os: linux
 dist: focal
 
+git:
+   depth: 5
+
 branches:
   only:
     - master
