@@ -1,4 +1,3 @@
-#![deny(warnings)]
 #![warn(missing_docs)]
 #![deny(missing_docs)]
 
