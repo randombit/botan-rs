@@ -35,7 +35,7 @@ fn configure(build_dir: &str) {
     configure.arg("--no-install-python-module");
     configure.arg("--distribution-info=https://crates.io/crates/botan-src");
     #[cfg(debug_assertions)]
-    configure.arg("--debug-mode");
+    configure.arg("--with-debug-info");
     add_env_arg!(configure, "BOTAN_CONFIGURE_OS", "--os", false);
     add_env_arg!(configure, "BOTAN_CONFIGURE_CPU", "--cpu", false);
     add_env_arg!(configure, "BOTAN_CONFIGURE_CC", "--cc", false);
