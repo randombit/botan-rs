@@ -21,7 +21,7 @@ fi
 
 if [ "x$FEATURES" = "x" ]; then
     cargo build --verbose
-    cargo test --verbose
+    cargo test --verbose --test-threads 4
 
     if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then
         cargo clippy
@@ -30,8 +30,8 @@ if [ "x$FEATURES" = "x" ]; then
 else
     cd botan-sys
     cargo build --verbose --features "$FEATURES"
-    cargo test --verbose --features "$FEATURES"
+    cargo test --verbose --features "$FEATURES" --test-threads 4
     cd ../botan
     cargo build --verbose --features "$FEATURES"
-    cargo test --verbose --features "$FEATURES"
+    cargo test --verbose --features "$FEATURES" --test-threads 4
 fi
