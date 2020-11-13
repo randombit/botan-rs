@@ -12,7 +12,7 @@ if [ "x$FEATURES" != "xvendored" ]; then
     git clone --branch release-2 --depth 1 https://github.com/randombit/botan.git
 
     cd botan
-    CXX='ccache g++' ./configure.py --disable-static --without-documentation
+    ./configure.py --disable-static --without-documentation --compiler-cache=ccache
     ccache -s
     make -j$(nproc) libs cli
     ccache -s
