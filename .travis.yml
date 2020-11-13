@@ -33,11 +33,11 @@ jobs:
       arch: ppc64le
       rust: nightly
 
-#    - name: "Stable arm64 vendored"
-#      arch: arm64
-#      rust: stable
-#      env:
-#       - FEATURES="vendored"
+    - name: "Stable arm64 vendored"
+      arch: arm64
+      rust: stable
+      env:
+       - FEATURES="vendored"
 
     - name: "Nightly arm64 no_std"
       arch: arm64
