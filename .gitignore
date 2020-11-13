@@ -3,4 +3,7 @@ botan/target
 target
 **/*.rs.bk
 Cargo.lock
-raw.rs
+
+*~
+\#*\#
+.\#*
