@@ -4,6 +4,7 @@ set -ev
 
 # deny all warnings in CI
 export RUSTFLAGS="-D warnings"
+export CCACHE_MAXSIZE=2G
 
 if [ "x$FEATURES" != "xvendored" ]; then
     pushd /tmp
@@ -11,7 +12,7 @@ if [ "x$FEATURES" != "xvendored" ]; then
     git clone --branch release-2 --depth 1 https://github.com/randombit/botan.git
 
     cd botan
-    CXX='ccache g++' ./configure.py --disable-static --without-documentation --with-debug-info
+    CXX='ccache g++' ./configure.py --disable-static --without-documentation
     make -j$(nproc) libs cli
     sudo make install
     sudo ldconfig
