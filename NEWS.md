@@ -1,4 +1,11 @@
 
+## 0.7.1 Not Yet Released
+
+- Update botan-src to upstream 2.17.1 release
+- Add ability to encrypt in place in raw block cipher API
+- Fix a dangling pointer bug in the botan-sys tests which caused a
+  crash with recent nightly
+
 ## 0.7.0 2020-09-27
 
 - Add support for vendoring the Botan library via new botan-src crate
