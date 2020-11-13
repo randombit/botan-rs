@@ -5,6 +5,7 @@ set -ev
 # deny all warnings in CI
 export RUSTFLAGS="-D warnings"
 export CCACHE_MAXSIZE=2G
+export BOTAN_CONFIGURE_COMPILER_CACHE=ccache
 
 if [ "x$FEATURES" != "xvendored" ]; then
     pushd /tmp

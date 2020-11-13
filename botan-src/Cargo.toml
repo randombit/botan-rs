@@ -1,8 +1,8 @@
 [package]
 name = "botan-src"
-version = "0.21701.0"
+version = "0.21702.0"
 authors = ["Rodolphe Breard <rodolphe@what.tf>", "Jack Lloyd <jack@randombit.net>"]
-description = "Sources of for Botan cryptography library"
+description = "Sources of Botan cryptography library"
 license = "MIT"
 edition = "2018"
 homepage = "https://botan.randombit.net/"
