@@ -56,6 +56,9 @@ jobs:
       env:
        - FEATURES="no-std"
 
+    - name: "MSRV x86-64"
+      rust: 1.43.0
+
 cache:
   directories:
     - $HOME/.ccache
