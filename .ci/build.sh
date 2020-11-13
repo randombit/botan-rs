@@ -13,7 +13,9 @@ if [ "x$FEATURES" != "xvendored" ]; then
 
     cd botan
     CXX='ccache g++' ./configure.py --disable-static --without-documentation
+    ccache -s
     make -j$(nproc) libs cli
+    ccache -s
     sudo make install
     sudo ldconfig
 
