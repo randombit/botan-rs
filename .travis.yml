@@ -4,10 +4,14 @@ dist: focal
 
 git:
    depth: 5
+   submodules: false
 
 branches:
   only:
     - master
+
+before_install:
+  - git submodule update --init --recursive --depth 5
 
 install:
   - sudo apt-get install ccache
