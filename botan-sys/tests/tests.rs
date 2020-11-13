@@ -45,10 +45,8 @@ fn test_hex() {
 fn test_hash() {
     unsafe {
         let mut hash = std::ptr::null_mut();
-        assert_eq!(
-            botan_hash_init(&mut hash, CString::new("SHA-384").unwrap().as_ptr(), 0u32),
-            0
-        );
+        let hash_name = CString::new("SHA-384").unwrap();
+        assert_eq!(botan_hash_init(&mut hash, hash_name.as_ptr(), 0u32), 0);
 
         let input = vec![97, 98, 99];
         assert_eq!(botan_hash_update(hash, input.as_ptr(), input.len()), 0);

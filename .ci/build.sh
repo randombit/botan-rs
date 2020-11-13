@@ -2,6 +2,9 @@
 
 set -ev
 
+# deny all warnings in CI
+export RUSTFLAGS="-D warnings"
+
 if [ "x$FEATURES" != "xvendored" ]; then
     pushd /tmp
 
