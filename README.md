@@ -6,7 +6,7 @@
 
 This crate wraps the C API exposed by the [Botan](https://botan.randombit.net/)
 cryptography library. The current version requires Botan 2.8.0 or higher
-and Rust 1.36.0 or higher.
+and Rust 1.43.0 or higher.
 
 The following features are supported:
 
