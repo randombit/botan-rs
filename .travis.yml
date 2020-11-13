@@ -22,8 +22,18 @@ jobs:
       arch: arm64
       rust: stable
 
+    - name: "Stable arm64 vendored"
+      arch: arm64
+      rust: stable
+      env:
+       - FEATURES="vendored"
+
     - name: "Stable ppc64le"
       arch: ppc64le
+      rust: stable
+
+    - name: "Stable s390x"
+      arch: s390x
       rust: stable
 
     - name: "Beta x86-64"
@@ -32,12 +42,6 @@ jobs:
     - name: "Nightly ppc64le"
       arch: ppc64le
       rust: nightly
-
-    - name: "Stable arm64 vendored"
-      arch: arm64
-      rust: stable
-      env:
-       - FEATURES="vendored"
 
     - name: "Nightly arm64 no_std"
       arch: arm64
