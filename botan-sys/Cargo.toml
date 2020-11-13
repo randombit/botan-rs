@@ -20,6 +20,7 @@ status = "actively-developed"
 
 [features]
 default = []
+no-std = []
 vendored = ["botan-src"]
 
 [dependencies]

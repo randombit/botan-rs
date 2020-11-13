@@ -29,8 +29,8 @@ if [ "x$FEATURES" = "x" ]; then
 
 else
     cd botan-sys
-    cargo build --verbose
-    cargo test --verbose
+    cargo build --verbose --features "$FEATURES"
+    cargo test --verbose --features "$FEATURES"
     cd ../botan
     cargo build --verbose --features "$FEATURES"
     cargo test --verbose --features "$FEATURES"
