@@ -10,7 +10,7 @@ and Rust 1.43.0 or higher.
 
 The following features are supported:
 
-* `no-std`: Enable a no-std build. (Still uses `alloc`)
+* `no-std`: Enable a no-std build. (Still uses `alloc`, requires nightly)
 * `vendored`: Build a copy of the C++ library directly, without
   relying on a system installed version.
 

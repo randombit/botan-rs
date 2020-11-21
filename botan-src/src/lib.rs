@@ -24,7 +24,7 @@ macro_rules! add_env_arg {
 
 macro_rules! add_env_flag {
     ($cnf: ident, $env_name: expr, $arg_name: expr) => {
-        if let Ok(_) = env::var($env_name) {
+        if env::var($env_name).is_ok() {
             let flag = format!("{}", $arg_name);
             $cnf.arg(&flag);
         }
