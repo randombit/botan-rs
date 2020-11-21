@@ -1,11 +1,13 @@
 #!/bin/bash
 
-set -ev
+set -ex
 
 # deny all warnings in CI
 export RUSTFLAGS="-D warnings"
 export CCACHE_MAXSIZE=2G
 export BOTAN_CONFIGURE_COMPILER_CACHE=ccache
+
+FEATURES=$1
 
 if [ "x$FEATURES" != "xvendored" ]; then
     pushd /tmp
@@ -21,21 +23,18 @@ if [ "x$FEATURES" != "xvendored" ]; then
     sudo ldconfig
 
     popd
+else
+    git submodule update --init --depth 3
 fi
 
 if [ "x$FEATURES" = "x" ]; then
-    cargo build --verbose
-    cargo test --verbose -- --test-threads 4
-
-    if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then
-        cargo clippy
-    fi
-
+    cargo build
+    cargo test
 else
     cd botan-sys
-    cargo build --verbose --features "$FEATURES"
-    cargo test --verbose --features "$FEATURES" -- --test-threads 4
+    cargo build --features "$FEATURES"
+    cargo test --features "$FEATURES"
     cd ../botan
-    cargo build --verbose --features "$FEATURES"
-    cargo test --verbose --features "$FEATURES" -- --test-threads 4
+    cargo build --features "$FEATURES"
+    cargo test --features "$FEATURES"
 fi
