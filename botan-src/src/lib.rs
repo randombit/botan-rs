@@ -13,22 +13,10 @@ macro_rules! pathbuf_to_string {
     };
 }
 
-macro_rules! add_env_arg {
-    ($cnf: ident, $env_name: expr, $arg_name: expr) => {
-        if let Ok(val) = env::var($env_name) {
-            let arg = format!("{}={}", $arg_name, val);
-            $cnf.arg(&arg);
-        }
-    };
-}
-
-macro_rules! add_env_flag {
-    ($cnf: ident, $env_name: expr, $arg_name: expr) => {
-        if env::var($env_name).is_ok() {
-            let flag = format!("{}", $arg_name);
-            $cnf.arg(&flag);
-        }
-    };
+fn env_name_for(opt: &'static str) -> String {
+    assert!(opt[0..2] == *"--");
+    let to_var = opt[2..].to_uppercase().replace('-', "_");
+    format!("BOTAN_CONFIGURE_{}", to_var)
 }
 
 fn configure(build_dir: &str) {
@@ -41,41 +29,61 @@ fn configure(build_dir: &str) {
     configure.arg("--distribution-info=https://crates.io/crates/botan-src");
     #[cfg(debug_assertions)]
     configure.arg("--with-debug-info");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_OS", "--os");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_CPU", "--cpu");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_COMPILER_CACHE", "--compiler-cache");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_CC", "--cc");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_CC_MIN_VERSION", "--cc-min-version");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_CC_BIN", "--cc-bin");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_CC_API_FLAGS", "--cc-abi-flags");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_CXXFLAGS", "--cxxflags");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_EXTRA_CXXFLAGS", "--extra-cxxflags");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_LDFLAGS", "--ldflags");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_AR_COMMAND", "--ar-command");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_AR_OPTIONS", "--ar-options");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_MSVC_RUNTIME", "--msvc-runtime");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_ENDIAN", "--with-endian");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_OS_FEATURES", "--with-os-features");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITHOUT_OS_FEATURES", "--without-os-features");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_SYSTEM_CERT_BUNDLE", "--system-cert-bundle");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_WITH_LOCAL_CONFIG", "--with-local-config");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_BOOST_LIBRARY_NAME", "--boost-library-name");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_MODULE_POLICY", "--module-policy");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_ENABLE_MODULES", "--enable-modules");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_DISABLE_MODULES", "--disable-modules");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_LIBRARY_SUFFIX", "--library-suffix");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_PREFIX", "--prefix");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_LIBDIR", "--libdir");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_MANDIR", "--mandir");
-    add_env_arg!(configure, "BOTAN_CONFIGURE_INCLUDEDIR", "--includedir");
 
-    add_env_flag!(configure, "BOTAN_CONFIGURE_OPTIMIZE_FOR_SIZE", "--optimize-for-size");
-    add_env_flag!(configure, "BOTAN_CONFIGURE_NO_OPTIMIZATIONS", "--no-optimizations");
-    add_env_flag!(configure, "BOTAN_CONFIGURE_AMALGAMATION", "--amalgamation");
-    add_env_flag!(configure, "BOTAN_CONFIGURE_MINIMIZED_BUILD", "--minimized-build");
-    add_env_flag!(configure, "BOTAN_CONFIGURE_WITH_OPENSSL", "--with-openssl");
-    add_env_flag!(configure, "BOTAN_CONFIGURE_WITH_COMMONCRYPTO", "--with-commoncrypto");
-    add_env_flag!(configure, "BOTAN_CONFIGURE_WITH_SQLITE3", "--with-sqlite3");
+    let args = [
+        "--os",
+        "--cpu",
+        "--compiler-cache",
+        "--cc",
+        "--cc-min-version",
+        "--cc-bin",
+        "--cc-abi-flags",
+        "--cxxflags",
+        "--extra-cxxflags",
+        "--ldflags",
+        "--ar-command",
+        "--ar-options",
+        "--msvc-runtime",
+        "--with-endian",
+        "--with-os-features",
+        "--without-os-features",
+        "--system-cert-bundle",
+        "--with-local-config",
+        "--boost-library-name",
+        "--module-policy",
+        "--enable-modules",
+        "--disable-modules",
+        "--library-suffix",
+        "--prefix",
+        "--libdir",
+        "--mandir",
+        "--includedir",
+    ];
+
+    let flags = [
+        "--optimize-for-size",
+        "--no-optimizations",
+        "--amalgamation",
+        "--minimized-build",
+        "--with-openssl",
+        "--with-commoncrypto",
+        "--with-sqlite3",
+    ];
+
+    for arg_name in &args {
+        let env_name = env_name_for(arg_name);
+        if let Ok(arg_val) = env::var(env_name) {
+            let arg = format!("{}={}", arg_name, arg_val);
+            configure.arg(arg);
+        }
+    }
+
+    for flag_name in &flags {
+        let env_name = env_name_for(flag_name);
+        if env::var(env_name).is_ok() {
+            configure.arg(flag_name);
+        }
+    }
 
     let status = configure
         .spawn()
@@ -97,7 +105,8 @@ fn make(build_dir: &str) {
     } else {
         eprintln!("Can't set MAKEFLAGS as CARGO_MAKEFLAGS couldn't be read");
     }
-    let status = cmd.arg("-f")
+    let status = cmd
+        .arg("-f")
         .arg(format!("{}/Makefile", build_dir))
         .arg("libs")
         .spawn()
