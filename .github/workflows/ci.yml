@@ -7,6 +7,19 @@ on:
     branches: [ master ]
 
 jobs:
+  rustfmt:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          profile: minimal
+          components: rustfmt
+
+      - uses: actions/checkout@v2
+
+      - run: cargo fmt -- --check
   clippy:
     runs-on: ubuntu-20.04
 
