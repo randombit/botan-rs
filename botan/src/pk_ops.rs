@@ -10,11 +10,11 @@ use crate::rng::RandomNumberGenerator;
 /// # Examples
 ///
 /// ```
-/// let rng = botan::RandomNumberGenerator::new_system().unwrap();
-/// let rsa = botan::Privkey::create("RSA", "2048", &rng).unwrap();
-/// let signer = botan::Signer::new(&rsa, "PKCS1v15(SHA-256)").unwrap();
+/// let mut rng = botan::RandomNumberGenerator::new_system().unwrap();
+/// let rsa = botan::Privkey::create("RSA", "2048", &mut rng).unwrap();
+/// let mut signer = botan::Signer::new(&rsa, "PKCS1v15(SHA-256)").unwrap();
 /// signer.update(&[1,2,3]).unwrap();
-/// let signature = signer.finish(&rng).unwrap();
+/// let signature = signer.finish(&mut rng).unwrap();
 /// ```
 pub struct Signer {
     obj: botan_pk_op_sign_t,
@@ -45,7 +45,7 @@ impl Signer {
     }
 
     /// Complete and return the signature
-    pub fn finish(&mut self, rng: &RandomNumberGenerator) -> Result<Vec<u8>> {
+    pub fn finish(&mut self, rng: &mut RandomNumberGenerator) -> Result<Vec<u8>> {
         call_botan_ffi_returning_vec_u8(self.sig_len, &|out_buf, out_len| unsafe {
             botan_pk_op_sign_finish(self.obj, rng.handle(), out_buf, out_len)
         })
@@ -133,11 +133,11 @@ impl Verifier {
 /// # Examples
 ///
 /// ```
-/// let rng = botan::RandomNumberGenerator::new_system().unwrap();
-/// let rsa = botan::Privkey::create("RSA", "2048", &rng).unwrap();
+/// let mut rng = botan::RandomNumberGenerator::new_system().unwrap();
+/// let rsa = botan::Privkey::create("RSA", "2048", &mut rng).unwrap();
 /// let rsa_pub = rsa.pubkey().unwrap();
-/// let enc = botan::Encryptor::new(&rsa_pub, "OAEP(SHA-256)").unwrap();
-/// let ctext = enc.encrypt(&[1,2,3], &rng).unwrap();
+/// let mut enc = botan::Encryptor::new(&rsa_pub, "OAEP(SHA-256)").unwrap();
+/// let ctext = enc.encrypt(&[1,2,3], &mut rng).unwrap();
 /// ```
 pub struct Encryptor {
     obj: botan_pk_op_encrypt_t,
@@ -159,7 +159,7 @@ impl Encryptor {
     }
 
     /// Encrypt a message using the provided public key
-    pub fn encrypt(&mut self, ptext: &[u8], rng: &RandomNumberGenerator) -> Result<Vec<u8>> {
+    pub fn encrypt(&mut self, ptext: &[u8], rng: &mut RandomNumberGenerator) -> Result<Vec<u8>> {
         let mut ctext_len = 0;
 
         call_botan! { botan_pk_op_encrypt_output_length(self.obj, ptext.len(), &mut ctext_len) };

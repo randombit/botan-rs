@@ -36,7 +36,7 @@ impl Privkey {
 
     /// Create a new private key
     ///
-    pub fn create(alg: &str, params: &str, rng: &RandomNumberGenerator) -> Result<Privkey> {
+    pub fn create(alg: &str, params: &str, rng: &mut RandomNumberGenerator) -> Result<Privkey> {
         let mut obj = ptr::null_mut();
 
         call_botan! { botan_privkey_create(&mut obj,
@@ -167,7 +167,7 @@ impl Privkey {
     }
 
     /// Check if the key seems to be valid
-    pub fn check_key(&self, rng: &RandomNumberGenerator) -> Result<bool> {
+    pub fn check_key(&self, rng: &mut RandomNumberGenerator) -> Result<bool> {
         let flags = 1u32;
         let rc = unsafe { botan_privkey_check_key(self.obj, rng.handle(), flags) };
 
@@ -207,7 +207,7 @@ impl Privkey {
     pub fn der_encode_encrypted(
         &self,
         passphrase: &str,
-        rng: &RandomNumberGenerator,
+        rng: &mut RandomNumberGenerator,
     ) -> Result<Vec<u8>> {
         let iterations = 150_000;
         self.der_encode_encrypted_with_options(
@@ -226,7 +226,7 @@ impl Privkey {
         cipher: &str,
         pbkdf: &str,
         pbkdf_iter: usize,
-        rng: &RandomNumberGenerator,
+        rng: &mut RandomNumberGenerator,
     ) -> Result<Vec<u8>> {
         let der_len = 4096; // fixme
         let passphrase = make_cstr(passphrase)?;
@@ -252,7 +252,7 @@ impl Privkey {
     pub fn pem_encode_encrypted(
         &self,
         passphrase: &str,
-        rng: &RandomNumberGenerator,
+        rng: &mut RandomNumberGenerator,
     ) -> Result<String> {
         let iterations = 150_000;
         self.pem_encode_encrypted_with_options(
@@ -271,7 +271,7 @@ impl Privkey {
         cipher: &str,
         pbkdf: &str,
         pbkdf_iter: usize,
-        rng: &RandomNumberGenerator,
+        rng: &mut RandomNumberGenerator,
     ) -> Result<String> {
         let pem_len = 4096; // fixme
 
@@ -345,7 +345,7 @@ impl Privkey {
     }
 
     /// Sign a message using the specified padding method
-    pub fn sign(&self, message: &[u8], padding: &str, rng: &RandomNumberGenerator) -> Result<Vec<u8>> {
+    pub fn sign(&self, message: &[u8], padding: &str, rng: &mut RandomNumberGenerator) -> Result<Vec<u8>> {
         let mut signer = Signer::new(self, padding)?;
         signer.update(message)?;
         Ok(signer.finish(rng)?)
@@ -445,7 +445,7 @@ impl Pubkey {
     }
 
     /// Check key for problems
-    pub fn check_key(&self, rng: &RandomNumberGenerator) -> Result<bool> {
+    pub fn check_key(&self, rng: &mut RandomNumberGenerator) -> Result<bool> {
         let flags = 1u32;
         let rc = unsafe { botan_pubkey_check_key(self.obj, rng.handle(), flags) };
 
@@ -524,7 +524,7 @@ impl Pubkey {
     }
 
     /// Encrypt a message using the specified padding method
-    pub fn encrypt(&self, message: &[u8], padding: &str, rng: &RandomNumberGenerator) -> Result<Vec<u8>> {
+    pub fn encrypt(&self, message: &[u8], padding: &str, rng: &mut RandomNumberGenerator) -> Result<Vec<u8>> {
         let mut op = Encryptor::new(self, padding)?;
         op.encrypt(message, rng)
     }

@@ -97,11 +97,11 @@ impl BlockCipher {
     /// # Examples
     ///
     /// ```
-    /// let cipher = botan::BlockCipher::new("AES-128").unwrap();
+    /// let mut cipher = botan::BlockCipher::new("AES-128").unwrap();
     /// assert!(cipher.set_key(&vec![0; 32]).is_err());
     /// assert!(cipher.set_key(&vec![0; 16]).is_ok());
     /// ```
-    pub fn set_key(&self, key: &[u8]) -> Result<()> {
+    pub fn set_key(&mut self, key: &[u8]) -> Result<()> {
         call_botan! { botan_block_cipher_set_key(self.obj, key.as_ptr(), key.len()) };
         Ok(())
     }
@@ -116,7 +116,7 @@ impl BlockCipher {
     /// # Examples
     ///
     /// ```
-    /// let cipher = botan::BlockCipher::new("AES-128").unwrap();
+    /// let mut cipher = botan::BlockCipher::new("AES-128").unwrap();
     /// // Key is not set
     /// assert!(cipher.encrypt_blocks(&vec![0; 16]).is_err());
     /// assert!(cipher.set_key(&vec![0; 16]).is_ok());
@@ -160,7 +160,7 @@ impl BlockCipher {
     /// # Examples
     ///
     /// ```
-    /// let cipher = botan::BlockCipher::new("AES-128").unwrap();
+    /// let mut cipher = botan::BlockCipher::new("AES-128").unwrap();
     /// // Key is not set
     /// assert!(cipher.decrypt_blocks(&vec![0; 16]).is_err());
     /// assert!(cipher.set_key(&vec![0; 16]).is_ok());
@@ -200,13 +200,13 @@ impl BlockCipher {
     /// # Examples
     ///
     /// ```
-    /// let cipher = botan::BlockCipher::new("AES-128").unwrap();
+    /// let mut cipher = botan::BlockCipher::new("AES-128").unwrap();
     /// assert!(cipher.set_key(&vec![0; 16]).is_ok());
     /// assert!(cipher.encrypt_blocks(&vec![0; 16]).is_ok());
     /// assert!(cipher.clear().is_ok());
     /// assert!(cipher.encrypt_blocks(&vec![0; 16]).is_err());
     /// ```
-    pub fn clear(&self) -> Result<()> {
+    pub fn clear(&mut self) -> Result<()> {
         call_botan! { botan_block_cipher_clear(self.obj) };
         Ok(())
     }

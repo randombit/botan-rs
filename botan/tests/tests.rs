@@ -35,7 +35,7 @@ fn test_version() -> Result<(), botan::Error> {
 
 #[test]
 fn test_hash() -> Result<(), botan::Error> {
-    let hash = botan::HashFunction::new("SHA-384")?;
+    let mut hash = botan::HashFunction::new("SHA-384")?;
 
     assert_eq!(hash.output_length()?, 48);
     assert_eq!(hash.block_size()?, 128);
@@ -43,7 +43,7 @@ fn test_hash() -> Result<(), botan::Error> {
 
     assert!(hash.update(&[97, 98]).is_ok());
 
-    let hash_dup = hash.duplicate()?;
+    let mut hash_dup = hash.duplicate()?;
 
     assert!(hash.update(&[99]).is_ok());
     assert!(hash_dup.update(&[100]).is_ok());
@@ -97,7 +97,7 @@ fn test_mac() -> Result<(), botan::Error> {
 
 #[test]
 fn test_block_cipher() -> Result<(), botan::Error> {
-    let bc = botan::BlockCipher::new("AES-128")?;
+    let mut bc = botan::BlockCipher::new("AES-128")?;
 
     assert_eq!(bc.algo_name()?, "AES-128");
     assert_eq!(bc.block_size()?, 16);
@@ -136,7 +136,7 @@ fn test_block_cipher() -> Result<(), botan::Error> {
 
 #[test]
 fn test_cipher() -> Result<(), botan::Error> {
-    let cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt)?;
+    let mut cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt)?;
 
     assert_eq!(cipher.tag_length(), 16);
 
@@ -161,7 +161,7 @@ fn test_cipher() -> Result<(), botan::Error> {
         "0388DACE60B6A392F328C2B971B2FE78AB6E47D42CEC13BDF53A67B21257BDDF"
     );
 
-    let cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Decrypt)?;
+    let mut cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Decrypt)?;
     cipher.set_key(&zero16)?;
 
     let ptext = cipher.process(&zero12, &ctext)?;
@@ -188,7 +188,7 @@ fn test_incremental_cipher() -> Result<(), botan::Error> {
     let output = botan::hex_decode("38C21B6430D9A3E4BC6749405765653AE91051E96CE0D076141DD7B515EC150FDB8A65EE988D206C9F64874664CDBF61257FFAE521B9A5EB5B35E3745F4232025B269A6CD7DCFE19153ECF7341CE2C6A6A87F95F2109841350DA3D24EEED4E4E32D2BED880737670FFE8ED76DB890FD72A0076300E50914984A777C9F2BC843977396C602B24E7A045F04D15CD2EAC01AD8808064CFE5A2DC1AE9FFFA4BF0A6F0C07668097DEEB9C5CA5EC1F9A52F96A403B73FEA2DBBF44473D355553EE7FB1B4D6630777DAF67804BE213089B9F78652CE970C582FD813F87FF0ECBACCE1CA46247E20D09F3E0B4EF6BFCD13244C6877F25E6646252CAD6EB7DBBA3476AAAC83BC3285FF70B50D6CDEDC8E5921944A")?;
 
     // encode
-    let cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt)?;
+    let mut cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt)?;
     cipher.set_key(&key)?;
     cipher.start(&nonce)?;
 
@@ -212,7 +212,7 @@ fn test_incremental_cipher() -> Result<(), botan::Error> {
                "38C21B6430D9A3E4BC6749405765653AE91051E96CE0D076141DD7B515EC150FDB8A65EE988D206C9F64874664CDBF61257FFAE521B9A5EB5B35E3745F4232025B269A6CD7DCFE19153ECF7341CE2C6A6A87F95F2109841350DA3D24EEED4E4E32D2BED880737670FFE8ED76DB890FD72A0076300E50914984A777C9F2BC843977396C602B24E7A045F04D15CD2EAC01AD8808064CFE5A2DC1AE9FFFA4BF0A6F0C07668097DEEB9C5CA5EC1F9A52F96A403B73FEA2DBBF44473D355553EE7FB1B4D6630777DAF67804BE213089B9F78652CE970C582FD813F87FF0ECBACCE1CA46247E20D09F3E0B4EF6BFCD13244C6877F25E6646252CAD6EB7DBBA3476AAAC83BC3285FF70B50D6CDEDC8E5921944A");
 
     // decode
-    let cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Decrypt)?;
+    let mut cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Decrypt)?;
     cipher.set_key(&key)?;
     cipher.start(&nonce)?;
     let chunk_size = cipher.update_granularity();
@@ -244,7 +244,7 @@ fn test_incremental_cipher() -> Result<(), botan::Error> {
 
 #[test]
 fn test_chacha() -> Result<(), botan::Error> {
-    let cipher = botan::Cipher::new("ChaCha20", botan::CipherDirection::Encrypt)?;
+    let mut cipher = botan::Cipher::new("ChaCha20", botan::CipherDirection::Encrypt)?;
 
     assert_eq!(cipher.tag_length(), 0);
 
@@ -332,7 +332,7 @@ fn test_scrypt() -> Result<(), botan::Error> {
 
 #[test]
 fn test_pwdhash() -> Result<(), botan::Error> {
-    let rng = botan::RandomNumberGenerator::new()?;
+    let mut rng = botan::RandomNumberGenerator::new()?;
     let salt = rng.read(10)?;
     let msec = 30;
     let (key, r, p, n) =
@@ -353,7 +353,7 @@ fn test_hex() -> Result<(), botan::Error> {
 
 #[test]
 fn test_rng() -> Result<(), botan::Error> {
-    let rng = botan::RandomNumberGenerator::new_system()?;
+    let mut rng = botan::RandomNumberGenerator::new_system()?;
 
     let read1 = rng.read(10)?;
     let read2 = rng.read(10)?;
@@ -456,13 +456,13 @@ AzMCIEJSRDmXjX8TMTbSfoTLmhaYJnCL+AfHLZLdHlSLDIzh
 #[test]
 fn test_bcrypt() -> Result<(), botan::Error> {
     let pass = "password";
-    let rng = botan::RandomNumberGenerator::new_system()?;
+    let mut rng = botan::RandomNumberGenerator::new_system()?;
 
-    let bcrypt1 = botan::bcrypt_hash(pass, &rng, 10)?;
+    let bcrypt1 = botan::bcrypt_hash(pass, &mut rng, 10)?;
 
     assert_eq!(bcrypt1.len(), 60);
 
-    let bcrypt2 = botan::bcrypt_hash(pass, &rng, 10)?;
+    let bcrypt2 = botan::bcrypt_hash(pass, &mut rng, 10)?;
 
     assert_eq!(bcrypt2.len(), 60);
 
@@ -477,11 +477,11 @@ fn test_bcrypt() -> Result<(), botan::Error> {
 
 #[test]
 fn test_pubkey() -> Result<(), botan::Error> {
-    let rng = botan::RandomNumberGenerator::new_system()?;
+    let mut rng = botan::RandomNumberGenerator::new_system()?;
 
-    let ecdsa_key = botan::Privkey::create("ECDSA", "secp256r1", &rng)?;
+    let ecdsa_key = botan::Privkey::create("ECDSA", "secp256r1", &mut rng)?;
 
-    assert_eq!(ecdsa_key.check_key(&rng)?, true);
+    assert_eq!(ecdsa_key.check_key(&mut rng)?, true);
     assert_eq!(ecdsa_key.algo_name()?, "ECDSA");
 
     assert!(ecdsa_key.get_field("n").is_err());
@@ -505,10 +505,10 @@ fn test_pubkey() -> Result<(), botan::Error> {
     assert!(pub_pem.ends_with("-----END PUBLIC KEY-----\n"));
 
     let loaded_key = botan::Privkey::load_der(&bits)?;
-    assert_eq!(loaded_key.check_key(&rng)?, true);
+    assert_eq!(loaded_key.check_key(&mut rng)?, true);
 
     let loaded_pem_key = botan::Pubkey::load_pem(&pub_pem)?;
-    assert_eq!(loaded_pem_key.check_key(&rng)?, true);
+    assert_eq!(loaded_pem_key.check_key(&mut rng)?, true);
 
     let loaded_bits = loaded_key.der_encode()?;
     let loaded_pub_key = loaded_key.pubkey()?;
@@ -549,19 +549,19 @@ fn test_x25519() -> Result<(), botan::Error> {
 
 #[test]
 fn test_ed25519() -> Result<(), botan::Error> {
-    let rng = botan::RandomNumberGenerator::new_system()?;
+    let mut rng = botan::RandomNumberGenerator::new_system()?;
 
     let msg = vec![23, 42, 69, 6, 66];
     let padding = "Pure";
 
-    let ed_priv = botan::Privkey::create("Ed25519", "", &rng)?;
+    let ed_priv = botan::Privkey::create("Ed25519", "", &mut rng)?;
 
-    let signature1 = ed_priv.sign(&msg, padding, &rng)?;
+    let signature1 = ed_priv.sign(&msg, padding, &mut rng)?;
 
     let ed_bits = ed_priv.get_ed25519_key()?;
 
     let ed_loaded = botan::Privkey::load_ed25519(&ed_bits.1)?;
-    let signature2 = ed_loaded.sign(&msg, padding, &rng)?;
+    let signature2 = ed_loaded.sign(&msg, padding, &mut rng)?;
 
     let ed_pub = ed_priv.pubkey()?;
 
@@ -580,12 +580,12 @@ fn test_ed25519() -> Result<(), botan::Error> {
 
 #[test]
 fn test_rsa() -> Result<(), botan::Error> {
-    let rng = botan::RandomNumberGenerator::new_system()?;
+    let mut rng = botan::RandomNumberGenerator::new_system()?;
 
     let padding = "EMSA-PKCS1-v1_5(SHA-256)";
     let msg = rng.read(32)?;
 
-    let privkey = botan::Privkey::create("RSA", "1024", &rng)?;
+    let privkey = botan::Privkey::create("RSA", "1024", &mut rng)?;
     let pubkey = privkey.pubkey()?;
 
     assert_eq!(privkey.get_field("e"), botan::MPI::from_str("65537"));
@@ -598,7 +598,7 @@ fn test_rsa() -> Result<(), botan::Error> {
 
     assert_eq!(&p * &q, privkey.get_field("n")?);
 
-    let signature = privkey.sign(&msg, padding, &rng)?;
+    let signature = privkey.sign(&msg, padding, &mut rng)?;
 
     assert!(pubkey.verify(&msg, &signature, padding)?);
 
@@ -612,26 +612,26 @@ fn test_pubkey_encryption() -> Result<(), botan::Error> {
     let padding = "EMSA-PKCS1-v1_5(SHA-256)";
     let msg = [1, 2, 3];
 
-    let rng = botan::RandomNumberGenerator::new_system()?;
-    let key = botan::Privkey::create("RSA", "1024", &rng)?;
+    let mut rng = botan::RandomNumberGenerator::new_system()?;
+    let key = botan::Privkey::create("RSA", "1024", &mut rng)?;
 
-    let der = key.der_encode_encrypted("passphrase", &rng)?;
-    let pem = key.pem_encode_encrypted("pemword", &rng)?;
+    let der = key.der_encode_encrypted("passphrase", &mut rng)?;
+    let pem = key.pem_encode_encrypted("pemword", &mut rng)?;
 
     assert!(pem.starts_with("-----BEGIN ENCRYPTED PRIVATE KEY-----\n"));
     assert!(pem.ends_with("-----END ENCRYPTED PRIVATE KEY-----\n"));
 
-    let sig1 = key.sign(&msg, padding, &rng)?;
+    let sig1 = key.sign(&msg, padding, &mut rng)?;
 
     //assert!(botan::Privkey::load_encrypted_der(&der, "i forget").is_err());
 
     let load = botan::Privkey::load_encrypted_der(&der, "passphrase")?;
-    let sig2 = load.sign(&msg, padding, &rng)?;
+    let sig2 = load.sign(&msg, padding, &mut rng)?;
 
     assert_eq!(sig1, sig2);
 
     let load = botan::Privkey::load_encrypted_pem(&pem, "pemword")?;
-    let sig3 = load.sign(&msg, padding, &rng)?;
+    let sig3 = load.sign(&msg, padding, &mut rng)?;
 
     assert_eq!(sig1, sig3);
     Ok(())
@@ -641,12 +641,12 @@ fn test_pubkey_encryption() -> Result<(), botan::Error> {
 fn test_pubkey_sign() -> Result<(), botan::Error> {
     let msg = vec![1, 23, 42];
 
-    let rng = botan::RandomNumberGenerator::new_system()?;
+    let mut rng = botan::RandomNumberGenerator::new_system()?;
 
-    let ecdsa_key = botan::Privkey::create("ECDSA", "secp256r1", &rng)?;
+    let ecdsa_key = botan::Privkey::create("ECDSA", "secp256r1", &mut rng)?;
     assert!(ecdsa_key.key_agreement_key().is_err());
 
-    let signature = ecdsa_key.sign(&msg, "EMSA1(SHA-256)", &rng)?;
+    let signature = ecdsa_key.sign(&msg, "EMSA1(SHA-256)", &mut rng)?;
 
     let pub_key = ecdsa_key.pubkey()?;
 
@@ -671,15 +671,15 @@ fn test_pubkey_sign() -> Result<(), botan::Error> {
 fn test_pubkey_encrypt() -> Result<(), botan::Error> {
     let msg = vec![1, 23, 42];
 
-    let rng = botan::RandomNumberGenerator::new_system()?;
+    let mut rng = botan::RandomNumberGenerator::new_system()?;
 
-    let priv_key = botan::Privkey::create("RSA", "2048", &rng)?;
+    let priv_key = botan::Privkey::create("RSA", "2048", &mut rng)?;
     assert!(priv_key.key_agreement_key().is_err());
     let pub_key = priv_key.pubkey()?;
 
     let mut encryptor = botan::Encryptor::new(&pub_key, "OAEP(SHA-256)")?;
 
-    let ctext = encryptor.encrypt(&msg, &rng)?;
+    let ctext = encryptor.encrypt(&msg, &mut rng)?;
     assert_eq!(ctext.len(), 2048 / 8);
 
     let mut decryptor = botan::Decryptor::new(&priv_key, "OAEP(SHA-256)")?;
@@ -692,10 +692,10 @@ fn test_pubkey_encrypt() -> Result<(), botan::Error> {
 
 #[test]
 fn test_pubkey_key_agreement() -> Result<(), botan::Error> {
-    let rng = botan::RandomNumberGenerator::new_system()?;
+    let mut rng = botan::RandomNumberGenerator::new_system()?;
 
-    let a_priv = botan::Privkey::create("ECDH", "secp384r1", &rng)?;
-    let b_priv = botan::Privkey::create("ECDH", "secp384r1", &rng)?;
+    let a_priv = botan::Privkey::create("ECDH", "secp384r1", &mut rng)?;
+    let b_priv = botan::Privkey::create("ECDH", "secp384r1", &mut rng)?;
 
     let a_pub = a_priv.key_agreement_key()?;
     let b_pub = b_priv.key_agreement_key()?;
