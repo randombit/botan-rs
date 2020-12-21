@@ -162,10 +162,10 @@ impl Cipher {
     ///
     /// # Examples
     /// ```
-    /// let aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// let mut aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
     /// aes_gcm.set_key(&vec![0; 16]).unwrap();
     /// ```
-    pub fn set_key(&self, key: &[u8]) -> Result<()> {
+    pub fn set_key(&mut self, key: &[u8]) -> Result<()> {
         call_botan! { botan_cipher_set_key(self.obj, key.as_ptr(), key.len()) };
         Ok(())
     }
@@ -175,11 +175,11 @@ impl Cipher {
     ///
     /// # Examples
     /// ```
-    /// let aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// let mut aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
     /// aes_gcm.set_key(&vec![0; 16]).unwrap();
     /// aes_gcm.set_associated_data(&[1,2,3]).unwrap();
     /// ```
-    pub fn set_associated_data(&self, ad: &[u8]) -> Result<()> {
+    pub fn set_associated_data(&mut self, ad: &[u8]) -> Result<()> {
         call_botan! { botan_cipher_set_associated_data(self.obj, ad.as_ptr(), ad.len()) };
         Ok(())
     }
@@ -189,13 +189,13 @@ impl Cipher {
     ///
     /// # Examples
     /// ```
-    /// let aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// let mut aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
     /// aes_gcm.set_key(&vec![0; 16]).unwrap();
     /// let nonce = vec![0; aes_gcm.default_nonce_length()];
     /// let msg = vec![0; 48];
     /// let ctext = aes_gcm.process(&nonce, &msg);
     /// ```
-    pub fn process(&self, nonce: &[u8], msg: &[u8]) -> Result<Vec<u8>> {
+    pub fn process(&mut self, nonce: &[u8], msg: &[u8]) -> Result<Vec<u8>> {
         call_botan! { botan_cipher_start(self.obj, nonce.as_ptr(), nonce.len()) };
 
         let flags = 1u32; // only supporting one-shot processing here
@@ -224,15 +224,15 @@ impl Cipher {
         Ok(output)
     }
 
-    /// start function
-    pub fn start(&self, nonce: &[u8]) -> Result<()> {
+    /// start processing a message
+    pub fn start(&mut self, nonce: &[u8]) -> Result<()> {
         call_botan! { botan_cipher_start(self.obj, nonce.as_ptr(), nonce.len()) }
         Ok(())
     }
 
     /// Encrypt or decrypt a message with the provided nonce. The key must
     /// incremental update
-    fn _update(&self, msg: &[u8], end: bool) -> Result<Vec<u8>> {
+    fn _update(&mut self, msg: &[u8], end: bool) -> Result<Vec<u8>> {
         let flags = if end { 1 } else { 0 };
         let mut output = vec![0; msg.len() + if end { self.tag_length() } else { 0 }];
         let mut output_written = 0;
@@ -258,17 +258,17 @@ impl Cipher {
     }
 
     /// incremental update
-    pub fn update(&self, msg: &[u8]) -> Result<Vec<u8>> {
+    pub fn update(&mut self, msg: &[u8]) -> Result<Vec<u8>> {
         self._update(msg, false)
     }
 
     /// finish function
-    pub fn finish(&self, msg: &[u8]) -> Result<Vec<u8>> {
+    pub fn finish(&mut self, msg: &[u8]) -> Result<Vec<u8>> {
         self._update(msg, true)
     }
 
     /// Clear all state associated with the key
-    pub fn clear(&self) -> Result<()> {
+    pub fn clear(&mut self) -> Result<()> {
         call_botan! { botan_cipher_clear(self.obj) };
         Ok(())
     }

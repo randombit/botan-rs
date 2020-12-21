@@ -10,12 +10,12 @@ const BCRYPT_SIZE: usize = 60;
 /// # Examples
 ///
 /// ```
-/// let rng = botan::RandomNumberGenerator::new().unwrap();
-/// let bcrypt1 = botan::bcrypt_hash("password", &rng, 10).unwrap();
-/// let bcrypt2 = botan::bcrypt_hash("password", &rng, 10).unwrap();
+/// let mut rng = botan::RandomNumberGenerator::new().unwrap();
+/// let bcrypt1 = botan::bcrypt_hash("password", &mut rng, 10).unwrap();
+/// let bcrypt2 = botan::bcrypt_hash("password", &mut rng, 10).unwrap();
 /// assert_ne!(bcrypt1, bcrypt2); // different salt each time
 /// ```
-pub fn bcrypt_hash(pass: &str, rng: &RandomNumberGenerator, workfactor: usize) -> Result<String> {
+pub fn bcrypt_hash(pass: &str, rng: &mut RandomNumberGenerator, workfactor: usize) -> Result<String> {
     let mut out = vec![0; BCRYPT_SIZE + 1];
     let mut out_len = out.len();
 
@@ -35,8 +35,8 @@ pub fn bcrypt_hash(pass: &str, rng: &RandomNumberGenerator, workfactor: usize) -
 /// # Examples
 ///
 /// ```
-/// let rng = botan::RandomNumberGenerator::new().unwrap();
-/// let bcrypt = botan::bcrypt_hash("password", &rng, 10).unwrap();
+/// let mut rng = botan::RandomNumberGenerator::new().unwrap();
+/// let bcrypt = botan::bcrypt_hash("password", &mut rng, 10).unwrap();
 /// assert_eq!(botan::bcrypt_verify("not even close", &bcrypt), Ok(false));
 /// assert_eq!(botan::bcrypt_verify("password", &bcrypt), Ok(true));
 /// ```

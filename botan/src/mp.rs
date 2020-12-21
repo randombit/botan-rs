@@ -91,7 +91,7 @@ impl MPI {
     }
 
     /// Set self to zero
-    pub fn clear(&self) -> Result<()> {
+    pub fn clear(&mut self) -> Result<()> {
         call_botan! { botan_mp_clear(self.obj) };
         Ok(())
     }
@@ -119,7 +119,7 @@ impl MPI {
     }
 
     /// Randomize self to an integer of specified bit size
-    pub fn randomize(&mut self, rng: &RandomNumberGenerator, bits: usize) -> Result<()> {
+    pub fn randomize(&mut self, rng: &mut RandomNumberGenerator, bits: usize) -> Result<()> {
         call_botan! { botan_mp_rand_bits(self.obj, rng.handle(), bits) };
         Ok(())
     }
@@ -127,7 +127,7 @@ impl MPI {
     /// Randomize self to an integer within specified range
     pub fn random_range(
         &mut self,
-        rng: &RandomNumberGenerator,
+        rng: &mut RandomNumberGenerator,
         lower: &MPI,
         upper: &MPI,
     ) -> Result<()> {
@@ -372,10 +372,10 @@ impl MPI {
     /// ```
     /// use core::str::FromStr;
     /// let n = botan::MPI::from_str("1111111111111111111").unwrap();
-    /// let rng = botan::RandomNumberGenerator::new_system().unwrap();
-    /// assert!(n.is_prime(&rng, 128).unwrap());
+    /// let mut rng = botan::RandomNumberGenerator::new_system().unwrap();
+    /// assert!(n.is_prime(&mut rng, 128).unwrap());
     /// ```
-    pub fn is_prime(&self, rng: &RandomNumberGenerator, test_prob: usize) -> Result<bool> {
+    pub fn is_prime(&self, rng: &mut RandomNumberGenerator, test_prob: usize) -> Result<bool> {
         let rc = unsafe { botan_mp_is_prime(self.obj, rng.handle(), test_prob) };
         match rc {
             0 => Ok(false),
