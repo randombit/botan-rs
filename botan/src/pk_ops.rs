@@ -39,13 +39,13 @@ impl Signer {
     }
 
     /// Add more bytes of the message that will be signed
-    pub fn update(&self, data: &[u8]) -> Result<()> {
+    pub fn update(&mut self, data: &[u8]) -> Result<()> {
         call_botan! { botan_pk_op_sign_update(self.obj, data.as_ptr(), data.len()) };
         Ok(())
     }
 
     /// Complete and return the signature
-    pub fn finish(&self, rng: &RandomNumberGenerator) -> Result<Vec<u8>> {
+    pub fn finish(&mut self, rng: &RandomNumberGenerator) -> Result<Vec<u8>> {
         call_botan_ffi_returning_vec_u8(self.sig_len, &|out_buf, out_len| unsafe {
             botan_pk_op_sign_finish(self.obj, rng.handle(), out_buf, out_len)
         })
@@ -74,7 +74,7 @@ impl Decryptor {
     }
 
     /// Decrypt a message
-    pub fn decrypt(&self, ctext: &[u8]) -> Result<Vec<u8>> {
+    pub fn decrypt(&mut self, ctext: &[u8]) -> Result<Vec<u8>> {
         let mut ptext_len = 0;
 
         call_botan! { botan_pk_op_decrypt_output_length(self.obj, ctext.len(), &mut ptext_len) };
@@ -107,13 +107,13 @@ impl Verifier {
     }
 
     /// Add more bytes of the message that will be verified
-    pub fn update(&self, data: &[u8]) -> Result<()> {
+    pub fn update(&mut self, data: &[u8]) -> Result<()> {
         call_botan! { botan_pk_op_verify_update(self.obj, data.as_ptr(), data.len()) };
         Ok(())
     }
 
     /// Verify the provided signature and return true if valid
-    pub fn finish(&self, signature: &[u8]) -> Result<bool> {
+    pub fn finish(&mut self, signature: &[u8]) -> Result<bool> {
         let rc =
             unsafe { botan_pk_op_verify_finish(self.obj, signature.as_ptr(), signature.len()) };
 
@@ -159,7 +159,7 @@ impl Encryptor {
     }
 
     /// Encrypt a message using the provided public key
-    pub fn encrypt(&self, ptext: &[u8], rng: &RandomNumberGenerator) -> Result<Vec<u8>> {
+    pub fn encrypt(&mut self, ptext: &[u8], rng: &RandomNumberGenerator) -> Result<Vec<u8>> {
         let mut ctext_len = 0;
 
         call_botan! { botan_pk_op_encrypt_output_length(self.obj, ptext.len(), &mut ctext_len) };
@@ -200,7 +200,7 @@ impl KeyAgreement {
 
     /// Perform key agreement operation
     pub fn agree(
-        &self,
+        &mut self,
         requested_output: usize,
         counterparty_key: &[u8],
         salt: &[u8],

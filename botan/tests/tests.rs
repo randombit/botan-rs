@@ -541,9 +541,7 @@ fn test_x25519() -> Result<(), botan::Error> {
     assert_eq!(b_priv.key_agreement_key()?, b_pub_bits);
     assert_eq!(b_priv.pubkey()?.get_x25519_key()?, b_pub_bits);
 
-    let ka = botan::KeyAgreement::new(&b_priv, "Raw")?;
-
-    let shared = ka.agree(0, &a_pub_bits, &[])?;
+    let shared = b_priv.agree(&a_pub_bits, 0, &[], "Raw")?;
 
     assert_eq!(shared, expected_shared);
     Ok(())
@@ -558,33 +556,21 @@ fn test_ed25519() -> Result<(), botan::Error> {
 
     let ed_priv = botan::Privkey::create("Ed25519", "", &rng)?;
 
-    let signer = botan::Signer::new(&ed_priv, padding)?;
-    signer.update(&msg)?;
-    let signature1 = signer.finish(&rng)?;
+    let signature1 = ed_priv.sign(&msg, padding, &rng)?;
 
     let ed_bits = ed_priv.get_ed25519_key()?;
 
     let ed_loaded = botan::Privkey::load_ed25519(&ed_bits.1)?;
-    let signer = botan::Signer::new(&ed_loaded, padding)?;
-    signer.update(&msg)?;
-    let signature2 = signer.finish(&rng)?;
+    let signature2 = ed_loaded.sign(&msg, padding, &rng)?;
 
     let ed_pub = ed_priv.pubkey()?;
 
-    let verifier = botan::Verifier::new(&ed_pub, padding)?;
-    verifier.update(&msg)?;
-    assert!(verifier.finish(&signature1)?);
-
-    verifier.update(&msg)?;
-    assert!(verifier.finish(&signature2)?);
+    assert!(ed_pub.verify(&msg, &signature1, padding)?);
+    assert!(ed_pub.verify(&msg, &signature2, padding)?);
 
     let ed_loaded = botan::Pubkey::load_ed25519(&ed_bits.0)?;
-    let verifier = botan::Verifier::new(&ed_loaded, padding)?;
-    verifier.update(&msg)?;
-    assert!(verifier.finish(&signature1)?);
-
-    verifier.update(&msg)?;
-    assert!(verifier.finish(&signature2)?);
+    assert!(ed_loaded.verify(&msg, &signature1, padding)?);
+    assert!(ed_loaded.verify(&msg, &signature2, padding)?);
 
     assert_eq!(ed_loaded.get_ed25519_key()?, ed_pub.get_ed25519_key()?);
 
@@ -612,18 +598,12 @@ fn test_rsa() -> Result<(), botan::Error> {
 
     assert_eq!(&p * &q, privkey.get_field("n")?);
 
-    let signer = botan::Signer::new(&privkey, padding)?;
-    signer.update(&msg)?;
-    let signature = signer.finish(&rng)?;
+    let signature = privkey.sign(&msg, padding, &rng)?;
 
-    let verifier = botan::Verifier::new(&pubkey, padding)?;
-    verifier.update(&msg)?;
-    assert_eq!(verifier.finish(&signature)?, true);
+    assert!(pubkey.verify(&msg, &signature, padding)?);
 
     let pubkey = botan::Pubkey::load_rsa(&privkey.get_field("n")?, &privkey.get_field("e")?)?;
-    let verifier = botan::Verifier::new(&pubkey, padding)?;
-    verifier.update(&msg)?;
-    assert_eq!(verifier.finish(&signature)?, true);
+    assert!(pubkey.verify(&msg, &signature, padding)?);
     Ok(())
 }
 
@@ -641,24 +621,17 @@ fn test_pubkey_encryption() -> Result<(), botan::Error> {
     assert!(pem.starts_with("-----BEGIN ENCRYPTED PRIVATE KEY-----\n"));
     assert!(pem.ends_with("-----END ENCRYPTED PRIVATE KEY-----\n"));
 
-    let signer = botan::Signer::new(&key, padding)?;
-
-    signer.update(&msg)?;
-    let sig1 = signer.finish(&rng)?;
+    let sig1 = key.sign(&msg, padding, &rng)?;
 
     //assert!(botan::Privkey::load_encrypted_der(&der, "i forget").is_err());
 
     let load = botan::Privkey::load_encrypted_der(&der, "passphrase")?;
-    let signer = botan::Signer::new(&load, padding)?;
-    signer.update(&msg)?;
-    let sig2 = signer.finish(&rng)?;
+    let sig2 = load.sign(&msg, padding, &rng)?;
 
     assert_eq!(sig1, sig2);
 
     let load = botan::Privkey::load_encrypted_pem(&pem, "pemword")?;
-    let signer = botan::Signer::new(&load, padding)?;
-    signer.update(&msg)?;
-    let sig3 = signer.finish(&rng)?;
+    let sig3 = load.sign(&msg, padding, &rng)?;
 
     assert_eq!(sig1, sig3);
     Ok(())
@@ -673,14 +646,11 @@ fn test_pubkey_sign() -> Result<(), botan::Error> {
     let ecdsa_key = botan::Privkey::create("ECDSA", "secp256r1", &rng)?;
     assert!(ecdsa_key.key_agreement_key().is_err());
 
-    let signer = botan::Signer::new(&ecdsa_key, "EMSA1(SHA-256)")?;
-
-    signer.update(&msg)?;
-    let signature = signer.finish(&rng)?;
+    let signature = ecdsa_key.sign(&msg, "EMSA1(SHA-256)", &rng)?;
 
     let pub_key = ecdsa_key.pubkey()?;
 
-    let verifier = botan::Verifier::new(&pub_key, "EMSA1(SHA-256)")?;
+    let mut verifier = botan::Verifier::new(&pub_key, "EMSA1(SHA-256)")?;
 
     verifier.update(&[1])?;
     verifier.update(&[23, 42])?;
@@ -707,12 +677,12 @@ fn test_pubkey_encrypt() -> Result<(), botan::Error> {
     assert!(priv_key.key_agreement_key().is_err());
     let pub_key = priv_key.pubkey()?;
 
-    let encryptor = botan::Encryptor::new(&pub_key, "OAEP(SHA-256)")?;
+    let mut encryptor = botan::Encryptor::new(&pub_key, "OAEP(SHA-256)")?;
 
     let ctext = encryptor.encrypt(&msg, &rng)?;
     assert_eq!(ctext.len(), 2048 / 8);
 
-    let decryptor = botan::Decryptor::new(&priv_key, "OAEP(SHA-256)")?;
+    let mut decryptor = botan::Decryptor::new(&priv_key, "OAEP(SHA-256)")?;
 
     let ptext = decryptor.decrypt(&ctext)?;
 
@@ -730,8 +700,8 @@ fn test_pubkey_key_agreement() -> Result<(), botan::Error> {
     let a_pub = a_priv.key_agreement_key()?;
     let b_pub = b_priv.key_agreement_key()?;
 
-    let a_ka = botan::KeyAgreement::new(&a_priv, "KDF2(SHA-384)")?;
-    let b_ka = botan::KeyAgreement::new(&b_priv, "KDF2(SHA-384)")?;
+    let mut a_ka = botan::KeyAgreement::new(&a_priv, "KDF2(SHA-384)")?;
+    let mut b_ka = botan::KeyAgreement::new(&b_priv, "KDF2(SHA-384)")?;
 
     let salt = rng.read(16)?;
 
@@ -739,8 +709,8 @@ fn test_pubkey_key_agreement() -> Result<(), botan::Error> {
     let b_key = b_ka.agree(32, &a_pub, &salt)?;
     assert_eq!(a_key, b_key);
 
-    let a_ka = botan::KeyAgreement::new(&a_priv, "Raw")?;
-    let b_ka = botan::KeyAgreement::new(&b_priv, "Raw")?;
+    let mut a_ka = botan::KeyAgreement::new(&a_priv, "Raw")?;
+    let mut b_ka = botan::KeyAgreement::new(&b_priv, "Raw")?;
 
     let a_key = a_ka.agree(0, &b_pub, &salt)?;
     let b_key = b_ka.agree(0, &a_pub, &vec![])?;
