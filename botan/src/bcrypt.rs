@@ -15,7 +15,11 @@ const BCRYPT_SIZE: usize = 60;
 /// let bcrypt2 = botan::bcrypt_hash("password", &mut rng, 10).unwrap();
 /// assert_ne!(bcrypt1, bcrypt2); // different salt each time
 /// ```
-pub fn bcrypt_hash(pass: &str, rng: &mut RandomNumberGenerator, workfactor: usize) -> Result<String> {
+pub fn bcrypt_hash(
+    pass: &str,
+    rng: &mut RandomNumberGenerator,
+    workfactor: usize,
+) -> Result<String> {
     let mut out = vec![0; BCRYPT_SIZE + 1];
     let mut out_len = out.len();
 

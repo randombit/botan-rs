@@ -2,8 +2,8 @@ use crate::utils::*;
 use botan_sys::*;
 
 use crate::mp::MPI;
-use crate::rng::RandomNumberGenerator;
 use crate::pk_ops::*;
+use crate::rng::RandomNumberGenerator;
 
 #[derive(Debug)]
 /// A public key object
@@ -345,7 +345,12 @@ impl Privkey {
     }
 
     /// Sign a message using the specified padding method
-    pub fn sign(&self, message: &[u8], padding: &str, rng: &mut RandomNumberGenerator) -> Result<Vec<u8>> {
+    pub fn sign(
+        &self,
+        message: &[u8],
+        padding: &str,
+        rng: &mut RandomNumberGenerator,
+    ) -> Result<Vec<u8>> {
         let mut signer = Signer::new(self, padding)?;
         signer.update(message)?;
         Ok(signer.finish(rng)?)
@@ -358,7 +363,13 @@ impl Privkey {
     }
 
     /// Perform key agreement
-    pub fn agree(&self, other_key: &[u8], output_len: usize, salt: &[u8], kdf: &str) -> Result<Vec<u8>> {
+    pub fn agree(
+        &self,
+        other_key: &[u8],
+        output_len: usize,
+        salt: &[u8],
+        kdf: &str,
+    ) -> Result<Vec<u8>> {
         let mut op = KeyAgreement::new(self, kdf)?;
         op.agree(output_len, other_key, salt)
     }
@@ -524,7 +535,12 @@ impl Pubkey {
     }
 
     /// Encrypt a message using the specified padding method
-    pub fn encrypt(&self, message: &[u8], padding: &str, rng: &mut RandomNumberGenerator) -> Result<Vec<u8>> {
+    pub fn encrypt(
+        &self,
+        message: &[u8],
+        padding: &str,
+        rng: &mut RandomNumberGenerator,
+    ) -> Result<Vec<u8>> {
         let mut op = Encryptor::new(self, padding)?;
         op.encrypt(message, rng)
     }

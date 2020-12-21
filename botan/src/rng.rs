@@ -104,7 +104,11 @@ impl RandomNumberGenerator {
     /// let mut rng = botan::RandomNumberGenerator::new_userspace().unwrap();
     /// rng.reseed_from_rng(&mut system_rng, 256).unwrap();
     /// ```
-    pub fn reseed_from_rng(&mut self, source: &mut RandomNumberGenerator, bits: usize) -> Result<()> {
+    pub fn reseed_from_rng(
+        &mut self,
+        source: &mut RandomNumberGenerator,
+        bits: usize,
+    ) -> Result<()> {
         call_botan! { botan_rng_reseed_from_rng(self.obj, source.handle(), bits) }
         Ok(())
     }
