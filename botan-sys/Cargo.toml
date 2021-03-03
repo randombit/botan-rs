@@ -12,12 +12,6 @@ documentation = "https://docs.rs/botan-sys"
 readme = "README.md"
 categories = [ "cryptography", "external-ffi-bindings", "no-std" ]
 
-[badges]
-travis-ci = { repository = "randombit/botan-rs" }
-
-[badges.maintenance]
-status = "actively-developed"
-
 [features]
 default = []
 no-std = []

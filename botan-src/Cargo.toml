@@ -10,12 +10,6 @@ repository = "https://github.com/randombit/botan-rs"
 readme = "README.md"
 categories = ["cryptography"]
 
-[badges]
-travis-ci = { repository = "randombit/botan-rs" }
-
-[badges.maintenance]
-status = "actively-developed"
-
 [dependencies]
 
 [[example]]
