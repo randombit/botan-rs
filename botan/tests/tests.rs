@@ -481,7 +481,7 @@ fn test_pubkey() -> Result<(), botan::Error> {
 
     let ecdsa_key = botan::Privkey::create("ECDSA", "secp256r1", &rng)?;
 
-    assert!(ecdsa_key.check_key(&rng)?, true);
+    assert_eq!(ecdsa_key.check_key(&rng)?, true);
     assert_eq!(ecdsa_key.algo_name()?, "ECDSA");
 
     assert!(ecdsa_key.get_field("n").is_err());
@@ -505,10 +505,10 @@ fn test_pubkey() -> Result<(), botan::Error> {
     assert!(pub_pem.ends_with("-----END PUBLIC KEY-----\n"));
 
     let loaded_key = botan::Privkey::load_der(&bits)?;
-    assert!(loaded_key.check_key(&rng)?, true);
+    assert_eq!(loaded_key.check_key(&rng)?, true);
 
     let loaded_pem_key = botan::Pubkey::load_pem(&pub_pem)?;
-    assert!(loaded_pem_key.check_key(&rng)?, true);
+    assert_eq!(loaded_pem_key.check_key(&rng)?, true);
 
     let loaded_bits = loaded_key.der_encode()?;
     let loaded_pub_key = loaded_key.pubkey()?;
@@ -874,7 +874,7 @@ fn test_mp() -> Result<(), botan::Error> {
 
     let t = -t * &ten;
 
-    assert!(t.is_negative()?, true);
+    assert_eq!(t.is_negative()?, true);
 
     assert_eq!(format!("{}", t), "-39814346982240");
     Ok(())
