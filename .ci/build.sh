@@ -6,6 +6,9 @@ set -ex
 export RUSTFLAGS="-D warnings"
 export CCACHE_MAXSIZE=2G
 export BOTAN_CONFIGURE_COMPILER_CACHE=ccache
+export INSTALL_PREFIX=/usr/local
+export LD_LIBRARY_PATH=$INSTALL_PREFIX/lib
+export DYLD_LIBRARY_PATH=$INSTALL_PREFIX/lib
 
 FEATURES=$1
 
@@ -15,12 +18,11 @@ if [ "x$FEATURES" != "xvendored" ]; then
     git clone --branch release-2 --depth 1 https://github.com/randombit/botan.git
 
     cd botan
-    ./configure.py --disable-static --without-documentation --compiler-cache=ccache
+    ./configure.py --disable-static --without-documentation --compiler-cache=ccache --prefix=$INSTALL_PREFIX
     ccache -s
     make -j$(nproc) libs cli
     ccache -s
     sudo make install
-    sudo ldconfig
 
     popd
 else
