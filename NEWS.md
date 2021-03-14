@@ -1,4 +1,11 @@
 
+## 0.8.1 2021-03-14
+
+- Fix a bug that prevented using vendored builds on systems which
+  use libc++ instead of libstdc++
+- MSRV is now 1.43.0
+- Fix some test compilation problems with recent nightly
+
 ## 0.8.0 2020-11-13
 
 - Update botan-src to upstream 2.17.1 release
