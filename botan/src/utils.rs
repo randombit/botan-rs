@@ -1,4 +1,5 @@
 use botan_sys::*;
+use core::fmt;
 
 #[cfg(feature = "no-std")]
 pub(crate) use alloc::prelude::v1::*;
@@ -106,6 +107,44 @@ pub enum Error {
     /// An error occurred during an HTTP transaction
     HttpError,
 }
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let msg = match self {
+            Error::BadAuthCode => "A provided authentication code was incorrect",
+            Error::BadFlag => "A bad flag was passed to the library",
+            Error::BadParameter => "An invalid parameter was provided to the library",
+            Error::ExceptionThrown => "An exception was thrown while processing this request",
+            Error::InsufficientBufferSpace => {
+                "There was insufficient buffer space to write the output"
+            }
+            Error::InternalError => "An internal error occurred (this is a bug in the library)",
+            Error::InvalidInput => "Something about the input was invalid",
+            Error::InvalidObject => "An invalid object was provided to the library",
+            Error::InvalidObjectState => {
+                "An object was invoked in a way that is invalid for its current state"
+            }
+            Error::InvalidVerifier => "A verifier was incorrect",
+            Error::InvalidKeyLength => "An key of invalid length was provided",
+            Error::KeyNotSet => "An object was invoked without the key being set",
+            Error::NotImplemented => {
+                "Some functionality is not implemented in the current library version"
+            }
+            Error::NullPointer => "A null pointer was incorrectly provided",
+            Error::OutOfMemory => "Memory exhaustion",
+            Error::SystemError => "An error occurred while invoking a system API",
+            Error::UnknownError => "Some unknown error occurred",
+            Error::ConversionError => "An error occured while converting data to C",
+            Error::TlsError => "An error occurred in TLS",
+            Error::HttpError => "An error occurred during an HTTP transaction",
+        };
+
+        write!(f, "{}", msg)
+    }
+}
+
+#[cfg(not(feature = "no-std"))]
+impl std::error::Error for Error {}
 
 impl From<i32> for Error {
     fn from(err: i32) -> Error {
