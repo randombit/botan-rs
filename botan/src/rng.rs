@@ -61,11 +61,11 @@ impl RandomNumberGenerator {
     ///
     /// # Examples
     /// ```
-    /// let rng = botan::RandomNumberGenerator::new().unwrap();
+    /// let mut rng = botan::RandomNumberGenerator::new().unwrap();
     /// let output = rng.read(32).unwrap();
     /// assert_eq!(output.len(), 32);
     /// ```
-    pub fn read(&self, len: usize) -> Result<Vec<u8>> {
+    pub fn read(&mut self, len: usize) -> Result<Vec<u8>> {
         let mut result = vec![0; len];
         self.fill(&mut result)?;
         Ok(result)
@@ -75,11 +75,11 @@ impl RandomNumberGenerator {
     ///
     /// # Examples
     /// ```
-    /// let rng = botan::RandomNumberGenerator::new().unwrap();
+    /// let mut rng = botan::RandomNumberGenerator::new().unwrap();
     /// let mut output = vec![0; 32];
     /// rng.fill(&mut output).unwrap();
     /// ```
-    pub fn fill(&self, out: &mut [u8]) -> Result<()> {
+    pub fn fill(&mut self, out: &mut [u8]) -> Result<()> {
         call_botan! { botan_rng_get(self.obj, out.as_mut_ptr(), out.len()) }
         Ok(())
     }
@@ -88,10 +88,10 @@ impl RandomNumberGenerator {
     ///
     /// # Examples
     /// ```
-    /// let rng = botan::RandomNumberGenerator::new().unwrap();
+    /// let mut rng = botan::RandomNumberGenerator::new().unwrap();
     /// rng.reseed(256).unwrap();
     /// ```
-    pub fn reseed(&self, bits: usize) -> Result<()> {
+    pub fn reseed(&mut self, bits: usize) -> Result<()> {
         call_botan! { botan_rng_reseed(self.obj, bits) }
         Ok(())
     }
@@ -100,11 +100,15 @@ impl RandomNumberGenerator {
     ///
     /// # Examples
     /// ```
-    /// let system_rng = botan::RandomNumberGenerator::new_system().unwrap();
-    /// let rng = botan::RandomNumberGenerator::new_userspace().unwrap();
-    /// rng.reseed_from_rng(&system_rng, 256).unwrap();
+    /// let mut system_rng = botan::RandomNumberGenerator::new_system().unwrap();
+    /// let mut rng = botan::RandomNumberGenerator::new_userspace().unwrap();
+    /// rng.reseed_from_rng(&mut system_rng, 256).unwrap();
     /// ```
-    pub fn reseed_from_rng(&self, source: &RandomNumberGenerator, bits: usize) -> Result<()> {
+    pub fn reseed_from_rng(
+        &mut self,
+        source: &mut RandomNumberGenerator,
+        bits: usize,
+    ) -> Result<()> {
         call_botan! { botan_rng_reseed_from_rng(self.obj, source.handle(), bits) }
         Ok(())
     }
@@ -113,11 +117,11 @@ impl RandomNumberGenerator {
     ///
     /// # Examples
     /// ```
-    /// let rng = botan::RandomNumberGenerator::new_userspace().unwrap();
+    /// let mut rng = botan::RandomNumberGenerator::new_userspace().unwrap();
     /// let my_seed = vec![0x42, 0x6F, 0x62];
     /// rng.add_entropy(&my_seed);
     /// ```
-    pub fn add_entropy(&self, seed: &[u8]) -> Result<()> {
+    pub fn add_entropy(&mut self, seed: &[u8]) -> Result<()> {
         call_botan! { botan_rng_add_entropy(self.obj, seed.as_ptr(), seed.len()) }
         Ok(())
     }

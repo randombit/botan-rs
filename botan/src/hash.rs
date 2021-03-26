@@ -85,11 +85,11 @@ impl HashFunction {
     ///
     /// # Examples
     /// ```
-    /// let hash = botan::HashFunction::new("SHA-256").unwrap();
+    /// let mut hash = botan::HashFunction::new("SHA-256").unwrap();
     /// hash.update(&[1,2,3]).unwrap();
     /// hash.update(&[4,5,6]).unwrap();
     /// ```
-    pub fn update(&self, data: &[u8]) -> Result<()> {
+    pub fn update(&mut self, data: &[u8]) -> Result<()> {
         call_botan! { botan_hash_update(self.obj, data.as_ptr(), data.len()) };
         Ok(())
     }
@@ -98,12 +98,12 @@ impl HashFunction {
     ///
     /// # Examples
     /// ```
-    /// let hash = botan::HashFunction::new("SHA-256").unwrap();
+    /// let mut hash = botan::HashFunction::new("SHA-256").unwrap();
     /// hash.update(&[1,2,3]).unwrap();
     /// hash.update(&[4,5,6]).unwrap();
     /// let digest = hash.finish().unwrap();
     /// ```
-    pub fn finish(&self) -> Result<Vec<u8>> {
+    pub fn finish(&mut self) -> Result<Vec<u8>> {
         let mut output = vec![0; self.output_length];
         call_botan! { botan_hash_final(self.obj, output.as_mut_ptr()) };
         Ok(output)
@@ -113,7 +113,7 @@ impl HashFunction {
     /// was newly created, and is ready to compute a new digest.
     /// Basically the same as calling final, but without returning a
     /// result.
-    pub fn clear(&self) -> Result<()> {
+    pub fn clear(&mut self) -> Result<()> {
         call_botan! { botan_hash_clear(self.obj) };
         Ok(())
     }
@@ -125,9 +125,9 @@ impl HashFunction {
     /// Should not fail but might due to unexpected error
     /// # Examples
     /// ```
-    /// let hash = botan::HashFunction::new("SHA-256").unwrap();
+    /// let mut hash = botan::HashFunction::new("SHA-256").unwrap();
     /// hash.update(&[1,2,3]);
-    /// let hash2 = hash.duplicate().unwrap();
+    /// let mut hash2 = hash.duplicate().unwrap();
     /// hash2.update(&[4,5,6]);
     /// let result1 = hash.finish().unwrap(); // hash of 1,2,3
     /// let result2 = hash2.finish().unwrap(); // hash of 1,2,3,4,5,6

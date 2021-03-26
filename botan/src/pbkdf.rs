@@ -5,7 +5,7 @@ use botan_sys::*;
 ///
 /// # Examples
 /// ```
-/// let rng = botan::RandomNumberGenerator::new().unwrap();
+/// let mut rng = botan::RandomNumberGenerator::new().unwrap();
 /// let salt = rng.read(10).unwrap();
 /// let key = botan::derive_key_from_password("Scrypt", 32, "passphrase", &salt, 8192, 8, 1).unwrap();
 /// assert_eq!(key.len(), 32);
@@ -44,7 +44,7 @@ pub fn derive_key_from_password(
 ///
 /// # Examples
 /// ```
-/// let rng = botan::RandomNumberGenerator::new().unwrap();
+/// let mut rng = botan::RandomNumberGenerator::new().unwrap();
 /// let salt = rng.read(10).unwrap();
 /// let msec = 30;
 /// let (key,r,p,n) = botan::derive_key_from_password_timed("Scrypt", 32, "passphrase", &salt, msec).unwrap();
@@ -91,7 +91,7 @@ pub fn derive_key_from_password_timed(
 ///
 /// # Examples
 /// ```
-/// let rng = botan::RandomNumberGenerator::new().unwrap();
+/// let mut rng = botan::RandomNumberGenerator::new().unwrap();
 /// let salt = rng.read(10).unwrap();
 /// let key = botan::pbkdf("PBKDF2(SHA-256)", 32, "passphrase", &salt, 10000).unwrap();
 /// assert_eq!(key.len(), 32);
@@ -113,7 +113,7 @@ pub fn pbkdf(
 ///
 /// # Examples
 /// ```
-/// let rng = botan::RandomNumberGenerator::new().unwrap();
+/// let mut rng = botan::RandomNumberGenerator::new().unwrap();
 /// let salt = rng.read(10).unwrap();
 /// let n = 32768;
 /// let r = 8;
