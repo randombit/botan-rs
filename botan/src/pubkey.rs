@@ -11,23 +11,15 @@ pub struct Pubkey {
     obj: botan_pubkey_t,
 }
 
+botan_impl_drop!(Pubkey, botan_pubkey_destroy);
+
 #[derive(Debug)]
 /// A private key object
 pub struct Privkey {
     obj: botan_privkey_t,
 }
 
-impl Drop for Privkey {
-    fn drop(&mut self) {
-        unsafe { botan_privkey_destroy(self.obj) };
-    }
-}
-
-impl Drop for Pubkey {
-    fn drop(&mut self) {
-        unsafe { botan_pubkey_destroy(self.obj) };
-    }
-}
+botan_impl_drop!(Privkey, botan_privkey_destroy);
 
 impl Privkey {
     pub(crate) fn handle(&self) -> botan_privkey_t {

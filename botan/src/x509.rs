@@ -9,11 +9,7 @@ pub struct Certificate {
     obj: botan_x509_cert_t,
 }
 
-impl Drop for Certificate {
-    fn drop(&mut self) {
-        unsafe { botan_x509_cert_destroy(self.obj) };
-    }
-}
+botan_impl_drop!(Certificate, botan_x509_cert_destroy);
 
 impl Clone for Certificate {
     fn clone(&self) -> Certificate {
@@ -23,7 +19,7 @@ impl Clone for Certificate {
 }
 
 /// Indicates if the certificate key is allowed for a particular usage
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum CertUsage {
     /// No particular usage restrictions
     NoRestrictions,
@@ -81,7 +77,7 @@ impl From<CertUsage> for X509KeyConstraints {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 /// Represents result of cert validation
 pub enum CertValidationStatus {
     /// Successful validation, with possible detail code

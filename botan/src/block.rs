@@ -13,13 +13,7 @@ pub struct BlockCipher {
     mod_keylen: usize,
 }
 
-impl Drop for BlockCipher {
-    fn drop(&mut self) {
-        unsafe {
-            botan_block_cipher_destroy(self.obj);
-        }
-    }
-}
+botan_impl_drop!(BlockCipher, botan_block_cipher_destroy);
 
 impl BlockCipher {
     /// Create a new block cipher instance, failing if the cipher is unknown

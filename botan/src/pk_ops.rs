@@ -21,11 +21,7 @@ pub struct Signer {
     sig_len: usize,
 }
 
-impl Drop for Signer {
-    fn drop(&mut self) {
-        unsafe { botan_pk_op_sign_destroy(self.obj) };
-    }
-}
+botan_impl_drop!(Signer, botan_pk_op_sign_destroy);
 
 impl Signer {
     /// Create a new signature operator
@@ -58,11 +54,7 @@ pub struct Decryptor {
     obj: botan_pk_op_decrypt_t,
 }
 
-impl Drop for Decryptor {
-    fn drop(&mut self) {
-        unsafe { botan_pk_op_decrypt_destroy(self.obj) };
-    }
-}
+botan_impl_drop!(Decryptor, botan_pk_op_decrypt_destroy);
 
 impl Decryptor {
     /// Create a new decryption object
@@ -91,11 +83,7 @@ pub struct Verifier {
     obj: botan_pk_op_verify_t,
 }
 
-impl Drop for Verifier {
-    fn drop(&mut self) {
-        unsafe { botan_pk_op_verify_destroy(self.obj) };
-    }
-}
+botan_impl_drop!(Verifier, botan_pk_op_verify_destroy);
 
 impl Verifier {
     /// Create a new verifier object
@@ -143,11 +131,7 @@ pub struct Encryptor {
     obj: botan_pk_op_encrypt_t,
 }
 
-impl Drop for Encryptor {
-    fn drop(&mut self) {
-        unsafe { botan_pk_op_encrypt_destroy(self.obj) };
-    }
-}
+botan_impl_drop!(Encryptor, botan_pk_op_encrypt_destroy);
 
 impl Encryptor {
     /// Create a new public key encryptor object
@@ -183,11 +167,7 @@ pub struct KeyAgreement {
     obj: botan_pk_op_ka_t,
 }
 
-impl Drop for KeyAgreement {
-    fn drop(&mut self) {
-        unsafe { botan_pk_op_key_agreement_destroy(self.obj) };
-    }
-}
+botan_impl_drop!(KeyAgreement, botan_pk_op_key_agreement_destroy);
 
 impl KeyAgreement {
     /// Create a new key agreement operator

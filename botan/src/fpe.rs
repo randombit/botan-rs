@@ -26,13 +26,7 @@ pub struct FPE {
     obj: botan_fpe_t,
 }
 
-impl Drop for FPE {
-    fn drop(&mut self) {
-        unsafe {
-            botan_fpe_destroy(self.obj);
-        }
-    }
-}
+botan_impl_drop!(FPE, botan_fpe_destroy);
 
 impl FPE {
     /// Create a new FPE instance, FE1 scheme

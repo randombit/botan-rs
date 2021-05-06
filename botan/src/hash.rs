@@ -14,13 +14,7 @@ impl Clone for HashFunction {
     }
 }
 
-impl Drop for HashFunction {
-    fn drop(&mut self) {
-        unsafe {
-            botan_hash_destroy(self.obj);
-        }
-    }
-}
+botan_impl_drop!(HashFunction, botan_hash_destroy);
 
 impl HashFunction {
     /// Create a new hash function

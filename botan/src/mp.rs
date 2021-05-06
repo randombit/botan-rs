@@ -17,13 +17,7 @@ pub struct MPI {
     obj: botan_mp_t,
 }
 
-impl Drop for MPI {
-    fn drop(&mut self) {
-        unsafe {
-            botan_mp_destroy(self.obj);
-        }
-    }
-}
+botan_impl_drop!(MPI, botan_mp_destroy);
 
 impl Clone for MPI {
     fn clone(&self) -> MPI {

@@ -7,13 +7,7 @@ pub struct RandomNumberGenerator {
     obj: botan_rng_t,
 }
 
-impl Drop for RandomNumberGenerator {
-    fn drop(&mut self) {
-        unsafe {
-            botan_rng_destroy(self.obj);
-        }
-    }
-}
+botan_impl_drop!(RandomNumberGenerator, botan_rng_destroy);
 
 impl RandomNumberGenerator {
     fn new_of_type(typ: &str) -> Result<RandomNumberGenerator> {

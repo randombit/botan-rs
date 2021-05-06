@@ -7,27 +7,15 @@ pub struct HOTP {
     obj: botan_hotp_t,
 }
 
+botan_impl_drop!(HOTP, botan_hotp_destroy);
+
 #[derive(Debug)]
 /// Generate or check TOTP tokens
 pub struct TOTP {
     obj: botan_totp_t,
 }
 
-impl Drop for HOTP {
-    fn drop(&mut self) {
-        unsafe {
-            botan_hotp_destroy(self.obj);
-        }
-    }
-}
-
-impl Drop for TOTP {
-    fn drop(&mut self) {
-        unsafe {
-            botan_totp_destroy(self.obj);
-        }
-    }
-}
+botan_impl_drop!(TOTP, botan_totp_destroy);
 
 impl HOTP {
     /// Instantiate a new HOTP instance with the given parameters

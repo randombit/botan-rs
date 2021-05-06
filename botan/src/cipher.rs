@@ -23,13 +23,7 @@ pub enum CipherDirection {
     Decrypt,
 }
 
-impl Drop for Cipher {
-    fn drop(&mut self) {
-        unsafe {
-            botan_cipher_destroy(self.obj);
-        }
-    }
-}
+botan_impl_drop!(Cipher, botan_cipher_destroy);
 
 impl Cipher {
     /// Create a new cipher object in the specified direction

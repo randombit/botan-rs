@@ -25,12 +25,16 @@ macro_rules! call_botan {
     };
 }
 
-macro_rules! call_botan_destroy {
-    ($fn:expr) => {
-        let rc = unsafe { $fn };
-        if rc != 0 {
-            let err = Error::from(rc);
-            panic!("{} failed: {}", core::stringify!($fn), err);
+macro_rules! botan_impl_drop {
+    ($typ:ty, $fn:path) => {
+        impl Drop for $typ {
+            fn drop(&mut self) {
+                let rc = unsafe { $fn(self.obj) };
+                if rc != 0 {
+                    let err = Error::from(rc);
+                    panic!("{} failed: {}", core::stringify!($fn), err);
+                }
+            }
         }
     };
 }

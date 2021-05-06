@@ -11,11 +11,7 @@ pub struct MsgAuthCode {
     mod_keylen: usize,
 }
 
-impl Drop for MsgAuthCode {
-    fn drop(&mut self) {
-        call_botan_destroy! { botan_mac_destroy(self.obj) }
-    }
-}
+botan_impl_drop!(MsgAuthCode, botan_mac_destroy);
 
 impl MsgAuthCode {
     /// Create a new message authentication code

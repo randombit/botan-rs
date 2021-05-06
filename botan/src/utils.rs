@@ -63,7 +63,7 @@ pub(crate) fn call_botan_ffi_returning_string(
     Ok(ostr)
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 /// Possible errors
 pub enum Error {
     /// A provided authentication code was incorrect
