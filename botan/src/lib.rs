@@ -25,6 +25,42 @@ macro_rules! call_botan {
     };
 }
 
+macro_rules! call_botan_destroy {
+    ($fn:expr) => {
+        let rc = unsafe { $fn };
+        if rc != 0 {
+            let err = Error::from(rc);
+            panic!("{} failed: {}", core::stringify!($fn), err);
+        }
+    };
+}
+
+macro_rules! botan_usize {
+    ($fn:path, $obj:expr) => {{
+        let mut val = 0;
+        let rc = unsafe { $fn($obj, &mut val) };
+        if rc != 0 {
+            Err(Error::from(rc))
+        } else {
+            Ok(val)
+        }
+    }};
+}
+
+macro_rules! botan_usize3 {
+    ($fn:path, $obj:expr) => {{
+        let mut val1 = 0;
+        let mut val2 = 0;
+        let mut val3 = 0;
+        let rc = unsafe { $fn($obj, &mut val1, &mut val2, &mut val3) };
+        if rc != 0 {
+            Err(Error::from(rc))
+        } else {
+            Ok((val1, val2, val3))
+        }
+    }};
+}
+
 mod bcrypt;
 mod block;
 mod cipher;

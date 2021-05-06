@@ -12,13 +12,22 @@ fn os_uses_gnu_libstdcpp() -> bool {
     }
 }
 
+fn botan_lib_major_version() -> i32 {
+    #[cfg(feature = "botan3")] {
+        3
+    }
+    #[cfg(not(feature = "botan3"))] {
+        2
+    }
+}
+
 fn main() {
     #[cfg(feature = "vendored")]
     {
         let (lib_dir, _) = botan_src::build();
         println!("cargo:vendored=1");
         println!("cargo:rustc-link-search=native={}", &lib_dir);
-        println!("cargo:rustc-link-lib=static=botan-2");
+        println!("cargo:rustc-link-lib=static=botan-{}", botan_lib_major_version());
 
         if os_uses_gnu_libstdcpp() {
             println!("cargo:rustc-flags=-l dylib=stdc++");
@@ -28,6 +37,6 @@ fn main() {
     }
     #[cfg(not(feature = "vendored"))]
     {
-        println!("cargo:rustc-link-lib=botan-2");
+        println!("cargo:rustc-link-lib=botan-{}", botan_lib_major_version());
     }
 }

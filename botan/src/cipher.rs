@@ -47,19 +47,12 @@ impl Cipher {
         };
         call_botan! { botan_cipher_init(&mut obj, make_cstr(name)?.as_ptr(), flag) };
 
-        let mut tag_length = 0;
-        call_botan! { botan_cipher_get_tag_length(obj, &mut tag_length) };
+        let tag_length = botan_usize!(botan_cipher_get_tag_length, obj)?;
+        let update_granularity = botan_usize!(botan_cipher_get_update_granularity, obj)?;
+        let default_nonce_length = botan_usize!(botan_cipher_get_default_nonce_length, obj)?;
 
-        let mut update_granularity = 0;
-        call_botan! { botan_cipher_get_update_granularity(obj, &mut update_granularity) };
-
-        let mut default_nonce_length = 0;
-        call_botan! { botan_cipher_get_default_nonce_length(obj, &mut default_nonce_length) };
-
-        let mut min_keylen = 0;
-        let mut max_keylen = 0;
-        let mut mod_keylen = 0;
-        call_botan! { botan_cipher_get_keyspec(obj, &mut min_keylen, &mut max_keylen, &mut mod_keylen) };
+        let (min_keylen, max_keylen, mod_keylen) =
+            botan_usize3!(botan_cipher_get_keyspec, obj)?;
 
         Ok(Cipher {
             obj,

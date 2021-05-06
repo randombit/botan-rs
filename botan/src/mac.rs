@@ -13,9 +13,7 @@ pub struct MsgAuthCode {
 
 impl Drop for MsgAuthCode {
     fn drop(&mut self) {
-        unsafe {
-            botan_mac_destroy(self.obj);
-        }
+        call_botan_destroy! { botan_mac_destroy(self.obj) }
     }
 }
 
@@ -33,13 +31,10 @@ impl MsgAuthCode {
         let mut obj = ptr::null_mut();
         call_botan! { botan_mac_init(&mut obj, make_cstr(name)?.as_ptr(), 0u32) };
 
-        let mut output_length = 0;
-        call_botan! { botan_mac_output_length(obj, &mut output_length) };
+        let output_length = botan_usize!(botan_mac_output_length, obj)?;
 
-        let mut min_keylen = 0;
-        let mut max_keylen = 0;
-        let mut mod_keylen = 0;
-        call_botan! { botan_mac_get_keyspec(obj, &mut min_keylen, &mut max_keylen, &mut mod_keylen) };
+        let (min_keylen, max_keylen, mod_keylen) =
+            botan_usize3!(botan_mac_get_keyspec, obj)?;
 
         Ok(MsgAuthCode {
             obj,

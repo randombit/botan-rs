@@ -13,11 +13,13 @@ The following features are supported:
 * `no-std`: Enable a no-std build. (Still uses `alloc`, requires nightly)
 * `vendored`: Build a copy of the C++ library directly, without
   relying on a system installed version.
+* `botan3`: Link against (the currently unreleased) Botan 3.x rather
+  than the default Botan 2.x
 
-Currently the crate exposes ciphers, hashes, MACs, KDFs, password based
-key derivation (PBKDF2, Scrypt, Argon2, etc), bcrypt password hashes,
-random number generators, X.509 certificates, format preserving encryption,
-HOTP/TOTP, NIST key wrapping, multiprecision integers, and various
-public key algorithms (RSA, ECDSA, ECDH, ...)
+Currently the crate exposes ciphers, hashes, MACs, KDFs, password based key
+derivation (PBKDF2, Scrypt, Argon2, etc), bcrypt password hashes, random number
+generators, X.509 certificates, format preserving encryption, HOTP/TOTP, NIST
+key wrapping, multiprecision integers, and the usual public key algorithms (RSA,
+ECDSA, ECDH, DH, ...)
 
 PRs and comments/issues happily accepted.

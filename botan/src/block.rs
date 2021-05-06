@@ -42,10 +42,8 @@ impl BlockCipher {
             return Err(Error::from(block_size));
         }
 
-        let mut min_keylen = 0;
-        let mut max_keylen = 0;
-        let mut mod_keylen = 0;
-        call_botan! { botan_block_cipher_get_keyspec(obj, &mut min_keylen, &mut max_keylen, &mut mod_keylen) };
+        let (min_keylen, max_keylen, mod_keylen) =
+            botan_usize3!(botan_block_cipher_get_keyspec, obj)?;
 
         Ok(BlockCipher {
             obj,
@@ -126,19 +124,17 @@ impl BlockCipher {
     /// assert!(cipher.encrypt_blocks(&vec![0; 16]).is_ok());
     /// ```
     pub fn encrypt_blocks(&self, input: &[u8]) -> Result<Vec<u8>> {
-        if input.len() % self.block_size != 0 {
-            return Err(Error::InvalidInput);
-        }
-
-        let blocks = input.len() / self.block_size;
-
-        let mut output = vec![0; input.len()];
-
-        call_botan! { botan_block_cipher_encrypt_blocks(self.obj, input.as_ptr(), output.as_mut_ptr(), blocks) };
-        Ok(output)
+        let mut ivec = input.to_vec();
+        self.encrypt_in_place(&mut ivec)?;
+        Ok(ivec)
     }
 
     /// Encrypt in place
+    ///
+    /// # Errors
+    ///
+    /// Fails if the input is not a multiple of the block size, or if the
+    /// key was not set on the object.
     pub fn encrypt_in_place(&self, buf: &mut [u8]) -> Result<()> {
         if buf.len() % self.block_size != 0 {
             return Err(Error::InvalidInput);
@@ -170,19 +166,17 @@ impl BlockCipher {
     /// assert!(cipher.decrypt_blocks(&vec![0; 16]).is_ok());
     /// ```
     pub fn decrypt_blocks(&self, input: &[u8]) -> Result<Vec<u8>> {
-        if input.len() % self.block_size != 0 {
-            return Err(Error::InvalidInput);
-        }
-
-        let blocks = input.len() / self.block_size;
-
-        let mut output = vec![0; input.len()];
-
-        call_botan! { botan_block_cipher_decrypt_blocks(self.obj, input.as_ptr(), output.as_mut_ptr(), blocks) };
-        Ok(output)
+        let mut ivec = input.to_vec();
+        self.decrypt_in_place(&mut ivec)?;
+        Ok(ivec)
     }
 
     /// Decrypt in place
+    ///
+    /// # Errors
+    ///
+    /// Fails if the input is not a multiple of the block size, or if the
+    /// key was not set on the object.
     pub fn decrypt_in_place(&self, buf: &mut [u8]) -> Result<()> {
         if buf.len() % self.block_size != 0 {
             return Err(Error::InvalidInput);
