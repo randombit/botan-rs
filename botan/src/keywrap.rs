@@ -26,11 +26,15 @@ pub fn nist_key_wrap(kek: &[u8], key: &[u8]) -> Result<Vec<u8>> {
     let mut output = vec![0; key.len() + 8];
     let mut output_len = output.len();
 
-    call_botan! {
-        botan_key_wrap3394(key.as_ptr(), key.len(),
-                           kek.as_ptr(), kek.len(),
-                           output.as_mut_ptr(), &mut output_len)
-    }
+    botan_call!(
+        botan_key_wrap3394,
+        key.as_ptr(),
+        key.len(),
+        kek.as_ptr(),
+        kek.len(),
+        output.as_mut_ptr(),
+        &mut output_len
+    )?;
 
     output.resize(output_len, 0);
 
@@ -60,11 +64,15 @@ pub fn nist_key_unwrap(kek: &[u8], wrapped: &[u8]) -> Result<Vec<u8>> {
     let mut output = vec![0; wrapped.len() - 8];
     let mut output_len = output.len();
 
-    call_botan! {
-        botan_key_unwrap3394(wrapped.as_ptr(), wrapped.len(),
-                             kek.as_ptr(), kek.len(),
-                             output.as_mut_ptr(), &mut output_len)
-    }
+    botan_call!(
+        botan_key_unwrap3394,
+        wrapped.as_ptr(),
+        wrapped.len(),
+        kek.as_ptr(),
+        kek.len(),
+        output.as_mut_ptr(),
+        &mut output_len
+    )?;
 
     output.resize(output_len, 0);
 

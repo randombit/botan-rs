@@ -24,13 +24,10 @@ impl MsgAuthCode {
     /// let poly1305 = botan::MsgAuthCode::new("Poly1305").unwrap();
     /// ```
     pub fn new(name: &str) -> Result<MsgAuthCode> {
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_mac_init(&mut obj, make_cstr(name)?.as_ptr(), 0u32) };
-
+        let obj = botan_init!(botan_mac_init, make_cstr(name)?.as_ptr(), 0u32)?;
         let output_length = botan_usize!(botan_mac_output_length, obj)?;
 
-        let (min_keylen, max_keylen, mod_keylen) =
-            botan_usize3!(botan_mac_get_keyspec, obj)?;
+        let (min_keylen, max_keylen, mod_keylen) = botan_usize3!(botan_mac_get_keyspec, obj)?;
 
         Ok(MsgAuthCode {
             obj,
@@ -78,8 +75,7 @@ impl MsgAuthCode {
     /// hmac.set_key(&vec![0; 16]).unwrap();
     /// ```
     pub fn set_key(&self, key: &[u8]) -> Result<()> {
-        call_botan! { botan_mac_set_key(self.obj, key.as_ptr(), key.len()) };
-        Ok(())
+        botan_call!(botan_mac_set_key, self.obj, key.as_ptr(), key.len())
     }
 
     /// Add data to a MAC computation, may be called many times
@@ -93,8 +89,7 @@ impl MsgAuthCode {
     /// hmac.update(&[4,5,6]).unwrap();
     /// ```
     pub fn update(&self, data: &[u8]) -> Result<()> {
-        call_botan! { botan_mac_update(self.obj, data.as_ptr(), data.len()) };
-        Ok(())
+        botan_call!(botan_mac_update, self.obj, data.as_ptr(), data.len())
     }
 
     /// Complete a MAC computation, after which the object is reset to
@@ -111,7 +106,7 @@ impl MsgAuthCode {
     /// ```
     pub fn finish(&self) -> Result<Vec<u8>> {
         let mut output = vec![0; self.output_length];
-        call_botan! { botan_mac_final(self.obj, output.as_mut_ptr()) };
+        botan_call!(botan_mac_final, self.obj, output.as_mut_ptr())?;
         Ok(output)
     }
 
@@ -126,7 +121,6 @@ impl MsgAuthCode {
     /// assert!(hmac.update(&[23]).is_err()); // key not set anymore
     /// ```
     pub fn clear(&self) -> Result<()> {
-        call_botan! { botan_mac_clear(self.obj) };
-        Ok(())
+        botan_call!(botan_mac_clear, self.obj)
     }
 }

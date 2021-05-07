@@ -120,17 +120,14 @@ impl Certificate {
 
     /// Load a X.509 certificate from DER or PEM representation
     pub fn load(data: &[u8]) -> Result<Certificate> {
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_x509_cert_load(&mut obj, data.as_ptr(), data.len()) };
+        let obj = botan_init!(botan_x509_cert_load, data.as_ptr(), data.len())?;
         Ok(Certificate { obj })
     }
 
     /// Read an X.509 certificate from a file
     pub fn from_file(fsname: &str) -> Result<Certificate> {
         let fsname = make_cstr(fsname)?;
-
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_x509_cert_load_file(&mut obj, fsname.as_ptr()) };
+        let obj = botan_init!(botan_x509_cert_load_file, fsname.as_ptr())?;
         Ok(Certificate { obj })
     }
 
@@ -156,8 +153,7 @@ impl Certificate {
     /// Since certificate objects are immutable, duplication just involves
     /// atomic incrementing a reference count, so is quite cheap
     pub fn duplicate(&self) -> Result<Certificate> {
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_x509_cert_dup(&mut obj, self.obj) }
+        let obj = botan_init!(botan_x509_cert_dup, self.obj)?;
         Ok(Certificate { obj })
     }
 
@@ -188,7 +184,7 @@ impl Certificate {
     /// Return the public key included in this certificate
     pub fn public_key(&self) -> Result<Pubkey> {
         let mut key = ptr::null_mut();
-        call_botan! { botan_x509_cert_get_public_key(self.obj, &mut key) };
+        botan_call!(botan_x509_cert_get_public_key, self.obj, &mut key)?;
         Ok(Pubkey::from_handle(key))
     }
 
@@ -204,16 +200,11 @@ impl Certificate {
     pub fn allows_usage(&self, usage: CertUsage) -> Result<bool> {
         let usage_bit: X509KeyConstraints = X509KeyConstraints::from(usage);
 
-        let rc = unsafe { botan_x509_cert_allowed_usage(self.obj, usage_bit as u32) };
-
-        if rc == 0 {
-            Ok(true)
-        } else if rc == 1 {
-            Ok(false)
-        } else {
-            Err(Error::from(rc))
-        }
+        // Return logic is inverted for this function
+        let r = botan_bool_in_rc!(botan_x509_cert_allowed_usage, self.obj, usage_bit as u32)?;
+        Ok(!r)
     }
+
     /// Attempt to verify this certificate
     pub fn verify(
         &self,

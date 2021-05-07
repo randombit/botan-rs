@@ -23,15 +23,18 @@ pub fn bcrypt_hash(
     let mut out = vec![0; BCRYPT_SIZE + 1];
     let mut out_len = out.len();
 
-    call_botan! {
-        botan_bcrypt_generate(out.as_mut_ptr(), &mut out_len,
-                              make_cstr(pass)?.as_ptr(),
-                              rng.handle(),
-                              workfactor, 0u32)
-    };
+    botan_call!(
+        botan_bcrypt_generate,
+        out.as_mut_ptr(),
+        &mut out_len,
+        make_cstr(pass)?.as_ptr(),
+        rng.handle(),
+        workfactor,
+        0u32
+    )?;
 
     out.resize(out_len - 1, 0);
-    Ok(String::from_utf8(out).map_err(|_| Error::ConversionError)?)
+    String::from_utf8(out).map_err(|_| Error::ConversionError)
 }
 
 /// Verify a bcrypt password hash

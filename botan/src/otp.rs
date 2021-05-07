@@ -26,13 +26,15 @@ impl HOTP {
     /// let hotp = botan::HOTP::new(&[1,2,3,4], "SHA-1", 6);
     /// ```
     pub fn new(key: &[u8], hash_algo: &str, digits: usize) -> Result<HOTP> {
-        let mut obj = ptr::null_mut();
-
         let hash_algo = make_cstr(hash_algo)?;
 
-        call_botan! {
-            botan_hotp_init(&mut obj, key.as_ptr(), key.len(), hash_algo.as_ptr(), digits)
-        }
+        let obj = botan_init!(
+            botan_hotp_init,
+            key.as_ptr(),
+            key.len(),
+            hash_algo.as_ptr(),
+            digits
+        )?;
 
         Ok(HOTP { obj })
     }
@@ -40,7 +42,7 @@ impl HOTP {
     /// Generate an HOTP code
     pub fn generate(&self, counter: u64) -> Result<u32> {
         let mut code = 0;
-        call_botan! { botan_hotp_generate(self.obj, &mut code, counter) }
+        botan_call!(botan_hotp_generate, self.obj, &mut code, counter)?;
         Ok(code)
     }
 
@@ -58,15 +60,20 @@ impl HOTP {
         resync_range: usize,
     ) -> Result<(bool, u64)> {
         let mut new_ctr = 0;
+        let res = botan_bool_in_rc!(
+            botan_hotp_check,
+            self.obj,
+            &mut new_ctr,
+            code,
+            counter,
+            resync_range
+        )?;
 
-        let rc = unsafe { botan_hotp_check(self.obj, &mut new_ctr, code, counter, resync_range) };
-
-        if rc == 0 {
+        // Return value is inverted
+        if res == false {
             Ok((true, new_ctr))
-        } else if rc == 1 {
-            Ok((false, counter))
         } else {
-            Err(Error::from(rc))
+            Ok((false, counter))
         }
     }
 }
@@ -80,13 +87,16 @@ impl TOTP {
     /// let totp = botan::TOTP::new(&[1,2,3,4], "SHA-1", 6, 30);
     /// ```
     pub fn new(key: &[u8], hash_algo: &str, digits: usize, time_step: usize) -> Result<TOTP> {
-        let mut obj = ptr::null_mut();
-
         let hash_algo = make_cstr(hash_algo)?;
 
-        call_botan! {
-            botan_totp_init(&mut obj, key.as_ptr(), key.len(), hash_algo.as_ptr(), digits, time_step)
-        }
+        let obj = botan_init!(
+            botan_totp_init,
+            key.as_ptr(),
+            key.len(),
+            hash_algo.as_ptr(),
+            digits,
+            time_step
+        )?;
 
         Ok(TOTP { obj })
     }
@@ -94,20 +104,19 @@ impl TOTP {
     /// Generate an TOTP code
     pub fn generate(&self, timestamp: u64) -> Result<u32> {
         let mut code = 0;
-        call_botan! { botan_totp_generate(self.obj, &mut code, timestamp) }
+        botan_call!(botan_totp_generate, self.obj, &mut code, timestamp)?;
         Ok(code)
     }
 
     /// Check an TOTP code
     pub fn check(&self, code: u32, timestamp: u64, allowed_drift: usize) -> Result<bool> {
-        let rc = unsafe { botan_totp_check(self.obj, code, timestamp, allowed_drift) };
-
-        if rc == 0 {
-            Ok(true)
-        } else if rc == 1 {
-            Ok(false)
-        } else {
-            Err(Error::from(rc))
-        }
+        // Return value is inverted
+        Ok(!botan_bool_in_rc!(
+            botan_totp_check,
+            self.obj,
+            code,
+            timestamp,
+            allowed_drift
+        )?)
     }
 }

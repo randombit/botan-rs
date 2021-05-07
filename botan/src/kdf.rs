@@ -25,11 +25,18 @@ pub fn kdf(
 
     let algo = make_cstr(algo)?;
 
-    call_botan! { botan_kdf(algo.as_ptr(),
-    output.as_mut_ptr(), output_len,
-    secret.as_ptr(), secret.len(),
-    salt.as_ptr(), salt.len(),
-    label.as_ptr(), label.len()) };
+    botan_call!(
+        botan_kdf,
+        algo.as_ptr(),
+        output.as_mut_ptr(),
+        output_len,
+        secret.as_ptr(),
+        secret.len(),
+        salt.as_ptr(),
+        salt.len(),
+        label.as_ptr(),
+        label.len()
+    )?;
 
     Ok(output)
 }

@@ -27,9 +27,7 @@ impl HashFunction {
     /// assert!(botan::HashFunction::new("Hash9000").is_err());
     /// ```
     pub fn new(name: &str) -> Result<HashFunction> {
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_hash_init(&mut obj, make_cstr(name)?.as_ptr(), 0u32) };
-
+        let obj = botan_init!(botan_hash_init, make_cstr(name)?.as_ptr(), 0u32)?;
         let output_length = botan_usize!(botan_hash_output_length, obj)?;
 
         Ok(HashFunction { obj, output_length })
@@ -81,7 +79,7 @@ impl HashFunction {
     /// hash.update(&[4,5,6]).unwrap();
     /// ```
     pub fn update(&mut self, data: &[u8]) -> Result<()> {
-        call_botan! { botan_hash_update(self.obj, data.as_ptr(), data.len()) };
+        botan_call!(botan_hash_update, self.obj, data.as_ptr(), data.len())?;
         Ok(())
     }
 
@@ -96,7 +94,7 @@ impl HashFunction {
     /// ```
     pub fn finish(&mut self) -> Result<Vec<u8>> {
         let mut output = vec![0; self.output_length];
-        call_botan! { botan_hash_final(self.obj, output.as_mut_ptr()) };
+        botan_call!(botan_hash_final, self.obj, output.as_mut_ptr())?;
         Ok(output)
     }
 
@@ -105,7 +103,7 @@ impl HashFunction {
     /// Basically the same as calling final, but without returning a
     /// result.
     pub fn clear(&mut self) -> Result<()> {
-        call_botan! { botan_hash_clear(self.obj) };
+        botan_call!(botan_hash_clear, self.obj)?;
         Ok(())
     }
 
@@ -125,8 +123,7 @@ impl HashFunction {
     /// ```
 
     pub fn duplicate(&self) -> Result<HashFunction> {
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_hash_copy_state(&mut obj, self.obj) };
+        let obj = botan_init!(botan_hash_copy_state, self.obj)?;
         Ok(HashFunction {
             obj,
             output_length: self.output_length,

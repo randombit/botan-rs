@@ -24,18 +24,19 @@ pub fn derive_key_from_password(
 
     let mut output = vec![0u8; out_len];
 
-    call_botan! {
-        botan_pwdhash(algo.as_ptr(),
-                      param1,
-                      param2,
-                      param3,
-                      output.as_mut_ptr(),
-                      output.len(),
-                      passphrase.as_ptr(),
-                      0,
-                      salt.as_ptr(),
-                      salt.len())
-    }
+    botan_call!(
+        botan_pwdhash,
+        algo.as_ptr(),
+        param1,
+        param2,
+        param3,
+        output.as_mut_ptr(),
+        output.len(),
+        passphrase.as_ptr(),
+        0,
+        salt.as_ptr(),
+        salt.len()
+    )?;
 
     Ok(output)
 }
@@ -67,19 +68,20 @@ pub fn derive_key_from_password_timed(
     let mut param2 = 0;
     let mut param3 = 0;
 
-    call_botan! {
-        botan_pwdhash_timed(algo.as_ptr(),
-                            msec,
-                            &mut param1,
-                            &mut param2,
-                            &mut param3,
-                            output.as_mut_ptr(),
-                            output.len(),
-                            passphrase.as_ptr(),
-                            0,
-                            salt.as_ptr(),
-                            salt.len())
-    }
+    botan_call!(
+        botan_pwdhash_timed,
+        algo.as_ptr(),
+        msec,
+        &mut param1,
+        &mut param2,
+        &mut param3,
+        output.as_mut_ptr(),
+        output.len(),
+        passphrase.as_ptr(),
+        0,
+        salt.as_ptr(),
+        salt.len()
+    )?;
 
     Ok((output, param1, param2, param3))
 }
