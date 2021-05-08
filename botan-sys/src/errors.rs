@@ -1,5 +1,7 @@
 use cty::{c_char, c_int};
 
+#[allow(clippy::upper_case_acronyms)]
+
 pub type BOTAN_FFI_ERROR = c_int;
 
 pub const BOTAN_FFI_SUCCESS: BOTAN_FFI_ERROR = 0;

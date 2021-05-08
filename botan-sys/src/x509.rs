@@ -7,6 +7,7 @@ pub enum botan_x509_cert_struct {}
 pub type botan_x509_cert_t = *mut botan_x509_cert_struct;
 
 #[repr(u32)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum X509KeyConstraints {
     NO_CONSTRAINTS = 0,
     DIGITAL_SIGNATURE = 32768,
