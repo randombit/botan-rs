@@ -13,13 +13,7 @@ pub struct BlockCipher {
     mod_keylen: usize,
 }
 
-impl Drop for BlockCipher {
-    fn drop(&mut self) {
-        unsafe {
-            botan_block_cipher_destroy(self.obj);
-        }
-    }
-}
+botan_impl_drop!(BlockCipher, botan_block_cipher_destroy);
 
 impl BlockCipher {
     /// Create a new block cipher instance, failing if the cipher is unknown
@@ -33,8 +27,7 @@ impl BlockCipher {
     /// assert!(no_such_cipher.is_err());
     /// ```
     pub fn new(name: &str) -> Result<BlockCipher> {
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_block_cipher_init(&mut obj, make_cstr(name)?.as_ptr()) };
+        let obj = botan_init!(botan_block_cipher_init, make_cstr(name)?.as_ptr())?;
 
         let block_size = unsafe { botan_block_cipher_block_size(obj) };
 
@@ -42,10 +35,8 @@ impl BlockCipher {
             return Err(Error::from(block_size));
         }
 
-        let mut min_keylen = 0;
-        let mut max_keylen = 0;
-        let mut mod_keylen = 0;
-        call_botan! { botan_block_cipher_get_keyspec(obj, &mut min_keylen, &mut max_keylen, &mut mod_keylen) };
+        let (min_keylen, max_keylen, mod_keylen) =
+            botan_usize3!(botan_block_cipher_get_keyspec, obj)?;
 
         Ok(BlockCipher {
             obj,
@@ -102,8 +93,12 @@ impl BlockCipher {
     /// assert!(cipher.set_key(&vec![0; 16]).is_ok());
     /// ```
     pub fn set_key(&mut self, key: &[u8]) -> Result<()> {
-        call_botan! { botan_block_cipher_set_key(self.obj, key.as_ptr(), key.len()) };
-        Ok(())
+        botan_call!(
+            botan_block_cipher_set_key,
+            self.obj,
+            key.as_ptr(),
+            key.len()
+        )
     }
 
     /// Encrypt some blocks of data
@@ -126,19 +121,17 @@ impl BlockCipher {
     /// assert!(cipher.encrypt_blocks(&vec![0; 16]).is_ok());
     /// ```
     pub fn encrypt_blocks(&self, input: &[u8]) -> Result<Vec<u8>> {
-        if input.len() % self.block_size != 0 {
-            return Err(Error::InvalidInput);
-        }
-
-        let blocks = input.len() / self.block_size;
-
-        let mut output = vec![0; input.len()];
-
-        call_botan! { botan_block_cipher_encrypt_blocks(self.obj, input.as_ptr(), output.as_mut_ptr(), blocks) };
-        Ok(output)
+        let mut ivec = input.to_vec();
+        self.encrypt_in_place(&mut ivec)?;
+        Ok(ivec)
     }
 
     /// Encrypt in place
+    ///
+    /// # Errors
+    ///
+    /// Fails if the input is not a multiple of the block size, or if the
+    /// key was not set on the object.
     pub fn encrypt_in_place(&self, buf: &mut [u8]) -> Result<()> {
         if buf.len() % self.block_size != 0 {
             return Err(Error::InvalidInput);
@@ -146,8 +139,13 @@ impl BlockCipher {
 
         let blocks = buf.len() / self.block_size;
 
-        call_botan! { botan_block_cipher_encrypt_blocks(self.obj, buf.as_ptr(), buf.as_mut_ptr(), blocks) };
-        Ok(())
+        botan_call!(
+            botan_block_cipher_encrypt_blocks,
+            self.obj,
+            buf.as_ptr(),
+            buf.as_mut_ptr(),
+            blocks
+        )
     }
 
     /// Decrypt some blocks of data
@@ -170,19 +168,17 @@ impl BlockCipher {
     /// assert!(cipher.decrypt_blocks(&vec![0; 16]).is_ok());
     /// ```
     pub fn decrypt_blocks(&self, input: &[u8]) -> Result<Vec<u8>> {
-        if input.len() % self.block_size != 0 {
-            return Err(Error::InvalidInput);
-        }
-
-        let blocks = input.len() / self.block_size;
-
-        let mut output = vec![0; input.len()];
-
-        call_botan! { botan_block_cipher_decrypt_blocks(self.obj, input.as_ptr(), output.as_mut_ptr(), blocks) };
-        Ok(output)
+        let mut ivec = input.to_vec();
+        self.decrypt_in_place(&mut ivec)?;
+        Ok(ivec)
     }
 
     /// Decrypt in place
+    ///
+    /// # Errors
+    ///
+    /// Fails if the input is not a multiple of the block size, or if the
+    /// key was not set on the object.
     pub fn decrypt_in_place(&self, buf: &mut [u8]) -> Result<()> {
         if buf.len() % self.block_size != 0 {
             return Err(Error::InvalidInput);
@@ -190,8 +186,13 @@ impl BlockCipher {
 
         let blocks = buf.len() / self.block_size;
 
-        call_botan! { botan_block_cipher_decrypt_blocks(self.obj, buf.as_ptr(), buf.as_mut_ptr(), blocks) };
-        Ok(())
+        botan_call!(
+            botan_block_cipher_decrypt_blocks,
+            self.obj,
+            buf.as_ptr(),
+            buf.as_mut_ptr(),
+            blocks
+        )
     }
 
     /// Clear the key set on the cipher from memory. After this, the
@@ -207,7 +208,6 @@ impl BlockCipher {
     /// assert!(cipher.encrypt_blocks(&vec![0; 16]).is_err());
     /// ```
     pub fn clear(&mut self) -> Result<()> {
-        call_botan! { botan_block_cipher_clear(self.obj) };
-        Ok(())
+        botan_call!(botan_block_cipher_clear, self.obj)
     }
 }

@@ -3,7 +3,6 @@ use botan_sys::*;
 
 use crate::mp::MPI;
 
-#[derive(Debug)]
 /// Represents an instance of format preserving encryption
 ///
 /// # Examples
@@ -22,31 +21,28 @@ use crate::mp::MPI;
 /// let ptext = fpe.decrypt(&ctext, &tweak).unwrap();
 /// assert_eq!(ptext, input);
 /// ```
+#[derive(Debug)]
+#[allow(clippy::upper_case_acronyms)]
 pub struct FPE {
     obj: botan_fpe_t,
 }
 
-impl Drop for FPE {
-    fn drop(&mut self) {
-        unsafe {
-            botan_fpe_destroy(self.obj);
-        }
-    }
-}
+botan_impl_drop!(FPE, botan_fpe_destroy);
 
 impl FPE {
     /// Create a new FPE instance, FE1 scheme
     /// Rounds should be 16 or higher for best security
     pub fn new_fe1(modulus: &MPI, key: &[u8], rounds: usize, compat_mode: bool) -> Result<FPE> {
-        let mut obj = ptr::null_mut();
-
         let flags = if compat_mode { 1 } else { 0 };
 
-        call_botan! {
-            botan_fpe_fe1_init(&mut obj, modulus.handle(),
-                               key.as_ptr(), key.len(),
-                               rounds, flags)
-        }
+        let obj = botan_init!(
+            botan_fpe_fe1_init,
+            modulus.handle(),
+            key.as_ptr(),
+            key.len(),
+            rounds,
+            flags
+        )?;
 
         Ok(FPE { obj })
     }
@@ -54,20 +50,26 @@ impl FPE {
     /// Encrypt value under the FPE scheme using provided tweak
     pub fn encrypt(&self, x: &MPI, tweak: &[u8]) -> Result<MPI> {
         let r = x.duplicate()?;
-        call_botan! {
-            botan_fpe_encrypt(self.obj, r.handle(), tweak.as_ptr(), tweak.len())
-        }
-
+        botan_call!(
+            botan_fpe_encrypt,
+            self.obj,
+            r.handle(),
+            tweak.as_ptr(),
+            tweak.len()
+        )?;
         Ok(r)
     }
 
     /// Decrypt value under the FPE scheme using provided tweak
     pub fn decrypt(&self, x: &MPI, tweak: &[u8]) -> Result<MPI> {
         let r = x.duplicate()?;
-        call_botan! {
-            botan_fpe_decrypt(self.obj, r.handle(), tweak.as_ptr(), tweak.len())
-        }
-
+        botan_call!(
+            botan_fpe_decrypt,
+            self.obj,
+            r.handle(),
+            tweak.as_ptr(),
+            tweak.len()
+        )?;
         Ok(r)
     }
 }

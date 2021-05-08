@@ -16,6 +16,7 @@ categories = [ "cryptography", "external-ffi-bindings", "no-std" ]
 default = []
 no-std = []
 vendored = ["botan-src"]
+botan3 = []
 
 [dependencies]
 cty = { version = "0.2" }

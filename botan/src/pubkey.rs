@@ -11,23 +11,15 @@ pub struct Pubkey {
     obj: botan_pubkey_t,
 }
 
+botan_impl_drop!(Pubkey, botan_pubkey_destroy);
+
 #[derive(Debug)]
 /// A private key object
 pub struct Privkey {
     obj: botan_privkey_t,
 }
 
-impl Drop for Privkey {
-    fn drop(&mut self) {
-        unsafe { botan_privkey_destroy(self.obj) };
-    }
-}
-
-impl Drop for Pubkey {
-    fn drop(&mut self) {
-        unsafe { botan_pubkey_destroy(self.obj) };
-    }
-}
+botan_impl_drop!(Privkey, botan_privkey_destroy);
 
 impl Privkey {
     pub(crate) fn handle(&self) -> botan_privkey_t {
@@ -37,12 +29,12 @@ impl Privkey {
     /// Create a new private key
     ///
     pub fn create(alg: &str, params: &str, rng: &mut RandomNumberGenerator) -> Result<Privkey> {
-        let mut obj = ptr::null_mut();
-
-        call_botan! { botan_privkey_create(&mut obj,
-        make_cstr(alg)?.as_ptr(),
-        make_cstr(params)?.as_ptr(),
-        rng.handle()) }
+        let obj = botan_init!(
+            botan_privkey_create,
+            make_cstr(alg)?.as_ptr(),
+            make_cstr(params)?.as_ptr(),
+            rng.handle()
+        )?;
 
         Ok(Privkey { obj })
     }
@@ -59,8 +51,7 @@ impl Privkey {
     /// let rsa = botan::Privkey::load_rsa(&p, &q, &e).unwrap();
     /// ```
     pub fn load_rsa(p: &MPI, q: &MPI, e: &MPI) -> Result<Privkey> {
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_privkey_load_rsa(&mut obj, p.handle(), q.handle(), e.handle()) };
+        let obj = botan_init!(botan_privkey_load_rsa, p.handle(), q.handle(), e.handle())?;
         Ok(Privkey { obj })
     }
 
@@ -76,8 +67,7 @@ impl Privkey {
         if key.len() != 32 {
             return Err(Error::BadParameter);
         }
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_privkey_load_ed25519(&mut obj, key.as_ptr()) };
+        let obj = botan_init!(botan_privkey_load_ed25519, key.as_ptr())?;
         Ok(Privkey { obj })
     }
 
@@ -93,75 +83,86 @@ impl Privkey {
         if key.len() != 32 {
             return Err(Error::BadParameter);
         }
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_privkey_load_x25519(&mut obj, key.as_ptr()) };
+        let obj = botan_init!(botan_privkey_load_x25519, key.as_ptr())?;
         Ok(Privkey { obj })
     }
 
     /// Load a PKCS#1 encoded RSA private key
     pub fn load_rsa_pkcs1(pkcs1: &[u8]) -> Result<Privkey> {
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_privkey_load_rsa_pkcs1(&mut obj, pkcs1.as_ptr(), pkcs1.len()) }
+        let obj = botan_init!(botan_privkey_load_rsa_pkcs1, pkcs1.as_ptr(), pkcs1.len())?;
         Ok(Privkey { obj })
     }
 
     /// Load an DH private key (p,g,x)
     pub fn load_dh(p: &MPI, g: &MPI, x: &MPI) -> Result<Privkey> {
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_privkey_load_dh(&mut obj, p.handle(), g.handle(), x.handle()) };
+        let obj = botan_init!(botan_privkey_load_dh, p.handle(), g.handle(), x.handle())?;
         Ok(Privkey { obj })
     }
 
     /// Load an ECDSA private key with specified curve and secret scalar
     pub fn load_ecdsa(s: &MPI, curve_name: &str) -> Result<Privkey> {
-        let mut obj = ptr::null_mut();
         let curve_name = make_cstr(curve_name)?;
-        call_botan! { botan_privkey_load_ecdsa(&mut obj, s.handle(), curve_name.as_ptr()) }
+        let obj = botan_init!(botan_privkey_load_ecdsa, s.handle(), curve_name.as_ptr())?;
         Ok(Privkey { obj })
     }
 
     /// Load an ECDH private key with specified curve and secret scalar
     pub fn load_ecdh(s: &MPI, curve_name: &str) -> Result<Privkey> {
-        let mut obj = ptr::null_mut();
         let curve_name = make_cstr(curve_name)?;
-        call_botan! { botan_privkey_load_ecdh(&mut obj, s.handle(), curve_name.as_ptr()) }
+        let obj = botan_init!(botan_privkey_load_ecdh, s.handle(), curve_name.as_ptr())?;
         Ok(Privkey { obj })
     }
 
     /// Load DER bytes as an unencrypted PKCS#8 private key
     pub fn load_der(der: &[u8]) -> Result<Privkey> {
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_privkey_load(&mut obj, ptr::null_mut(), der.as_ptr(), der.len(), ptr::null()) }
+        let obj = botan_init!(
+            botan_privkey_load,
+            ptr::null_mut(),
+            der.as_ptr(),
+            der.len(),
+            ptr::null()
+        )?;
         Ok(Privkey { obj })
     }
 
     /// Load PEM string as an unencrypted PKCS#8 private key
     pub fn load_pem(pem: &str) -> Result<Privkey> {
-        let mut obj = ptr::null_mut();
-
         let cpem = make_cstr(pem)?;
-        call_botan! { botan_privkey_load(&mut obj, ptr::null_mut(), cpem.as_ptr() as *const u8, pem.len(), ptr::null()) }
+        let obj = botan_init!(
+            botan_privkey_load,
+            ptr::null_mut(),
+            cpem.as_ptr() as *const u8,
+            pem.len(),
+            ptr::null()
+        )?;
 
         Ok(Privkey { obj })
     }
 
     /// Load DER bytes as an encrypted PKCS#8 private key
     pub fn load_encrypted_der(der: &[u8], passphrase: &str) -> Result<Privkey> {
-        let mut obj = ptr::null_mut();
-
         let passphrase = make_cstr(passphrase)?;
-        call_botan! { botan_privkey_load(&mut obj, ptr::null_mut(), der.as_ptr(), der.len(), passphrase.as_ptr()) }
-
+        let obj = botan_init!(
+            botan_privkey_load,
+            ptr::null_mut(),
+            der.as_ptr(),
+            der.len(),
+            passphrase.as_ptr()
+        )?;
         Ok(Privkey { obj })
     }
 
     /// Load PEM string as an encrypted PKCS#8 private key
     pub fn load_encrypted_pem(pem: &str, passphrase: &str) -> Result<Privkey> {
-        let mut obj = ptr::null_mut();
-
         let passphrase = make_cstr(passphrase)?;
         let cpem = make_cstr(pem)?;
-        call_botan! { botan_privkey_load(&mut obj, ptr::null_mut(), cpem.as_ptr() as *const u8, pem.len(), passphrase.as_ptr()) }
+        let obj = botan_init!(
+            botan_privkey_load,
+            ptr::null_mut(),
+            cpem.as_ptr() as *const u8,
+            pem.len(),
+            passphrase.as_ptr()
+        )?;
 
         Ok(Privkey { obj })
     }
@@ -182,8 +183,7 @@ impl Privkey {
 
     /// Return the public key associated with this private key
     pub fn pubkey(&self) -> Result<Pubkey> {
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_privkey_export_pubkey(&mut obj, self.obj) }
+        let obj = botan_init!(botan_privkey_export_pubkey, self.obj)?;
         Ok(Pubkey { obj })
     }
 
@@ -316,18 +316,23 @@ impl Privkey {
         let which = make_cstr(which)?;
 
         let r = MPI::new()?;
-        call_botan! { botan_privkey_get_field(r.handle(), self.obj, which.as_ptr()) };
+        botan_call!(
+            botan_privkey_get_field,
+            r.handle(),
+            self.obj,
+            which.as_ptr()
+        )?;
         Ok(r)
     }
 
     /// Get the public and private key associated with this key
     pub fn get_ed25519_key(&self) -> Result<(Vec<u8>, Vec<u8>)> {
         let mut out = vec![0; 64];
-
-        call_botan! {
-            botan_privkey_ed25519_get_privkey(self.obj, out.as_mut_ptr())
-        }
-
+        botan_call!(
+            botan_privkey_ed25519_get_privkey,
+            self.obj,
+            out.as_mut_ptr()
+        )?;
         let pubkey = out.split_off(32);
 
         Ok((pubkey, out))
@@ -336,11 +341,7 @@ impl Privkey {
     /// Get the X25519 private key
     pub fn get_x25519_key(&self) -> Result<Vec<u8>> {
         let mut out = vec![0; 32];
-
-        call_botan! {
-            botan_privkey_x25519_get_privkey(self.obj, out.as_mut_ptr())
-        }
-
+        botan_call!(botan_privkey_x25519_get_privkey, self.obj, out.as_mut_ptr())?;
         Ok(out)
     }
 
@@ -353,13 +354,13 @@ impl Privkey {
     ) -> Result<Vec<u8>> {
         let mut signer = Signer::new(self, padding)?;
         signer.update(message)?;
-        Ok(signer.finish(rng)?)
+        signer.finish(rng)
     }
 
     /// Decrypt a message that was encrypted using the specified padding method
     pub fn decrypt(&self, ctext: &[u8], padding: &str) -> Result<Vec<u8>> {
         let mut decryptor = Decryptor::new(self, padding)?;
-        Ok(decryptor.decrypt(ctext)?)
+        decryptor.decrypt(ctext)
     }
 
     /// Perform key agreement
@@ -386,45 +387,53 @@ impl Pubkey {
 
     /// Load a DER encoded public key
     pub fn load_der(der: &[u8]) -> Result<Pubkey> {
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_pubkey_load(&mut obj, der.as_ptr(), der.len()) }
+        let obj = botan_init!(botan_pubkey_load, der.as_ptr(), der.len())?;
         Ok(Pubkey { obj })
     }
 
     /// Load a PEM encoded public key
     pub fn load_pem(pem: &str) -> Result<Pubkey> {
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_pubkey_load(&mut obj, make_cstr(pem)?.as_ptr() as *const u8, pem.len()) }
+        let obj = botan_init!(
+            botan_pubkey_load,
+            make_cstr(pem)?.as_ptr() as *const u8,
+            pem.len()
+        )?;
         Ok(Pubkey { obj })
     }
 
     /// Load an RSA public key (n,e)
     pub fn load_rsa(n: &MPI, e: &MPI) -> Result<Pubkey> {
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_pubkey_load_rsa(&mut obj, n.handle(), e.handle()) };
+        let obj = botan_init!(botan_pubkey_load_rsa, n.handle(), e.handle())?;
         Ok(Pubkey { obj })
     }
 
     /// Load an DH public key (p,g,y)
     pub fn load_dh(p: &MPI, g: &MPI, y: &MPI) -> Result<Pubkey> {
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_pubkey_load_dh(&mut obj, p.handle(), g.handle(), y.handle()) };
+        let obj = botan_init!(botan_pubkey_load_dh, p.handle(), g.handle(), y.handle())?;
         Ok(Pubkey { obj })
     }
 
     /// Load an ECDSA public key (x,y) for the specified curve
     pub fn load_ecdsa(pub_x: &MPI, pub_y: &MPI, curve_name: &str) -> Result<Pubkey> {
-        let mut obj = ptr::null_mut();
         let curve_name = make_cstr(curve_name)?;
-        call_botan! { botan_pubkey_load_ecdsa(&mut obj, pub_x.handle(), pub_y.handle(), curve_name.as_ptr()) }
+        let obj = botan_init!(
+            botan_pubkey_load_ecdsa,
+            pub_x.handle(),
+            pub_y.handle(),
+            curve_name.as_ptr()
+        )?;
         Ok(Pubkey { obj })
     }
 
     /// Load an ECDH public key (x,y) for the specified curve
     pub fn load_ecdh(pub_x: &MPI, pub_y: &MPI, curve_name: &str) -> Result<Pubkey> {
-        let mut obj = ptr::null_mut();
         let curve_name = make_cstr(curve_name)?;
-        call_botan! { botan_pubkey_load_ecdh(&mut obj, pub_x.handle(), pub_y.handle(), curve_name.as_ptr()) }
+        let obj = botan_init!(
+            botan_pubkey_load_ecdh,
+            pub_x.handle(),
+            pub_y.handle(),
+            curve_name.as_ptr()
+        )?;
         Ok(Pubkey { obj })
     }
 
@@ -433,8 +442,7 @@ impl Pubkey {
         if key.len() != 32 {
             return Err(Error::BadParameter);
         }
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_pubkey_load_ed25519(&mut obj, key.as_ptr()) };
+        let obj = botan_init!(botan_pubkey_load_ed25519, key.as_ptr())?;
         Ok(Pubkey { obj })
     }
 
@@ -443,16 +451,13 @@ impl Pubkey {
         if key.len() != 32 {
             return Err(Error::BadParameter);
         }
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_pubkey_load_x25519(&mut obj, key.as_ptr()) };
+        let obj = botan_init!(botan_pubkey_load_x25519, key.as_ptr())?;
         Ok(Pubkey { obj })
     }
 
     /// Return estimated bit strength of this key
     pub fn estimated_strength(&self) -> Result<usize> {
-        let mut strength = 0;
-        call_botan! { botan_pubkey_estimated_strength(self.obj, &mut strength) };
-        Ok(strength)
+        botan_usize!(botan_pubkey_estimated_strength, self.obj)
     }
 
     /// Check key for problems
@@ -508,7 +513,7 @@ impl Pubkey {
         let which = make_cstr(which)?;
 
         let r = MPI::new()?;
-        call_botan! { botan_pubkey_get_field(r.handle(), self.obj, which.as_ptr()) };
+        botan_call!(botan_pubkey_get_field, r.handle(), self.obj, which.as_ptr())?;
         Ok(r)
     }
 
@@ -516,9 +521,7 @@ impl Pubkey {
     pub fn get_ed25519_key(&self) -> Result<Vec<u8>> {
         let mut out = vec![0; 32];
 
-        call_botan! {
-            botan_pubkey_ed25519_get_pubkey(self.obj, out.as_mut_ptr())
-        }
+        botan_call!(botan_pubkey_ed25519_get_pubkey, self.obj, out.as_mut_ptr())?;
 
         Ok(out)
     }
@@ -526,11 +529,7 @@ impl Pubkey {
     /// Get the X25519 public key
     pub fn get_x25519_key(&self) -> Result<Vec<u8>> {
         let mut out = vec![0; 32];
-
-        call_botan! {
-            botan_pubkey_x25519_get_pubkey(self.obj, out.as_mut_ptr())
-        }
-
+        botan_call!(botan_pubkey_x25519_get_pubkey, self.obj, out.as_mut_ptr())?;
         Ok(out)
     }
 

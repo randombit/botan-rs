@@ -11,9 +11,19 @@ fn test_version() -> Result<(), botan::Error> {
     least 2.8 since we require APIs added after the 2.7 release.
     */
 
-    assert_eq!(version.major, 2);
-    assert!(version.minor >= 8);
+    #[cfg(feature = "botan3")]
+    {
+        assert_eq!(version.major, 3);
+    }
+
+    #[cfg(not(feature = "botan3"))]
+    {
+        assert_eq!(version.major, 2);
+        assert!(version.minor >= 8);
+    }
+
     assert!(version.release_date == 0 || version.release_date >= 20181001);
+
     assert!(version.ffi_api >= 20180713);
 
     assert!(botan::Version::supports_version(version.ffi_api));
@@ -787,6 +797,9 @@ fn test_mp() -> Result<(), botan::Error> {
 
     a.set_i32(9)?;
     b.set_i32(81)?;
+
+    assert_eq!(a.get_bit(0), Ok(true));
+    assert_eq!(a.get_bit(1), Ok(false));
 
     assert_eq!(a.to_u32()?, 9);
     assert_eq!(b.to_u32()?, 81);

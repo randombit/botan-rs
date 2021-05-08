@@ -16,13 +16,88 @@ extern crate cstr_core;
 extern crate botan_sys;
 extern crate cty;
 
-macro_rules! call_botan {
-    ($x:expr) => {
-        let rc = unsafe { $x };
-        if rc != 0 {
-            return Err(Error::from(rc));
+macro_rules! botan_call {
+    ($fn:path, $($args:expr),*) => {{
+        let rc = unsafe { $fn($($args),*) };
+        if rc == 0 {
+            Ok(())
+        } else {
+            Err(Error::from(rc))
+        }
+    }};
+}
+
+macro_rules! botan_init {
+    ($fn:path) => {{
+        let mut obj = ptr::null_mut();
+        let rc = unsafe { $fn(&mut obj) };
+        if rc == 0 {
+            Ok(obj)
+        } else {
+            Err(Error::from(rc))
+        }
+    }};
+    ($fn:path, $($args:expr),*) => {{
+        let mut obj = ptr::null_mut();
+        let rc = unsafe { $fn(&mut obj, $($args),*) };
+        if rc == 0 {
+            Ok(obj)
+        } else {
+            Err(Error::from(rc))
+        }
+    }};
+}
+
+macro_rules! botan_impl_drop {
+    ($typ:ty, $fn:path) => {
+        impl Drop for $typ {
+            fn drop(&mut self) {
+                let rc = unsafe { $fn(self.obj) };
+                if rc != 0 {
+                    let err = Error::from(rc);
+                    panic!("{} failed: {}", core::stringify!($fn), err);
+                }
+            }
         }
     };
+}
+
+macro_rules! botan_usize {
+    ($fn:path, $obj:expr) => {{
+        let mut val = 0;
+        let rc = unsafe { $fn($obj, &mut val) };
+        if rc != 0 {
+            Err(Error::from(rc))
+        } else {
+            Ok(val)
+        }
+    }};
+}
+
+macro_rules! botan_usize3 {
+    ($fn:path, $obj:expr) => {{
+        let mut val1 = 0;
+        let mut val2 = 0;
+        let mut val3 = 0;
+        let rc = unsafe { $fn($obj, &mut val1, &mut val2, &mut val3) };
+        if rc != 0 {
+            Err(Error::from(rc))
+        } else {
+            Ok((val1, val2, val3))
+        }
+    }};
+}
+
+macro_rules! botan_bool_in_rc {
+    ($fn:path, $($args:expr),*) => {{
+        let rc = unsafe { $fn($($args),*) };
+
+        match rc {
+            0 => Ok(false),
+            1 => Ok(true),
+            e => Err(Error::from(e)),
+        }
+    }};
 }
 
 mod bcrypt;

@@ -23,13 +23,7 @@ pub enum CipherDirection {
     Decrypt,
 }
 
-impl Drop for Cipher {
-    fn drop(&mut self) {
-        unsafe {
-            botan_cipher_destroy(self.obj);
-        }
-    }
-}
+botan_impl_drop!(Cipher, botan_cipher_destroy);
 
 impl Cipher {
     /// Create a new cipher object in the specified direction
@@ -39,27 +33,19 @@ impl Cipher {
     /// let aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
     /// ```
     pub fn new(name: &str, direction: CipherDirection) -> Result<Cipher> {
-        let mut obj = ptr::null_mut();
         let flag = if direction == CipherDirection::Encrypt {
             0u32
         } else {
             1u32
         };
-        call_botan! { botan_cipher_init(&mut obj, make_cstr(name)?.as_ptr(), flag) };
 
-        let mut tag_length = 0;
-        call_botan! { botan_cipher_get_tag_length(obj, &mut tag_length) };
+        let obj = botan_init!(botan_cipher_init, make_cstr(name)?.as_ptr(), flag)?;
 
-        let mut update_granularity = 0;
-        call_botan! { botan_cipher_get_update_granularity(obj, &mut update_granularity) };
+        let tag_length = botan_usize!(botan_cipher_get_tag_length, obj)?;
+        let update_granularity = botan_usize!(botan_cipher_get_update_granularity, obj)?;
+        let default_nonce_length = botan_usize!(botan_cipher_get_default_nonce_length, obj)?;
 
-        let mut default_nonce_length = 0;
-        call_botan! { botan_cipher_get_default_nonce_length(obj, &mut default_nonce_length) };
-
-        let mut min_keylen = 0;
-        let mut max_keylen = 0;
-        let mut mod_keylen = 0;
-        call_botan! { botan_cipher_get_keyspec(obj, &mut min_keylen, &mut max_keylen, &mut mod_keylen) };
+        let (min_keylen, max_keylen, mod_keylen) = botan_usize3!(botan_cipher_get_keyspec, obj)?;
 
         Ok(Cipher {
             obj,
@@ -109,15 +95,7 @@ impl Cipher {
     /// assert_eq!(aes_cbc.valid_nonce_length(1), Ok(false));
     /// ```
     pub fn valid_nonce_length(&self, l: usize) -> Result<bool> {
-        let rc = unsafe { botan_cipher_valid_nonce_length(self.obj, l) };
-
-        if rc == 1 {
-            Ok(true)
-        } else if rc == 0 {
-            Ok(false)
-        } else {
-            Err(Error::from(rc))
-        }
+        botan_bool_in_rc!(botan_cipher_valid_nonce_length, self.obj, l)
     }
 
     /// For an AEAD, return the tag length of the cipher
@@ -166,7 +144,7 @@ impl Cipher {
     /// aes_gcm.set_key(&vec![0; 16]).unwrap();
     /// ```
     pub fn set_key(&mut self, key: &[u8]) -> Result<()> {
-        call_botan! { botan_cipher_set_key(self.obj, key.as_ptr(), key.len()) };
+        botan_call!(botan_cipher_set_key, self.obj, key.as_ptr(), key.len())?;
         Ok(())
     }
 
@@ -180,7 +158,12 @@ impl Cipher {
     /// aes_gcm.set_associated_data(&[1,2,3]).unwrap();
     /// ```
     pub fn set_associated_data(&mut self, ad: &[u8]) -> Result<()> {
-        call_botan! { botan_cipher_set_associated_data(self.obj, ad.as_ptr(), ad.len()) };
+        botan_call!(
+            botan_cipher_set_associated_data,
+            self.obj,
+            ad.as_ptr(),
+            ad.len()
+        )?;
         Ok(())
     }
 
@@ -196,7 +179,7 @@ impl Cipher {
     /// let ctext = aes_gcm.process(&nonce, &msg);
     /// ```
     pub fn process(&mut self, nonce: &[u8], msg: &[u8]) -> Result<Vec<u8>> {
-        call_botan! { botan_cipher_start(self.obj, nonce.as_ptr(), nonce.len()) };
+        botan_call!(botan_cipher_start, self.obj, nonce.as_ptr(), nonce.len())?;
 
         let flags = 1u32; // only supporting one-shot processing here
 
@@ -205,16 +188,17 @@ impl Cipher {
         let mut output_written = 0;
         let mut input_consumed = 0;
 
-        call_botan! {
-            botan_cipher_update(self.obj,
-                                flags,
-                                output.as_mut_ptr(),
-                                output.len(),
-                                &mut output_written,
-                                msg.as_ptr(),
-                                msg.len(),
-                                &mut input_consumed)
-        }
+        botan_call!(
+            botan_cipher_update,
+            self.obj,
+            flags,
+            output.as_mut_ptr(),
+            output.len(),
+            &mut output_written,
+            msg.as_ptr(),
+            msg.len(),
+            &mut input_consumed
+        )?;
 
         assert!(input_consumed == msg.len());
         assert!(output_written <= output.len());
@@ -226,8 +210,7 @@ impl Cipher {
 
     /// start processing a message
     pub fn start(&mut self, nonce: &[u8]) -> Result<()> {
-        call_botan! { botan_cipher_start(self.obj, nonce.as_ptr(), nonce.len()) }
-        Ok(())
+        botan_call!(botan_cipher_start, self.obj, nonce.as_ptr(), nonce.len())
     }
 
     /// Encrypt or decrypt a message with the provided nonce. The key must
@@ -238,16 +221,17 @@ impl Cipher {
         let mut output_written = 0;
         let mut input_consumed = 0;
 
-        call_botan! {
-            botan_cipher_update(self.obj,
-                                flags,
-                                output.as_mut_ptr(),
-                                output.len(),
-                                &mut output_written,
-                                msg.as_ptr(),
-                                msg.len(),
-                                &mut input_consumed)
-        }
+        botan_call!(
+            botan_cipher_update,
+            self.obj,
+            flags,
+            output.as_mut_ptr(),
+            output.len(),
+            &mut output_written,
+            msg.as_ptr(),
+            msg.len(),
+            &mut input_consumed
+        )?;
 
         assert!(input_consumed == msg.len());
         assert!(output_written <= output.len());
@@ -269,7 +253,6 @@ impl Cipher {
 
     /// Clear all state associated with the key
     pub fn clear(&mut self) -> Result<()> {
-        call_botan! { botan_cipher_clear(self.obj) };
-        Ok(())
+        botan_call!(botan_cipher_clear, self.obj)
     }
 }

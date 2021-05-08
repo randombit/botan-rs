@@ -32,7 +32,13 @@ pub fn hex_encode(x: &[u8]) -> Result<String> {
     let flags = 0u32;
 
     let mut output = vec![0u8; x.len() * 2];
-    call_botan! { botan_hex_encode(x.as_ptr(), x.len(), output.as_mut_ptr() as *mut c_char, flags) };
+    botan_call!(
+        botan_hex_encode,
+        x.as_ptr(),
+        x.len(),
+        output.as_mut_ptr() as *mut c_char,
+        flags
+    )?;
 
     String::from_utf8(output).map_err(|_| Error::ConversionError)
 }
@@ -44,7 +50,13 @@ pub fn hex_decode(x: &str) -> Result<Vec<u8>> {
 
     let input = make_cstr(x)?;
 
-    call_botan! { botan_hex_decode(input.as_ptr(), x.len(), output.as_mut_ptr(), &mut output_len) }
+    botan_call!(
+        botan_hex_decode,
+        input.as_ptr(),
+        x.len(),
+        output.as_mut_ptr(),
+        &mut output_len
+    )?;
 
     output.resize(output_len, 0);
 

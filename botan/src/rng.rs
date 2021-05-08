@@ -7,19 +7,12 @@ pub struct RandomNumberGenerator {
     obj: botan_rng_t,
 }
 
-impl Drop for RandomNumberGenerator {
-    fn drop(&mut self) {
-        unsafe {
-            botan_rng_destroy(self.obj);
-        }
-    }
-}
+botan_impl_drop!(RandomNumberGenerator, botan_rng_destroy);
 
 impl RandomNumberGenerator {
     fn new_of_type(typ: &str) -> Result<RandomNumberGenerator> {
-        let mut obj = ptr::null_mut();
         let typ = make_cstr(typ)?;
-        call_botan! { botan_rng_init(&mut obj, typ.as_ptr()) }
+        let obj = botan_init!(botan_rng_init, typ.as_ptr())?;
         Ok(RandomNumberGenerator { obj })
     }
 
@@ -80,8 +73,7 @@ impl RandomNumberGenerator {
     /// rng.fill(&mut output).unwrap();
     /// ```
     pub fn fill(&mut self, out: &mut [u8]) -> Result<()> {
-        call_botan! { botan_rng_get(self.obj, out.as_mut_ptr(), out.len()) }
-        Ok(())
+        botan_call!(botan_rng_get, self.obj, out.as_mut_ptr(), out.len())
     }
 
     /// Attempt to reseed the RNG by unspecified means
@@ -92,8 +84,7 @@ impl RandomNumberGenerator {
     /// rng.reseed(256).unwrap();
     /// ```
     pub fn reseed(&mut self, bits: usize) -> Result<()> {
-        call_botan! { botan_rng_reseed(self.obj, bits) }
-        Ok(())
+        botan_call!(botan_rng_reseed, self.obj, bits)
     }
 
     /// Attempt to reseed the RNG by getting data from source RNG
@@ -109,8 +100,7 @@ impl RandomNumberGenerator {
         source: &mut RandomNumberGenerator,
         bits: usize,
     ) -> Result<()> {
-        call_botan! { botan_rng_reseed_from_rng(self.obj, source.handle(), bits) }
-        Ok(())
+        botan_call!(botan_rng_reseed_from_rng, self.obj, source.handle(), bits)
     }
 
     /// Add some seed material to the RNG
@@ -122,7 +112,6 @@ impl RandomNumberGenerator {
     /// rng.add_entropy(&my_seed);
     /// ```
     pub fn add_entropy(&mut self, seed: &[u8]) -> Result<()> {
-        call_botan! { botan_rng_add_entropy(self.obj, seed.as_ptr(), seed.len()) }
-        Ok(())
+        botan_call!(botan_rng_add_entropy, self.obj, seed.as_ptr(), seed.len())
     }
 }

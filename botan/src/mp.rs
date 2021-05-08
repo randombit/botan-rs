@@ -13,17 +13,12 @@ use core::ops::{
 };
 
 /// A big integer type
+#[allow(clippy::upper_case_acronyms)]
 pub struct MPI {
     obj: botan_mp_t,
 }
 
-impl Drop for MPI {
-    fn drop(&mut self) {
-        unsafe {
-            botan_mp_destroy(self.obj);
-        }
-    }
-}
+botan_impl_drop!(MPI, botan_mp_destroy);
 
 impl Clone for MPI {
     fn clone(&self) -> MPI {
@@ -38,8 +33,7 @@ impl MPI {
 
     /// Crate a new (zero-valued) MPI
     pub fn new() -> Result<MPI> {
-        let mut obj = ptr::null_mut();
-        call_botan! { botan_mp_init(&mut obj) };
+        let obj = botan_init!(botan_mp_init)?;
         Ok(MPI { obj })
     }
 
@@ -67,61 +61,49 @@ impl MPI {
     /// Crate a new MPI duplicating the value of self
     pub fn duplicate(&self) -> Result<MPI> {
         let mpi = MPI::new()?;
-        call_botan! { botan_mp_set_from_mp(mpi.obj, self.obj) };
+        botan_call!(botan_mp_set_from_mp, mpi.obj, self.obj)?;
         Ok(mpi)
     }
 
     /// Set self to value specified with an i32
     pub fn set_i32(&mut self, val: i32) -> Result<()> {
-        call_botan! { botan_mp_set_from_int(self.obj, val) };
-        Ok(())
+        botan_call!(botan_mp_set_from_int, self.obj, val)
     }
 
     /// Set self to value specified with a string
     pub fn set_str(&mut self, val: &str) -> Result<()> {
         let cstr = make_cstr(val)?;
-        call_botan! { botan_mp_set_from_str(self.obj, cstr.as_ptr()) };
-        Ok(())
+        botan_call!(botan_mp_set_from_str, self.obj, cstr.as_ptr())
     }
 
     /// Set self to value specified with an array of bytes (big-endian)
     pub fn set_bytes(&mut self, val: &[u8]) -> Result<()> {
-        call_botan! { botan_mp_from_bin(self.obj, val.as_ptr(), val.len()) };
-        Ok(())
+        botan_call!(botan_mp_from_bin, self.obj, val.as_ptr(), val.len())
     }
 
     /// Set self to zero
     pub fn clear(&mut self) -> Result<()> {
-        call_botan! { botan_mp_clear(self.obj) };
-        Ok(())
+        botan_call!(botan_mp_clear, self.obj)
     }
 
     /// Set a specific bit of self
     pub fn set_bit(&mut self, bit: usize) -> Result<()> {
-        call_botan! { botan_mp_set_bit(self.obj, bit) };
-        Ok(())
+        botan_call!(botan_mp_set_bit, self.obj, bit)
     }
 
     /// Clear a specific bit of self
     pub fn clear_bit(&mut self, bit: usize) -> Result<()> {
-        call_botan! { botan_mp_clear_bit(self.obj, bit) };
-        Ok(())
+        botan_call!(botan_mp_clear_bit, self.obj, bit)
     }
 
     /// Return the value of a bit in self
     pub fn get_bit(&self, bit: usize) -> Result<bool> {
-        let rc = unsafe { botan_mp_get_bit(self.obj, bit) };
-        match rc {
-            0 => Ok(false),
-            1 => Ok(true),
-            e => Err(Error::from(e)),
-        }
+        botan_bool_in_rc!(botan_mp_get_bit, self.obj, bit)
     }
 
     /// Randomize self to an integer of specified bit size
     pub fn randomize(&mut self, rng: &mut RandomNumberGenerator, bits: usize) -> Result<()> {
-        call_botan! { botan_mp_rand_bits(self.obj, rng.handle(), bits) };
-        Ok(())
+        botan_call!(botan_mp_rand_bits, self.obj, rng.handle(), bits)
     }
 
     /// Randomize self to an integer within specified range
@@ -131,8 +113,13 @@ impl MPI {
         lower: &MPI,
         upper: &MPI,
     ) -> Result<()> {
-        call_botan! { botan_mp_rand_range(self.obj, rng.handle(), lower.handle(), upper.handle()) }
-        Ok(())
+        botan_call!(
+            botan_mp_rand_range,
+            self.obj,
+            rng.handle(),
+            lower.handle(),
+            upper.handle()
+        )
     }
 
     /// Return value of self as decimal string
@@ -159,90 +146,66 @@ impl MPI {
     pub fn to_bin(&self) -> Result<Vec<u8>> {
         let bytes = self.byte_count()?;
         let mut output = vec![0; bytes];
-        call_botan! { botan_mp_to_bin(self.obj, output.as_mut_ptr()) };
+        botan_call!(botan_mp_to_bin, self.obj, output.as_mut_ptr())?;
         Ok(output)
     }
 
     /// Return number of significant bits
     pub fn bit_count(&self) -> Result<usize> {
         let mut bits = 0;
-        call_botan! { botan_mp_num_bits(self.obj, &mut bits) };
+        botan_call!(botan_mp_num_bits, self.obj, &mut bits)?;
         Ok(bits)
     }
 
     /// Return number of significant bytes
     pub fn byte_count(&self) -> Result<usize> {
         let mut bytes = 0;
-        call_botan! { botan_mp_num_bytes(self.obj, &mut bytes) };
+        botan_call!(botan_mp_num_bytes, self.obj, &mut bytes)?;
         Ok(bytes)
     }
 
     /// Return self as a u32, if it fits
     pub fn to_u32(&self) -> Result<u32> {
         let mut val = 0;
-        call_botan! { botan_mp_to_uint32(self.obj, &mut val) };
+        botan_call!(botan_mp_to_uint32, self.obj, &mut val)?;
         Ok(val)
     }
 
     /// Return true if self is an integer >= 0
     pub fn is_positive(&self) -> Result<bool> {
-        match unsafe { botan_mp_is_positive(self.obj) } {
-            0 => Ok(false),
-            1 => Ok(true),
-            e => Err(Error::from(e)),
-        }
+        botan_bool_in_rc!(botan_mp_is_positive, self.obj)
     }
 
     /// Return true if self is an integer < 0
     pub fn is_negative(&self) -> Result<bool> {
-        match unsafe { botan_mp_is_negative(self.obj) } {
-            0 => Ok(false),
-            1 => Ok(true),
-            e => Err(Error::from(e)),
-        }
+        botan_bool_in_rc!(botan_mp_is_negative, self.obj)
     }
 
     /// Return true if self is an integer == 0
     pub fn is_zero(&self) -> Result<bool> {
-        match unsafe { botan_mp_is_zero(self.obj) } {
-            0 => Ok(false),
-            1 => Ok(true),
-            e => Err(Error::from(e)),
-        }
+        botan_bool_in_rc!(botan_mp_is_zero, self.obj)
     }
 
     /// Return true if self is odd
     pub fn is_odd(&self) -> Result<bool> {
-        match unsafe { botan_mp_is_odd(self.obj) } {
-            0 => Ok(false),
-            1 => Ok(true),
-            e => Err(Error::from(e)),
-        }
+        botan_bool_in_rc!(botan_mp_is_odd, self.obj)
     }
 
     /// Return true if self is even
     pub fn is_even(&self) -> Result<bool> {
-        match unsafe { botan_mp_is_even(self.obj) } {
-            0 => Ok(false),
-            1 => Ok(true),
-            e => Err(Error::from(e)),
-        }
+        botan_bool_in_rc!(botan_mp_is_even, self.obj)
     }
 
     /// Return true if self equals other
     pub fn equals(&self, other: &MPI) -> Result<bool> {
-        match unsafe { botan_mp_equal(self.obj, other.obj) } {
-            0 => Ok(false),
-            1 => Ok(true),
-            e => Err(Error::from(e)),
-        }
+        botan_bool_in_rc!(botan_mp_equal, self.obj, other.obj)
     }
 
     /// Compare self with other
     pub fn compare(&self, other: &MPI) -> Result<Ordering> {
         let mut r = 0;
 
-        call_botan! { botan_mp_cmp(&mut r, self.obj, other.obj) };
+        botan_call!(botan_mp_cmp, &mut r, self.obj, other.obj)?;
 
         match r {
             -1 => Ok(Ordering::Less),
@@ -254,99 +217,91 @@ impl MPI {
 
     /// Flip the sign of self
     pub fn flip_sign(&mut self) -> Result<()> {
-        call_botan! { botan_mp_flip_sign(self.obj) };
-        Ok(())
+        botan_call!(botan_mp_flip_sign, self.obj)
     }
 
     /// Addition operator
     pub fn mp_add(&self, other: &MPI) -> Result<MPI> {
         let r = MPI::new()?;
-        call_botan! { botan_mp_add(r.obj, self.obj, other.obj) };
+        botan_call!(botan_mp_add, r.obj, self.obj, other.obj)?;
         Ok(r)
     }
 
     /// Addition operator, assignment version
     pub fn mp_add_assign(&mut self, other: &MPI) -> Result<()> {
-        call_botan! { botan_mp_add(self.obj, self.obj, other.obj) };
-        Ok(())
+        botan_call!(botan_mp_add, self.obj, self.obj, other.obj)
     }
 
     /// Addition operator
     pub fn mp_add_u32(&self, other: u32) -> Result<MPI> {
         let r = MPI::new()?;
-        call_botan! { botan_mp_add_u32(r.obj, self.obj, other) };
+        botan_call!(botan_mp_add_u32, r.obj, self.obj, other)?;
         Ok(r)
     }
 
     /// Addition operator, assignment version
     pub fn mp_add_u32_assign(&mut self, other: u32) -> Result<()> {
-        call_botan! { botan_mp_add_u32(self.obj, self.obj, other) };
-        Ok(())
+        botan_call!(botan_mp_add_u32, self.obj, self.obj, other)
     }
 
     /// Subtraction operator
     pub fn mp_sub(&self, other: &MPI) -> Result<MPI> {
         let r = MPI::new()?;
-        call_botan! { botan_mp_sub(r.obj, self.obj, other.obj) };
+        botan_call!(botan_mp_sub, r.obj, self.obj, other.obj)?;
         Ok(r)
     }
 
     /// Subtraction operator, assignment version
     pub fn mp_sub_assign(&mut self, other: &MPI) -> Result<()> {
-        call_botan! { botan_mp_sub(self.obj, self.obj, other.obj) };
-        Ok(())
+        botan_call!(botan_mp_sub, self.obj, self.obj, other.obj)
     }
 
     /// Subtraction operator
     pub fn mp_sub_u32(&self, other: u32) -> Result<MPI> {
         let r = MPI::new()?;
-        call_botan! { botan_mp_sub_u32(r.obj, self.obj, other) };
+        botan_call!(botan_mp_sub_u32, r.obj, self.obj, other)?;
         Ok(r)
     }
 
     /// Subtraction operator, assignment version
     pub fn mp_sub_u32_assign(&mut self, other: u32) -> Result<()> {
-        call_botan! { botan_mp_sub_u32(self.obj, self.obj, other) };
-        Ok(())
+        botan_call!(botan_mp_sub_u32, self.obj, self.obj, other)
     }
 
     /// Multiplication operator
     pub fn mp_mul(&self, other: &MPI) -> Result<MPI> {
         let r = MPI::new()?;
-        call_botan! { botan_mp_mul(r.obj, self.obj, other.obj) };
+        botan_call!(botan_mp_mul, r.obj, self.obj, other.obj)?;
         Ok(r)
     }
 
     /// Multiplication operator, assignment version
     pub fn mp_mul_assign(&mut self, other: &MPI) -> Result<()> {
-        call_botan! { botan_mp_mul(self.obj, self.obj, other.obj) };
-        Ok(())
+        botan_call!(botan_mp_mul, self.obj, self.obj, other.obj)
     }
 
     /// Bitwise left shift
     pub fn mp_shl(&self, shift: usize) -> Result<MPI> {
         let r = MPI::new()?;
-        call_botan! { botan_mp_lshift(r.obj, self.obj, shift) };
+        botan_call!(botan_mp_lshift, r.obj, self.obj, shift)?;
         Ok(r)
     }
 
     /// Bitwise left shift, assignment version
     pub fn mp_shl_assign(&mut self, shift: usize) -> Result<()> {
-        call_botan! { botan_mp_lshift(self.obj, self.obj, shift) };
-        Ok(())
+        botan_call!(botan_mp_lshift, self.obj, self.obj, shift)
     }
 
     /// Bitwise right shift
     pub fn mp_shr(&self, shift: usize) -> Result<MPI> {
         let r = MPI::new()?;
-        call_botan! { botan_mp_rshift(r.obj, self.obj, shift) };
+        botan_call!(botan_mp_rshift, r.obj, self.obj, shift)?;
         Ok(r)
     }
 
     /// Bitwise right shift, assignment version
     pub fn mp_shr_assign(&mut self, shift: usize) -> Result<()> {
-        call_botan! { botan_mp_rshift(self.obj, self.obj, shift) };
-        Ok(())
+        botan_call!(botan_mp_rshift, self.obj, self.obj, shift)
     }
 
     /// Division/modulo operator
@@ -354,15 +309,14 @@ impl MPI {
         let q = MPI::new()?;
         let r = MPI::new()?;
 
-        call_botan! { botan_mp_div(q.obj, r.obj, self.obj, z.obj) };
+        botan_call!(botan_mp_div, q.obj, r.obj, self.obj, z.obj)?;
 
         Ok((q, r))
     }
 
     /// Swap two MPI values
     pub fn swap(&mut self, other: &mut MPI) -> Result<()> {
-        call_botan! { botan_mp_swap(self.obj, other.obj) };
-        Ok(())
+        botan_call!(botan_mp_swap, self.obj, other.obj)
     }
 
     /// Perform a primality test on self
@@ -376,12 +330,7 @@ impl MPI {
     /// assert!(n.is_prime(&mut rng, 128).unwrap());
     /// ```
     pub fn is_prime(&self, rng: &mut RandomNumberGenerator, test_prob: usize) -> Result<bool> {
-        let rc = unsafe { botan_mp_is_prime(self.obj, rng.handle(), test_prob) };
-        match rc {
-            0 => Ok(false),
-            1 => Ok(true),
-            e => Err(Error::from(e)),
-        }
+        botan_bool_in_rc!(botan_mp_is_prime, self.obj, rng.handle(), test_prob)
     }
 
     /// Return the greatest common divisor of x and y
@@ -395,21 +344,21 @@ impl MPI {
     /// ```
     pub fn gcd(x: &MPI, y: &MPI) -> Result<MPI> {
         let r = MPI::new()?;
-        call_botan! { botan_mp_gcd(r.obj, x.obj, y.obj) };
+        botan_call!(botan_mp_gcd, r.obj, x.obj, y.obj)?;
         Ok(r)
     }
 
     /// Return the inverse of x modulo m, or 0 if gcd(x,m) > 1
     pub fn modular_inverse(x: &MPI, m: &MPI) -> Result<MPI> {
         let r = MPI::new()?;
-        call_botan! { botan_mp_mod_inverse(r.obj, x.obj, m.obj) };
+        botan_call!(botan_mp_mod_inverse, r.obj, x.obj, m.obj)?;
         Ok(r)
     }
 
     /// Return (x^e) mod m
     pub fn powmod(x: &MPI, e: &MPI, m: &MPI) -> Result<MPI> {
         let r = MPI::new()?;
-        call_botan! { botan_mp_powmod(r.obj, x.obj, e.obj, m.obj) };
+        botan_call!(botan_mp_powmod, r.obj, x.obj, e.obj, m.obj)?;
         Ok(r)
     }
 }
