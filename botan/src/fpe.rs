@@ -3,7 +3,6 @@ use botan_sys::*;
 
 use crate::mp::MPI;
 
-#[derive(Debug)]
 /// Represents an instance of format preserving encryption
 ///
 /// # Examples
@@ -22,6 +21,8 @@ use crate::mp::MPI;
 /// let ptext = fpe.decrypt(&ctext, &tweak).unwrap();
 /// assert_eq!(ptext, input);
 /// ```
+#[derive(Debug)]
+#[allow(clippy::upper_case_acronyms)]
 pub struct FPE {
     obj: botan_fpe_t,
 }

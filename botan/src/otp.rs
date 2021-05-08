@@ -1,16 +1,18 @@
 use crate::utils::*;
 use botan_sys::*;
 
-#[derive(Debug)]
 /// Generate or check HOTP tokens
+#[derive(Debug)]
+#[allow(clippy::upper_case_acronyms)]
 pub struct HOTP {
     obj: botan_hotp_t,
 }
 
 botan_impl_drop!(HOTP, botan_hotp_destroy);
 
-#[derive(Debug)]
 /// Generate or check TOTP tokens
+#[derive(Debug)]
+#[allow(clippy::upper_case_acronyms)]
 pub struct TOTP {
     obj: botan_totp_t,
 }

@@ -13,6 +13,7 @@ use core::ops::{
 };
 
 /// A big integer type
+#[allow(clippy::upper_case_acronyms)]
 pub struct MPI {
     obj: botan_mp_t,
 }
