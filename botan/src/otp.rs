@@ -70,7 +70,7 @@ impl HOTP {
         )?;
 
         // Return value is inverted
-        if res == false {
+        if !res {
             Ok((true, new_ctr))
         } else {
             Ok((false, counter))
