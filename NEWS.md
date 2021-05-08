@@ -4,6 +4,8 @@
 - Incompatible change: previously operations which modified the
   internal state of an object, such as ``BlockCipher::set_key`` and
   ``HashFunction::update`` used ``&self`` now use ``&mut self``.
+- Add support for building against (currently unreleased) Botan 3.x
+- Add more convenience macros for calling FFI
 
 ## 0.8.1 2021-03-14
 
