@@ -17,6 +17,10 @@ botan-sys = { version = "0.8.1", path = "../botan-sys" }
 cty = { version = "0.2" }
 cstr_core = { version = "0.2", optional = true }
 
+[dev-dependencies]
+wycheproof = "0.1"
+hex = "0.4"
+
 [features]
 default = []
 no-std = ["cstr_core/alloc"]
