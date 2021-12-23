@@ -111,7 +111,7 @@ impl Error {
     pub(crate) fn with_message(err_type: ErrorType, message: String) -> Self {
         Self {
             err_type,
-            message: Some(message.to_string()),
+            message: Some(message),
         }
     }
 
