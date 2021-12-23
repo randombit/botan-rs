@@ -1,39 +1,45 @@
 #[test]
 fn wycheproof_aead_gcm_tests() -> Result<(), botan::Error> {
-    wycheproof_aead_test("aes_gcm", |ks: usize| format!("AES-{}/GCM", ks))
+    wycheproof_aead_test(wycheproof::aead::TestName::AesGcm, |ks: usize| {
+        format!("AES-{}/GCM", ks)
+    })
 }
 
 #[test]
 fn wycheproof_aead_eax_tests() -> Result<(), botan::Error> {
-    wycheproof_aead_test("aes_eax", |ks: usize| format!("AES-{}/EAX", ks))
+    wycheproof_aead_test(wycheproof::aead::TestName::AesEax, |ks: usize| {
+        format!("AES-{}/EAX", ks)
+    })
 }
 
 #[test]
 fn wycheproof_aead_siv_tests() -> Result<(), botan::Error> {
-    wycheproof_aead_test("aead_aes_siv_cmac", |ks: usize| {
+    wycheproof_aead_test(wycheproof::aead::TestName::AesSivCmac, |ks: usize| {
         format!("AES-{}/SIV", ks / 2)
     })
 }
 
 #[test]
 fn wycheproof_aead_chacha20poly1305_tests() -> Result<(), botan::Error> {
-    wycheproof_aead_test("chacha20_poly1305", |_ks: usize| {
-        "ChaCha20Poly1305".to_string()
-    })
+    wycheproof_aead_test(
+        wycheproof::aead::TestName::ChaCha20Poly1305,
+        |_ks: usize| "ChaCha20Poly1305".to_string(),
+    )
 }
 
 #[test]
 fn wycheproof_aead_xchacha20poly1305_tests() -> Result<(), botan::Error> {
-    wycheproof_aead_test("xchacha20_poly1305", |_ks: usize| {
-        "ChaCha20Poly1305".to_string()
-    })
+    wycheproof_aead_test(
+        wycheproof::aead::TestName::XChaCha20Poly1305,
+        |_ks: usize| "ChaCha20Poly1305".to_string(),
+    )
 }
 
 fn wycheproof_aead_test(
-    test_set_name: &str,
+    test_set_name: wycheproof::aead::TestName,
     botan_cipher_name: impl Fn(usize) -> String,
 ) -> Result<(), botan::Error> {
-    let test_set = wycheproof::AeadTestSet::load(test_set_name).unwrap();
+    let test_set = wycheproof::aead::TestSet::load(test_set_name).unwrap();
 
     for test_group in test_set.test_groups {
         let cipher_name = botan_cipher_name(test_group.key_size);
@@ -48,7 +54,9 @@ fn wycheproof_aead_test(
             cipher.set_associated_data(&test.aad).unwrap();
 
             if test.result == wycheproof::TestResult::Invalid
-                && test.flags.contains(&wycheproof::AeadTestFlag::ZeroLengthIv)
+                && test
+                    .flags
+                    .contains(&wycheproof::aead::TestFlag::ZeroLengthIv)
             {
                 assert!(cipher.process(&test.nonce, &test.pt).is_err());
                 continue;
@@ -82,7 +90,9 @@ fn wycheproof_aead_test(
             cipher.set_associated_data(&test.aad).unwrap();
 
             if test.result == wycheproof::TestResult::Invalid
-                && test.flags.contains(&wycheproof::AeadTestFlag::ZeroLengthIv)
+                && test
+                    .flags
+                    .contains(&wycheproof::aead::TestFlag::ZeroLengthIv)
             {
                 assert!(cipher.process(&test.nonce, &test.pt).is_err());
                 continue;
