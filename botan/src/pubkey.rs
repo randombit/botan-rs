@@ -64,9 +64,6 @@ impl Privkey {
     /// let key = botan::Privkey::load_ed25519(&v).unwrap();
     /// ```
     pub fn load_ed25519(key: &[u8]) -> Result<Privkey> {
-        if key.len() != 32 {
-            return Err(Error::BadParameter);
-        }
         let obj = botan_init!(botan_privkey_load_ed25519, key.as_ptr())?;
         Ok(Privkey { obj })
     }
@@ -80,9 +77,6 @@ impl Privkey {
     /// let key = botan::Privkey::load_x25519(&v).unwrap();
     /// ```
     pub fn load_x25519(key: &[u8]) -> Result<Privkey> {
-        if key.len() != 32 {
-            return Err(Error::BadParameter);
-        }
         let obj = botan_init!(botan_privkey_load_x25519, key.as_ptr())?;
         Ok(Privkey { obj })
     }
@@ -177,7 +171,7 @@ impl Privkey {
         } else if rc == -1 {
             Ok(false)
         } else {
-            Err(Error::from(rc))
+            Err(Error::from_rc(rc))
         }
     }
 
@@ -439,18 +433,12 @@ impl Pubkey {
 
     /// Load an Ed25519 public key
     pub fn load_ed25519(key: &[u8]) -> Result<Pubkey> {
-        if key.len() != 32 {
-            return Err(Error::BadParameter);
-        }
         let obj = botan_init!(botan_pubkey_load_ed25519, key.as_ptr())?;
         Ok(Pubkey { obj })
     }
 
     /// Load an X25519 key
     pub fn load_x25519(key: &[u8]) -> Result<Pubkey> {
-        if key.len() != 32 {
-            return Err(Error::BadParameter);
-        }
         let obj = botan_init!(botan_pubkey_load_x25519, key.as_ptr())?;
         Ok(Pubkey { obj })
     }
@@ -470,7 +458,7 @@ impl Pubkey {
         } else if rc == -1 {
             Ok(false)
         } else {
-            Err(Error::from(rc))
+            Err(Error::from_rc(rc))
         }
     }
 

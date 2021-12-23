@@ -21,7 +21,7 @@ macro_rules! botan_call {
         if rc == 0 {
             Ok(())
         } else {
-            Err(Error::from(rc))
+            Err(Error::from_rc(rc))
         }
     }};
 }
@@ -33,7 +33,7 @@ macro_rules! botan_init {
         if rc == 0 {
             Ok(obj)
         } else {
-            Err(Error::from(rc))
+            Err(Error::from_rc(rc))
         }
     }};
     ($fn:path, $($args:expr),*) => {{
@@ -42,7 +42,7 @@ macro_rules! botan_init {
         if rc == 0 {
             Ok(obj)
         } else {
-            Err(Error::from(rc))
+            Err(Error::from_rc(rc))
         }
     }};
 }
@@ -53,7 +53,7 @@ macro_rules! botan_impl_drop {
             fn drop(&mut self) {
                 let rc = unsafe { $fn(self.obj) };
                 if rc != 0 {
-                    let err = Error::from(rc);
+                    let err = Error::from_rc(rc);
                     panic!("{} failed: {}", core::stringify!($fn), err);
                 }
             }
@@ -66,7 +66,7 @@ macro_rules! botan_usize {
         let mut val = 0;
         let rc = unsafe { $fn($obj, &mut val) };
         if rc != 0 {
-            Err(Error::from(rc))
+            Err(Error::from_rc(rc))
         } else {
             Ok(val)
         }
@@ -80,7 +80,7 @@ macro_rules! botan_usize3 {
         let mut val3 = 0;
         let rc = unsafe { $fn($obj, &mut val1, &mut val2, &mut val3) };
         if rc != 0 {
-            Err(Error::from(rc))
+            Err(Error::from_rc(rc))
         } else {
             Ok((val1, val2, val3))
         }
@@ -94,7 +94,7 @@ macro_rules! botan_bool_in_rc {
         match rc {
             0 => Ok(false),
             1 => Ok(true),
-            e => Err(Error::from(e)),
+            e => Err(Error::from_rc(e)),
         }
     }};
 }

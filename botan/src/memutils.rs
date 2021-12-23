@@ -40,7 +40,7 @@ pub fn hex_encode(x: &[u8]) -> Result<String> {
         flags
     )?;
 
-    String::from_utf8(output).map_err(|_| Error::ConversionError)
+    String::from_utf8(output).map_err(Error::conversion_error)
 }
 
 /// Hex decode some data

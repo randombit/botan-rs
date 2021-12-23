@@ -18,7 +18,7 @@ pub(crate) use cty::{c_char, c_int, c_void};
 pub type Result<T> = ::core::result::Result<T, Error>;
 
 pub(crate) fn make_cstr(input: &str) -> Result<CString> {
-    let cstr = CString::new(input).map_err(|_| Error::ConversionError)?;
+    let cstr = CString::new(input).map_err(Error::conversion_error)?;
     Ok(cstr)
 }
 
@@ -35,18 +35,29 @@ pub(crate) fn call_botan_ffi_returning_vec_u8(
         output.resize(out_len, 0);
         return Ok(output);
     } else if rc != BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE {
-        return Err(Error::from(rc));
+        return Err(Error::from_rc(rc));
     }
 
     output.resize(out_len, 0);
     let rc = cb(output.as_mut_ptr(), &mut out_len);
 
     if rc != 0 {
-        return Err(Error::from(rc));
+        return Err(Error::from_rc(rc));
     }
 
     output.resize(out_len, 0);
     Ok(output)
+}
+
+fn cstr_slice_to_str(raw_cstr: &[u8]) -> Result<String> {
+    let cstr = CStr::from_bytes_with_nul(raw_cstr).map_err(Error::conversion_error)?;
+    Ok(cstr.to_str().map_err(Error::conversion_error)?.to_owned())
+}
+
+#[cfg(feature = "botan3")]
+unsafe fn cstr_to_str(raw_cstr: *const i8) -> Result<String> {
+    let cstr = CStr::from_ptr(raw_cstr);
+    Ok(cstr.to_str().map_err(Error::conversion_error)?.to_owned())
 }
 
 pub(crate) fn call_botan_ffi_returning_string(
@@ -54,18 +65,86 @@ pub(crate) fn call_botan_ffi_returning_string(
     cb: &dyn Fn(*mut u8, *mut usize) -> c_int,
 ) -> Result<String> {
     let v = call_botan_ffi_returning_vec_u8(initial_size, cb)?;
+    cstr_slice_to_str(&v)
+}
 
-    let cstr = CStr::from_bytes_with_nul(&v).map_err(|_| Error::ConversionError)?;
-    let ostr = cstr
-        .to_str()
-        .map_err(|_| Error::ConversionError)?
-        .to_owned();
-    Ok(ostr)
+/// The library error type
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Error {
+    err_type: ErrorType,
+    message: Option<String>,
+}
+
+impl Error {
+    /// Return the general type of the error
+    pub fn error_type(&self) -> ErrorType {
+        self.err_type
+    }
+
+    /// Return an optional message specific to the error
+    ///
+    /// This is only available in Botan 3.x; with older versions
+    /// it will always be None
+    pub fn error_message(&self) -> Option<&str> {
+        self.message.as_deref()
+    }
+
+    pub(crate) fn from_rc(rc: c_int) -> Self {
+        let err_type = ErrorType::from(rc);
+
+        #[cfg(feature = "botan3")]
+        let message = {
+            let cptr = unsafe { botan_sys::botan_error_last_exception_message() };
+            match unsafe { cstr_to_str(cptr) } {
+                Err(_) => None,
+                Ok(s) if s.len() > 0 => Some(s),
+                Ok(_) => None,
+            }
+        };
+
+        #[cfg(not(feature = "botan3"))]
+        let message = None;
+
+        Self { err_type, message }
+    }
+
+    pub(crate) fn with_message(err_type: ErrorType, message: String) -> Self {
+        Self {
+            err_type,
+            message: Some(message.to_string()),
+        }
+    }
+
+    #[cfg(not(feature = "no-std"))]
+    pub(crate) fn conversion_error<T: std::error::Error>(e: T) -> Self {
+        Self {
+            err_type: ErrorType::ConversionError,
+            message: Some(format!("{}", e)),
+        }
+    }
+
+    // Hack to deal with missing std::error::Error in no-std
+    #[cfg(feature = "no-std")]
+    pub(crate) fn conversion_error<T: core::fmt::Display>(e: T) -> Self {
+        Self {
+            err_type: ErrorType::ConversionError,
+            message: Some(format!("{}", e)),
+        }
+    }
+}
+
+impl core::fmt::Display for Error {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match &self.message {
+            Some(m) => write!(f, "{} ({})", self.err_type, m),
+            None => write!(f, "{}", self.err_type),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-/// Possible errors
-pub enum Error {
+/// Possible error categories
+pub enum ErrorType {
     /// A provided authentication code was incorrect
     BadAuthCode,
     /// A bad flag was passed to the library
@@ -108,35 +187,35 @@ pub enum Error {
     HttpError,
 }
 
-impl fmt::Display for Error {
+impl fmt::Display for ErrorType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let msg = match self {
-            Error::BadAuthCode => "A provided authentication code was incorrect",
-            Error::BadFlag => "A bad flag was passed to the library",
-            Error::BadParameter => "An invalid parameter was provided to the library",
-            Error::ExceptionThrown => "An exception was thrown while processing this request",
-            Error::InsufficientBufferSpace => {
+            Self::BadAuthCode => "A provided authentication code was incorrect",
+            Self::BadFlag => "A bad flag was passed to the library",
+            Self::BadParameter => "An invalid parameter was provided to the library",
+            Self::ExceptionThrown => "An exception was thrown while processing this request",
+            Self::InsufficientBufferSpace => {
                 "There was insufficient buffer space to write the output"
             }
-            Error::InternalError => "An internal error occurred (this is a bug in the library)",
-            Error::InvalidInput => "Something about the input was invalid",
-            Error::InvalidObject => "An invalid object was provided to the library",
-            Error::InvalidObjectState => {
+            Self::InternalError => "An internal error occurred (this is a bug in the library)",
+            Self::InvalidInput => "Something about the input was invalid",
+            Self::InvalidObject => "An invalid object was provided to the library",
+            Self::InvalidObjectState => {
                 "An object was invoked in a way that is invalid for its current state"
             }
-            Error::InvalidVerifier => "A verifier was incorrect",
-            Error::InvalidKeyLength => "An key of invalid length was provided",
-            Error::KeyNotSet => "An object was invoked without the key being set",
-            Error::NotImplemented => {
+            Self::InvalidVerifier => "A verifier was incorrect",
+            Self::InvalidKeyLength => "An key of invalid length was provided",
+            Self::KeyNotSet => "An object was invoked without the key being set",
+            Self::NotImplemented => {
                 "Some functionality is not implemented in the current library version"
             }
-            Error::NullPointer => "A null pointer was incorrectly provided",
-            Error::OutOfMemory => "Memory exhaustion",
-            Error::SystemError => "An error occurred while invoking a system API",
-            Error::UnknownError => "Some unknown error occurred",
-            Error::ConversionError => "An error occured while converting data to C",
-            Error::TlsError => "An error occurred in TLS",
-            Error::HttpError => "An error occurred during an HTTP transaction",
+            Self::NullPointer => "A null pointer was incorrectly provided",
+            Self::OutOfMemory => "Memory exhaustion",
+            Self::SystemError => "An error occurred while invoking a system API",
+            Self::UnknownError => "Some unknown error occurred",
+            Self::ConversionError => "An error occured while converting data to C",
+            Self::TlsError => "An error occurred in TLS",
+            Self::HttpError => "An error occurred during an HTTP transaction",
         };
 
         write!(f, "{}", msg)
@@ -146,29 +225,29 @@ impl fmt::Display for Error {
 #[cfg(not(feature = "no-std"))]
 impl std::error::Error for Error {}
 
-impl From<i32> for Error {
-    fn from(err: i32) -> Error {
+impl From<i32> for ErrorType {
+    fn from(err: i32) -> Self {
         match err {
-            BOTAN_FFI_ERROR_BAD_FLAG => Error::BadFlag,
-            BOTAN_FFI_ERROR_BAD_MAC => Error::BadAuthCode,
-            BOTAN_FFI_ERROR_BAD_PARAMETER => Error::BadParameter,
-            BOTAN_FFI_ERROR_EXCEPTION_THROWN => Error::ExceptionThrown,
-            BOTAN_FFI_ERROR_HTTP_ERROR => Error::HttpError,
-            BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE => Error::InsufficientBufferSpace,
-            BOTAN_FFI_ERROR_INTERNAL_ERROR => Error::InternalError,
-            BOTAN_FFI_ERROR_INVALID_INPUT => Error::InvalidInput,
-            BOTAN_FFI_ERROR_INVALID_KEY_LENGTH => Error::InvalidKeyLength,
-            BOTAN_FFI_ERROR_INVALID_OBJECT => Error::InvalidObject,
-            BOTAN_FFI_ERROR_INVALID_OBJECT_STATE => Error::InvalidObjectState,
-            BOTAN_FFI_ERROR_KEY_NOT_SET => Error::KeyNotSet,
-            BOTAN_FFI_ERROR_NOT_IMPLEMENTED => Error::NotImplemented,
-            BOTAN_FFI_ERROR_NULL_POINTER => Error::NullPointer,
-            BOTAN_FFI_ERROR_OUT_OF_MEMORY => Error::OutOfMemory,
-            BOTAN_FFI_ERROR_SYSTEM_ERROR => Error::SystemError,
-            BOTAN_FFI_ERROR_TLS_ERROR => Error::TlsError,
-            BOTAN_FFI_ERROR_UNKNOWN_ERROR => Error::UnknownError,
-            BOTAN_FFI_INVALID_VERIFIER => Error::InvalidVerifier,
-            _ => Error::UnknownError,
+            BOTAN_FFI_ERROR_BAD_FLAG => Self::BadFlag,
+            BOTAN_FFI_ERROR_BAD_MAC => Self::BadAuthCode,
+            BOTAN_FFI_ERROR_BAD_PARAMETER => Self::BadParameter,
+            BOTAN_FFI_ERROR_EXCEPTION_THROWN => Self::ExceptionThrown,
+            BOTAN_FFI_ERROR_HTTP_ERROR => Self::HttpError,
+            BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE => Self::InsufficientBufferSpace,
+            BOTAN_FFI_ERROR_INTERNAL_ERROR => Self::InternalError,
+            BOTAN_FFI_ERROR_INVALID_INPUT => Self::InvalidInput,
+            BOTAN_FFI_ERROR_INVALID_KEY_LENGTH => Self::InvalidKeyLength,
+            BOTAN_FFI_ERROR_INVALID_OBJECT => Self::InvalidObject,
+            BOTAN_FFI_ERROR_INVALID_OBJECT_STATE => Self::InvalidObjectState,
+            BOTAN_FFI_ERROR_KEY_NOT_SET => Self::KeyNotSet,
+            BOTAN_FFI_ERROR_NOT_IMPLEMENTED => Self::NotImplemented,
+            BOTAN_FFI_ERROR_NULL_POINTER => Self::NullPointer,
+            BOTAN_FFI_ERROR_OUT_OF_MEMORY => Self::OutOfMemory,
+            BOTAN_FFI_ERROR_SYSTEM_ERROR => Self::SystemError,
+            BOTAN_FFI_ERROR_TLS_ERROR => Self::TlsError,
+            BOTAN_FFI_ERROR_UNKNOWN_ERROR => Self::UnknownError,
+            BOTAN_FFI_INVALID_VERIFIER => Self::InvalidVerifier,
+            _ => Self::UnknownError,
         }
     }
 }
@@ -182,11 +261,11 @@ pub struct KeySpec {
 
 impl KeySpec {
     pub(crate) fn new(min_keylen: usize, max_keylen: usize, mod_keylen: usize) -> Result<KeySpec> {
-        if min_keylen > max_keylen {
-            return Err(Error::ConversionError);
-        }
-        if mod_keylen == 0 {
-            return Err(Error::ConversionError);
+        if min_keylen > max_keylen || mod_keylen == 0 {
+            return Err(Error::with_message(
+                ErrorType::ConversionError,
+                "Bad key spec".to_owned(),
+            ));
         }
 
         Ok(KeySpec {

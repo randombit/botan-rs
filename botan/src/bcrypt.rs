@@ -34,7 +34,7 @@ pub fn bcrypt_hash(
     )?;
 
     out.resize(out_len - 1, 0);
-    String::from_utf8(out).map_err(|_| Error::ConversionError)
+    String::from_utf8(out).map_err(Error::conversion_error)
 }
 
 /// Verify a bcrypt password hash
@@ -55,6 +55,6 @@ pub fn bcrypt_verify(pass: &str, hash: &str) -> Result<bool> {
     } else if rc == BOTAN_FFI_INVALID_VERIFIER {
         Ok(false)
     } else {
-        Err(Error::from(rc))
+        Err(Error::from_rc(rc))
     }
 }

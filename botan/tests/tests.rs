@@ -76,8 +76,8 @@ fn test_hash() -> Result<(), botan::Error> {
 
     assert_eq!(bad_hash.is_err(), true);
     assert_eq!(
-        *bad_hash.as_ref().unwrap_err(),
-        botan::Error::NotImplemented
+        bad_hash.as_ref().unwrap_err().error_type(),
+        botan::ErrorType::NotImplemented
     );
     Ok(())
 }
@@ -118,8 +118,8 @@ fn test_block_cipher() -> Result<(), botan::Error> {
     assert!(key_spec.is_valid_keylength(16));
 
     assert_eq!(
-        bc.set_key(&vec![0; 32]).unwrap_err(),
-        botan::Error::InvalidKeyLength
+        bc.set_key(&vec![0; 32]).unwrap_err().error_type(),
+        botan::ErrorType::InvalidKeyLength
     );
 
     bc.set_key(&vec![0; 16])?;
@@ -155,8 +155,8 @@ fn test_cipher() -> Result<(), botan::Error> {
 
     assert!(cipher.set_associated_data(&[1, 2, 3]).is_err()); // trying to set AD before key is set
     assert_eq!(
-        cipher.set_key(&vec![0; 42]).unwrap_err(),
-        botan::Error::InvalidKeyLength
+        cipher.set_key(&vec![0; 42]).unwrap_err().error_type(),
+        botan::ErrorType::InvalidKeyLength
     );
 
     cipher.set_key(&zero16)?;

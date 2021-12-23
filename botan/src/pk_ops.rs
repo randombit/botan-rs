@@ -124,7 +124,7 @@ impl Verifier {
         match unsafe { botan_pk_op_verify_finish(self.obj, signature.as_ptr(), signature.len()) } {
             0 => Ok(true),
             BOTAN_FFI_INVALID_VERIFIER => Ok(false),
-            e => Err(Error::from(e)),
+            e => Err(Error::from_rc(e)),
         }
     }
 }
