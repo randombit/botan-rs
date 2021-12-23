@@ -464,7 +464,7 @@ impl<'a> Add<u32> for &'a MPI {
 
 impl<'a> AddAssign<&'a MPI> for MPI {
     fn add_assign(&mut self, other: &MPI) {
-        self.mp_add_assign(&other)
+        self.mp_add_assign(other)
             .expect("MPI::mp_add_assign succeeded");
     }
 }
@@ -514,7 +514,7 @@ impl<'a> Sub<u32> for &'a MPI {
 
 impl<'a> SubAssign<&'a MPI> for MPI {
     fn sub_assign(&mut self, other: &MPI) {
-        self.mp_sub_assign(&other)
+        self.mp_sub_assign(other)
             .expect("MPI::mp_sub_assign succeeded");
     }
 }
@@ -546,7 +546,7 @@ impl<'a, 'b> Mul<&'a MPI> for &'b MPI {
 
 impl<'a> MulAssign<&'a MPI> for MPI {
     fn mul_assign(&mut self, other: &MPI) {
-        self.mp_mul_assign(&other)
+        self.mp_mul_assign(other)
             .expect("MPI::mp_mul_assign succeeded");
     }
 }

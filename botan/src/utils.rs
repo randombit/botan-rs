@@ -2,7 +2,7 @@ use botan_sys::*;
 use core::fmt;
 
 #[cfg(feature = "no-std")]
-pub(crate) use alloc::prelude::v1::*;
+pub(crate) use alloc::{borrow::ToOwned, string::String, string::ToString, vec::Vec};
 
 #[cfg(feature = "no-std")]
 pub(crate) use cstr_core::{CStr, CString};
