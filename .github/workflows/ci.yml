@@ -62,6 +62,7 @@ jobs:
         with:
             path: |
               ~/.ccache
+              ~/.cargo
             key: ${{ matrix.target }}-${{ matrix.toolchain }}-${{ matrix.cache_id }}-${{ github.run_id }}
             restore-keys: |
                ${{ matrix.target }}-${{ matrix.toolchain }}-${{ matrix.cache_id }}
@@ -96,6 +97,7 @@ jobs:
         with:
             path: |
               /Users/runner/Library/Caches/ccache
+              ~/.cargo
             key: ${{ matrix.target }}-${{ matrix.toolchain }}-${{ matrix.cache_id }}-${{ github.run_id }}
             restore-keys: |
                ${{ matrix.target }}-${{ matrix.toolchain }}-${{ matrix.cache_id }}
