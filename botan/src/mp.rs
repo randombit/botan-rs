@@ -137,9 +137,16 @@ impl MPI {
     pub fn to_hex(&self) -> Result<String> {
         let byte_count = self.byte_count()?;
 
-        call_botan_ffi_returning_string(byte_count * 2 + 1, &|out_buf, out_len| unsafe {
-            botan_mp_to_str(self.obj, 16, out_buf as *mut c_char, out_len)
-        })
+        let mut r =
+            call_botan_ffi_returning_string(byte_count * 2 + 1, &|out_buf, out_len| unsafe {
+                botan_mp_to_str(self.obj, 16, out_buf as *mut c_char, out_len)
+            })?;
+
+        if cfg!(feature = "botan3") {
+            Ok(r.split_off(2)) // remove leading 0x
+        } else {
+            Ok(r)
+        }
     }
 
     /// Return value of self as a byte array (big endian)
@@ -211,7 +218,10 @@ impl MPI {
             -1 => Ok(Ordering::Less),
             0 => Ok(Ordering::Equal),
             1 => Ok(Ordering::Greater),
-            _ => Err(Error::ConversionError),
+            r => Err(Error::with_message(
+                ErrorType::ConversionError,
+                format!("Unexpected botan_mp_cmp result {}", r),
+            )),
         }
     }
 
@@ -396,16 +406,19 @@ impl FromStr for MPI {
 impl fmt::Debug for MPI {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         let s = self.to_string().map_err(|_| fmt::Error)?;
-        let is_positive = self.is_positive().map_err(|_| fmt::Error)?;
-        formatter.pad_integral(is_positive, "", &s)
+
+        if cfg!(feature = "botan3") {
+            write!(formatter, "{}", s)
+        } else {
+            let is_positive = self.is_positive().map_err(|_| fmt::Error)?;
+            formatter.pad_integral(is_positive, "", &s)
+        }
     }
 }
 
 impl fmt::Display for MPI {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        let s = self.to_string().map_err(|_| fmt::Error)?;
-        let is_positive = self.is_positive().map_err(|_| fmt::Error)?;
-        formatter.pad_integral(is_positive, "", &s)
+        write!(formatter, "{:?}", self)
     }
 }
 

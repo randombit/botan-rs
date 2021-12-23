@@ -29,18 +29,20 @@ impl BlockCipher {
     pub fn new(name: &str) -> Result<BlockCipher> {
         let obj = botan_init!(botan_block_cipher_init, make_cstr(name)?.as_ptr())?;
 
-        let block_size = unsafe { botan_block_cipher_block_size(obj) };
-
-        if block_size < 0 {
-            return Err(Error::from(block_size));
-        }
+        let block_size = {
+            let rc = unsafe { botan_block_cipher_block_size(obj) };
+            if rc < 0 {
+                return Err(Error::from_rc(rc));
+            }
+            rc as usize
+        };
 
         let (min_keylen, max_keylen, mod_keylen) =
             botan_usize3!(botan_block_cipher_get_keyspec, obj)?;
 
         Ok(BlockCipher {
             obj,
-            block_size: block_size as usize,
+            block_size,
             min_keylen,
             max_keylen,
             mod_keylen,
@@ -134,7 +136,10 @@ impl BlockCipher {
     /// key was not set on the object.
     pub fn encrypt_in_place(&self, buf: &mut [u8]) -> Result<()> {
         if buf.len() % self.block_size != 0 {
-            return Err(Error::InvalidInput);
+            return Err(Error::with_message(
+                ErrorType::InvalidInput,
+                "Invalid input size".to_string(),
+            ));
         }
 
         let blocks = buf.len() / self.block_size;
@@ -181,7 +186,10 @@ impl BlockCipher {
     /// key was not set on the object.
     pub fn decrypt_in_place(&self, buf: &mut [u8]) -> Result<()> {
         if buf.len() % self.block_size != 0 {
-            return Err(Error::InvalidInput);
+            return Err(Error::with_message(
+                ErrorType::InvalidInput,
+                "Invalid input size".to_string(),
+            ));
         }
 
         let blocks = buf.len() / self.block_size;

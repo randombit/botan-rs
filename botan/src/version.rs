@@ -25,7 +25,7 @@ impl Version {
         unsafe {
             let version_str = CStr::from_ptr(botan_version_string())
                 .to_str()
-                .map_err(|_| Error::ConversionError)?;
+                .map_err(Error::conversion_error)?;
 
             Ok(Version {
                 major: botan_version_major(),

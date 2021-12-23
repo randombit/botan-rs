@@ -16,11 +16,17 @@ use botan_sys::*;
 /// ```
 pub fn nist_key_wrap(kek: &[u8], key: &[u8]) -> Result<Vec<u8>> {
     if kek.len() != 16 && kek.len() != 24 && kek.len() != 32 {
-        return Err(Error::InvalidKeyLength);
+        return Err(Error::with_message(
+            ErrorType::InvalidKeyLength,
+            "Invalid AES key length".to_string(),
+        ));
     }
 
     if key.len() % 8 != 0 {
-        return Err(Error::InvalidInput);
+        return Err(Error::with_message(
+            ErrorType::InvalidInput,
+            "Invalid keywrap input length".to_string(),
+        ));
     }
 
     let mut output = vec![0; key.len() + 8];
@@ -54,11 +60,17 @@ pub fn nist_key_wrap(kek: &[u8], key: &[u8]) -> Result<Vec<u8>> {
 /// ```
 pub fn nist_key_unwrap(kek: &[u8], wrapped: &[u8]) -> Result<Vec<u8>> {
     if kek.len() != 16 && kek.len() != 24 && kek.len() != 32 {
-        return Err(Error::InvalidKeyLength);
+        return Err(Error::with_message(
+            ErrorType::InvalidKeyLength,
+            "Invalid AES key length".to_string(),
+        ));
     }
 
     if wrapped.len() % 8 != 0 {
-        return Err(Error::InvalidInput);
+        return Err(Error::with_message(
+            ErrorType::InvalidInput,
+            "Invalid keywrap input length".to_string(),
+        ));
     }
 
     let mut output = vec![0; wrapped.len() - 8];

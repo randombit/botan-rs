@@ -253,7 +253,7 @@ impl Certificate {
         } else if rc == 1 {
             Ok(CertValidationStatus::Failed(result))
         } else {
-            Err(Error::from(rc))
+            Err(Error::from_rc(rc))
         }
     }
 
@@ -267,7 +267,7 @@ impl Certificate {
         } else if rc == -1 {
             Ok(false)
         } else {
-            Err(Error::from(rc))
+            Err(Error::from_rc(rc))
         }
     }
 }

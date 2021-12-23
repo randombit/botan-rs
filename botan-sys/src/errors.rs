@@ -29,4 +29,7 @@ extern "C" {
 
     pub fn botan_error_description(err: BOTAN_FFI_ERROR) -> *const c_char;
 
+    #[cfg(feature = "botan3")]
+    pub fn botan_error_last_exception_message() -> *const c_char;
+
 }
