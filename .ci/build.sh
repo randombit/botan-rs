@@ -12,20 +12,7 @@ export DYLD_LIBRARY_PATH=$INSTALL_PREFIX/lib
 
 FEATURES=$1
 
-if [ "x$FEATURES" != "xvendored" ]; then
-    pushd /tmp
-
-    git clone --branch release-2 --depth 1 https://github.com/randombit/botan.git
-
-    cd botan
-    ./configure.py --disable-static --without-documentation --compiler-cache=ccache --prefix=$INSTALL_PREFIX
-    ccache -s
-    make -j$(nproc) libs cli
-    ccache -s
-    sudo make install
-
-    popd
-else
+if [ "x$FEATURES" == "xvendored" ]; then
     git submodule update --init --depth 3
 fi
 
