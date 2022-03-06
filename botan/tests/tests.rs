@@ -913,3 +913,66 @@ fn test_totp() -> Result<(), botan::Error> {
     assert!(!totp.check(90693936, 59 + 31, 1)?);
     Ok(())
 }
+
+#[cfg(feature = "botan3")]
+#[test]
+fn test_srp6() -> Result<(), botan::Error> {
+    const IDENTITY: &str = "alice";
+    const PASSWORD: &str = "password123";
+    let mut rng = botan::RandomNumberGenerator::new_system()?;
+
+    // Test successful authentication
+    let mut server = botan::ServerSession::new()?;
+    let salt = rng.read(24)?;
+    let verifier =
+        botan::generate_srp6_verifier(IDENTITY, PASSWORD, &salt, "modp/srp/1024", "SHA-512")?;
+    let b_pub = server.step1(&verifier, "modp/srp/1024", "SHA-512", &rng)?;
+    let (a_pub, client_key) = botan::srp6_client_agree(
+        IDENTITY,
+        PASSWORD,
+        "modp/srp/1024",
+        "SHA-512",
+        &salt,
+        &b_pub,
+        &rng,
+    )?;
+    let server_key = server.step2(&a_pub)?;
+    assert_eq!(client_key, server_key);
+
+    // Test wrong server's B value
+    let salt = rng.read(24)?;
+    let b = hex::decode(
+        "BD0C6151 2C692C0C B6D041FA 01BB152D 4916A1E7 7AF46AE1 05393011 \
+    BAF38964 DC46A067 0DD125B9 5A981652 236F99D9 B681CBF8 7837EC99 \
+    6C6DA044 53728610 D0C6DDB5 8B318885 D7D82C7F 8DEB75CE 7BD4FBAA \
+    37089E6F 9C6059F3 88838E7A 00030B33 1EB76840 910440B1 B27AAEAE \
+    EB4012B7 D7665238 A8E3FB00 4B117B58",
+    );
+    let result = botan::srp6_client_agree(
+        IDENTITY,
+        PASSWORD,
+        "modp/srp/1024",
+        "SHA-512",
+        &salt,
+        b,
+        &rng,
+    );
+    assert!(result.is_err());
+
+    // Test wrong client's A value
+    let salt = rng.read(24)?;
+    let verifier =
+        botan::generate_srp6_verifier(IDENTITY, PASSWORD, &salt, "modp/srp/1024", "SHA-512")?;
+    let _ = server.step1(&verifier, "modp/srp/1024", "SHA-512", &rng)?;
+    let a_pub = hex::decode(
+        "61D5E490 F6F1B795 47B0704C 436F523D D0E560F0 C64115BB 72557EC4 \
+    4352E890 3211C046 92272D8B 2D1A5358 A2CF1B6E 0BFCF99F 921530EC \
+    8E393561 79EAE45E 42BA92AE ACED8251 71E1E8B9 AF6D9C03 E1327F44 \
+    BE087EF0 6530E69F 66615261 EEF54073 CA11CF58 58F0EDFD FE15EFEA \
+    B349EF5D 76988A36 72FAC47B 0769447B",
+    );
+    let result = server.step2(a_pub);
+    assert!(result.is_err());
+
+    Ok(())
+}

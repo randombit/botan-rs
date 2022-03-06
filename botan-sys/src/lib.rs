@@ -20,6 +20,8 @@ mod rng;
 mod utils;
 mod version;
 mod x509;
+#[cfg(feature="botan3")]
+mod srp6;
 
 pub use block::*;
 pub use cipher::*;
@@ -38,3 +40,5 @@ pub use rng::*;
 pub use utils::*;
 pub use version::*;
 pub use x509::*;
+#[cfg(feature="botan3")]
+pub use srp6::*;
