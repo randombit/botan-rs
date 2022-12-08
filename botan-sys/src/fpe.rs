@@ -1,4 +1,4 @@
-use cty::c_int;
+use core::ffi::c_int;
 
 use mp::botan_mp_t;
 

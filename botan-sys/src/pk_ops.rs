@@ -1,4 +1,4 @@
-use cty::{c_char, c_int};
+use core::ffi::{c_char, c_int};
 
 use pubkey::{botan_privkey_t, botan_pubkey_t};
 use rng::botan_rng_t;

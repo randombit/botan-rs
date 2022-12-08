@@ -18,8 +18,5 @@ no-std = []
 vendored = ["botan-src"]
 botan3 = []
 
-[dependencies]
-cty = { version = "0.2" }
-
 [build-dependencies]
 botan-src = { version = "0.21903", optional = true, path = "../botan-src" }
