@@ -8,7 +8,7 @@ on:
 
 jobs:
   rustfmt:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions-rs/toolchain@v1
@@ -21,7 +21,7 @@ jobs:
 
       - run: cargo fmt -- --check
   clippy:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions-rs/toolchain@v1
@@ -34,7 +34,7 @@ jobs:
 
       - run: cargo clippy -- --deny warnings
   ci:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       fail-fast: false
@@ -58,7 +58,7 @@ jobs:
     steps:
       - run: sudo apt-get -qq install ccache libbotan-2-dev
       - uses: actions/checkout@v2
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
             path: |
               ~/.ccache
@@ -93,7 +93,7 @@ jobs:
     steps:
       - run: brew install ccache botan
       - uses: actions/checkout@v2
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
             path: |
               /Users/runner/Library/Caches/ccache
