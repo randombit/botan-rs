@@ -33,7 +33,7 @@ impl FPE {
     /// Create a new FPE instance, FE1 scheme
     /// Rounds should be 16 or higher for best security
     pub fn new_fe1(modulus: &MPI, key: &[u8], rounds: usize, compat_mode: bool) -> Result<FPE> {
-        let flags = if compat_mode { 1 } else { 0 };
+        let flags = u32::from(compat_mode);
 
         let obj = botan_init!(
             botan_fpe_fe1_init,

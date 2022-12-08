@@ -14,7 +14,7 @@ pub struct Cipher {
     mod_keylen: usize,
 }
 
-#[derive(PartialEq, Debug, Copy, Clone)]
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
 /// Which direction the cipher processes in
 pub enum CipherDirection {
     /// Encrypt
@@ -216,7 +216,7 @@ impl Cipher {
     /// Encrypt or decrypt a message with the provided nonce. The key must
     /// incremental update
     fn _update(&mut self, msg: &[u8], end: bool) -> Result<Vec<u8>> {
-        let flags = if end { 1 } else { 0 };
+        let flags = u32::from(end);
         let mut output = vec![0; msg.len() + if end { self.tag_length() } else { 0 }];
         let mut output_written = 0;
         let mut input_consumed = 0;
