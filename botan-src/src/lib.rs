@@ -20,7 +20,7 @@ fn env_name_for(opt: &'static str) -> String {
 }
 
 fn configure(build_dir: &str) {
-    let mut configure = Command::new("python");
+    let mut configure = Command::new("python3");
     configure.arg("configure.py");
     configure.arg(format!("--with-build-dir={}", build_dir));
     configure.arg("--build-targets=static");
