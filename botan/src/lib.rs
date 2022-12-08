@@ -9,11 +9,7 @@
 #[macro_use]
 extern crate alloc;
 
-#[cfg(feature = "no-std")]
-extern crate cstr_core;
-
 extern crate botan_sys;
-extern crate cty;
 
 macro_rules! botan_call {
     ($fn:path, $($args:expr),*) => {{

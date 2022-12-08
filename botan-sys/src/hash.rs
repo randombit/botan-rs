@@ -1,4 +1,4 @@
-use cty::{c_char, c_int};
+use core::ffi::{c_char, c_int};
 
 pub enum botan_hash_struct {}
 pub type botan_hash_t = *mut botan_hash_struct;

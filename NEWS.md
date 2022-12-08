@@ -8,6 +8,8 @@
 - Add support for building against (currently unreleased) Botan 3.x
 - Add more convenience macros for calling FFI
 - Fix no_std builds with latest nightly
+- Switch to using `core::ffi` added in Rust 1.64. As a result new
+  MSRV is 1.64
 - Updated botan-src to 2.19.3
 
 ## 0.8.1 2021-03-14

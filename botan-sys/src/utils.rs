@@ -1,4 +1,4 @@
-use cty::{c_char, c_int, c_void};
+use core::ffi::{c_char, c_int, c_void};
 
 extern "C" {
 

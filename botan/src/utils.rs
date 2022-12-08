@@ -5,14 +5,14 @@ use core::fmt;
 pub(crate) use alloc::{borrow::ToOwned, string::String, string::ToString, vec::Vec};
 
 #[cfg(feature = "no-std")]
-pub(crate) use cstr_core::{CStr, CString};
+pub(crate) use alloc::ffi::CString;
 
 #[cfg(not(feature = "no-std"))]
-pub(crate) use std::ffi::{CStr, CString};
+pub(crate) use std::ffi::CString;
 
+pub(crate) use core::ffi::{c_char, c_int, c_void, CStr};
 pub(crate) use core::mem;
 pub(crate) use core::ptr;
-pub(crate) use cty::{c_char, c_int, c_void};
 
 /// The result of calling an operation on the library
 pub type Result<T> = ::core::result::Result<T, Error>;

@@ -14,8 +14,6 @@ edition = "2018"
 
 [dependencies]
 botan-sys = { version = "0.8.1", path = "../botan-sys" }
-cty = { version = "0.2" }
-cstr_core = { version = "0.2", optional = true }
 
 [dev-dependencies]
 wycheproof = "0.4"
@@ -23,6 +21,6 @@ hex = "0.4"
 
 [features]
 default = []
-no-std = ["cstr_core/alloc"]
+no-std = []
 vendored = ["botan-sys/vendored"]
 botan3 = ["botan-sys/botan3"]
