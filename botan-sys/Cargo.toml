@@ -22,4 +22,4 @@ botan3 = []
 cty = { version = "0.2" }
 
 [build-dependencies]
-botan-src = { version = "0.21703", optional = true, path = "../botan-src" }
+botan-src = { version = "0.21903", optional = true, path = "../botan-src" }

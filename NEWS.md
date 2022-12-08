@@ -8,6 +8,7 @@
 - Add support for building against (currently unreleased) Botan 3.x
 - Add more convenience macros for calling FFI
 - Fix no_std builds with latest nightly
+- Updated botan-src to 2.19.3
 
 ## 0.8.1 2021-03-14
 
