@@ -1,6 +1,6 @@
 [package]
 name = "botan-sys"
-version = "0.8.1"
+version = "0.9.0"
 authors = ["Jack Lloyd <jack@randombit.net>"]
 links = "botan-2"
 build = "build.rs"

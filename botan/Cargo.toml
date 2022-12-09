@@ -13,7 +13,7 @@ categories = [ "cryptography", "api-bindings", "no-std" ]
 edition = "2018"
 
 [dependencies]
-botan-sys = { version = "0.8.1", path = "../botan-sys" }
+botan-sys = { version = "0.9.0", path = "../botan-sys" }
 
 [dev-dependencies]
 wycheproof = "0.4"
