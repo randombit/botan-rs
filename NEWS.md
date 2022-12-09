@@ -1,5 +1,5 @@
 
-## 0.9.0 Not Yet Released
+## 0.9.0 2022-12-09
 
 - Incompatible change: previously operations which modified the
   internal state of an object, such as ``BlockCipher::set_key`` and
