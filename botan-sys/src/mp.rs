@@ -1,6 +1,6 @@
 use core::ffi::{c_char, c_int};
 
-use rng::botan_rng_t;
+use crate::rng::botan_rng_t;
 
 pub enum botan_mp_struct {}
 pub type botan_mp_t = *mut botan_mp_struct;

@@ -1,7 +1,7 @@
 use core::ffi::{c_char, c_int, c_uint};
 
-use pubkey::{botan_privkey_t, botan_pubkey_t};
-use rng::botan_rng_t;
+use crate::pubkey::{botan_privkey_t, botan_pubkey_t};
+use crate::rng::botan_rng_t;
 
 pub enum botan_x509_cert_struct {}
 pub type botan_x509_cert_t = *mut botan_x509_cert_struct;

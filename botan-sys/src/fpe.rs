@@ -1,6 +1,6 @@
 use core::ffi::c_int;
 
-use mp::botan_mp_t;
+use crate::mp::botan_mp_t;
 
 pub enum botan_fpe_struct {}
 pub type botan_fpe_t = *mut botan_fpe_struct;
