@@ -1,6 +1,6 @@
 use core::ffi::{c_char, c_int};
 
-use rng::botan_rng_t;
+use crate::rng::botan_rng_t;
 
 extern "C" {
 

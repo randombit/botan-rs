@@ -1,6 +1,6 @@
 [package]
 name = "botan-sys"
-version = "0.8.1"
+version = "0.8.2"
 authors = ["Jack Lloyd <jack@randombit.net>"]
 links = "botan-2"
 build = "build.rs"
@@ -11,6 +11,7 @@ repository = "https://github.com/randombit/botan-rs"
 documentation = "https://docs.rs/botan-sys"
 readme = "README.md"
 categories = [ "cryptography", "external-ffi-bindings", "no-std" ]
+edition = "2021"
 
 [features]
 default = []

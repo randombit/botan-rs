@@ -1,7 +1,7 @@
 use core::ffi::{c_char, c_int};
 
-use mp::botan_mp_t;
-use rng::botan_rng_t;
+use crate::mp::botan_mp_t;
+use crate::rng::botan_rng_t;
 
 pub enum botan_pubkey_struct {}
 pub type botan_pubkey_t = *mut botan_pubkey_struct;

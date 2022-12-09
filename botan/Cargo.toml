@@ -10,7 +10,7 @@ documentation = "https://docs.rs/botan"
 keywords = [ "crypto" ]
 readme = "../README.md"
 categories = [ "cryptography", "api-bindings", "no-std" ]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 botan-sys = { version = "0.8.1", path = "../botan-sys" }
