@@ -33,10 +33,10 @@ impl Cipher {
     /// let aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
     /// ```
     pub fn new(name: &str, direction: CipherDirection) -> Result<Cipher> {
-        let flag = if direction == CipherDirection::Encrypt {
-            0u32
-        } else {
-            1u32
+        let mut flag = 0u32;
+
+        if direction == CipherDirection::Decrypt {
+            flag |= 1u32;
         };
 
         let obj = botan_init!(botan_cipher_init, make_cstr(name)?.as_ptr(), flag)?;
