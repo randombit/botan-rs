@@ -1,5 +1,5 @@
 
-## 0.9.1 2023-01-19
+## 0.9.1 2023-01-29
 
 - Fix a problem building on Windows
 - Fix various clippy warnings
