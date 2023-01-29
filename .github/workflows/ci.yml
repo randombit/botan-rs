@@ -68,7 +68,7 @@ jobs:
       - uses: actions/cache@v3
         with:
             path: |
-              ~/.ccache
+              ~/.cache/ccache
               ~/.cargo
             key: ${{ matrix.target }}-${{ matrix.toolchain }}-${{ matrix.cache_id }}-${{ github.run_id }}
             restore-keys: |
