@@ -119,7 +119,7 @@ impl Error {
     pub(crate) fn conversion_error<T: std::error::Error>(e: T) -> Self {
         Self {
             err_type: ErrorType::ConversionError,
-            message: Some(format!("{}", e)),
+            message: Some(format!("{e}")),
         }
     }
 
@@ -218,7 +218,7 @@ impl fmt::Display for ErrorType {
             Self::HttpError => "An error occurred during an HTTP transaction",
         };
 
-        write!(f, "{}", msg)
+        write!(f, "{msg}")
     }
 }
 

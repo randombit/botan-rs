@@ -92,11 +92,11 @@ fn test_mac() -> Result<(), botan::Error> {
 
     assert!(key_spec.is_valid_keylength(20));
 
-    mac.set_key(&vec![0xAA; 20])?;
+    mac.set_key(&[0xAA; 20])?;
 
-    mac.update(&vec![0xDD; 1])?;
-    mac.update(&vec![0xDD; 29])?;
-    mac.update(&vec![0xDD; 20])?;
+    mac.update(&[0xDD; 1])?;
+    mac.update(&[0xDD; 29])?;
+    mac.update(&[0xDD; 20])?;
 
     let r = mac.finish()?;
 
@@ -114,15 +114,15 @@ fn test_block_cipher() -> Result<(), botan::Error> {
 
     let key_spec = bc.key_spec()?;
 
-    assert!(key_spec.is_valid_keylength(20) == false);
+    assert!(!key_spec.is_valid_keylength(20));
     assert!(key_spec.is_valid_keylength(16));
 
     assert_eq!(
-        bc.set_key(&vec![0; 32]).unwrap_err().error_type(),
+        bc.set_key(&[0; 32]).unwrap_err().error_type(),
         botan::ErrorType::InvalidKeyLength
     );
 
-    bc.set_key(&vec![0; 16])?;
+    bc.set_key(&[0; 16])?;
 
     let input = vec![0; 16];
 
@@ -155,7 +155,7 @@ fn test_cipher() -> Result<(), botan::Error> {
 
     assert!(cipher.set_associated_data(&[1, 2, 3]).is_err()); // trying to set AD before key is set
     assert_eq!(
-        cipher.set_key(&vec![0; 42]).unwrap_err().error_type(),
+        cipher.set_key(&[0; 42]).unwrap_err().error_type(),
         botan::ErrorType::InvalidKeyLength
     );
 
@@ -211,9 +211,9 @@ fn test_incremental_cipher() -> Result<(), botan::Error> {
     let mut enc_out = vec![0; 0];
     while let Some((cnt, v)) = enc_iter.next() {
         let mut res = if (cnt + 1) < chunks {
-            cipher.update(&v)?
+            cipher.update(v)?
         } else {
-            cipher.finish(&v)?
+            cipher.finish(v)?
         };
         enc_out.append(&mut res);
     }
@@ -234,7 +234,7 @@ fn test_incremental_cipher() -> Result<(), botan::Error> {
     };
     let mut dec_out = vec![0; 0];
     while let Some((cnt, v)) = dec_iter.next() {
-        let mut res = cipher.update(&v)?;
+        let mut res = cipher.update(v)?;
         dec_out.append(&mut res);
         if (cnt + 3) == chunks {
             break;
@@ -260,10 +260,10 @@ fn test_chacha() -> Result<(), botan::Error> {
 
     let key_spec = cipher.key_spec()?;
 
-    assert!(key_spec.is_valid_keylength(0) == false);
+    assert!(!key_spec.is_valid_keylength(0));
     assert!(key_spec.is_valid_keylength(16));
     assert!(key_spec.is_valid_keylength(32));
-    assert!(key_spec.is_valid_keylength(48) == false);
+    assert!(!key_spec.is_valid_keylength(48));
 
     let key = vec![0; 32];
 
@@ -723,7 +723,7 @@ fn test_pubkey_key_agreement() -> Result<(), botan::Error> {
     let mut b_ka = botan::KeyAgreement::new(&b_priv, "Raw")?;
 
     let a_key = a_ka.agree(0, &b_pub, &salt)?;
-    let b_key = b_ka.agree(0, &a_pub, &vec![])?;
+    let b_key = b_ka.agree(0, &a_pub, &[])?;
 
     assert_eq!(a_key, b_key);
     assert_eq!(a_key.len(), 384 / 8);
@@ -771,7 +771,7 @@ fn test_ct_compare() -> Result<(), botan::Error> {
     assert_eq!(botan::const_time_compare(&a, &[1, 2, 3, 4]), false);
     assert_eq!(botan::const_time_compare(&a, &[1, 2, 4]), false);
     assert_eq!(botan::const_time_compare(&a, &a), true);
-    assert_eq!(botan::const_time_compare(&a, &vec![1, 2, 3]), true);
+    assert_eq!(botan::const_time_compare(&a, &[1, 2, 3]), true);
     Ok(())
 }
 
@@ -814,11 +814,11 @@ fn test_mp() -> Result<(), botan::Error> {
 
     assert_eq!(c.to_string()?, "92700");
 
-    assert_eq!(format!("{}", c), "92700");
-    assert_eq!(format!("{:x}", c), "016a1c");
-    assert_eq!(format!("{:X}", c), "016A1C");
-    assert_eq!(format!("{:#x}", c), "0x016a1c");
-    assert_eq!(format!("{:#X}", c), "0x016A1C");
+    assert_eq!(format!("{c}"), "92700");
+    assert_eq!(format!("{c:x}"), "016a1c");
+    assert_eq!(format!("{c:X}"), "016A1C");
+    assert_eq!(format!("{c:#x}"), "0x016a1c");
+    assert_eq!(format!("{c:#X}"), "0x016A1C");
     assert_eq!(c.to_bin()?, vec![0x01, 0x6a, 0x1c]);
 
     let mut s = &c << 32;
@@ -859,7 +859,7 @@ fn test_mp() -> Result<(), botan::Error> {
 
     assert_eq!(t.is_negative()?, true);
 
-    assert_eq!(format!("{}", t), "-39814346982240");
+    assert_eq!(format!("{t}"), "-39814346982240");
     Ok(())
 }
 
