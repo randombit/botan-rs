@@ -1,4 +1,9 @@
 
+## 0.9.1 2023-01-19
+
+- Fix a problem building on Windows
+- Fix various clippy warnings
+
 ## 0.9.0 2022-12-09
 
 - Incompatible change: previously operations which modified the
