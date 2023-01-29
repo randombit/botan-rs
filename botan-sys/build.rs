@@ -31,7 +31,7 @@ fn botan_library_name() -> String {
         // the major version in the name of the Windows library
         "botan".to_string()
     } else {
-        format!("botan-{}", major_version)
+        format!("botan-{major_version}")
     }
 }
 
