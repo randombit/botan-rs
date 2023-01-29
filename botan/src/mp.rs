@@ -220,7 +220,7 @@ impl MPI {
             1 => Ok(Ordering::Greater),
             r => Err(Error::with_message(
                 ErrorType::ConversionError,
-                format!("Unexpected botan_mp_cmp result {}", r),
+                format!("Unexpected botan_mp_cmp result {r}"),
             )),
         }
     }
@@ -408,7 +408,7 @@ impl fmt::Debug for MPI {
         let s = self.to_string().map_err(|_| fmt::Error)?;
 
         if cfg!(feature = "botan3") {
-            write!(formatter, "{}", s)
+            write!(formatter, "{s}")
         } else {
             let is_positive = self.is_positive().map_err(|_| fmt::Error)?;
             formatter.pad_integral(is_positive, "", &s)
@@ -418,7 +418,7 @@ impl fmt::Debug for MPI {
 
 impl fmt::Display for MPI {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        write!(formatter, "{:?}", self)
+        write!(formatter, "{self:?}")
     }
 }
 

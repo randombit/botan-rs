@@ -1,14 +1,14 @@
 #[test]
 fn wycheproof_aead_gcm_tests() -> Result<(), botan::Error> {
     wycheproof_aead_test(wycheproof::aead::TestName::AesGcm, |ks: usize| {
-        format!("AES-{}/GCM", ks)
+        format!("AES-{ks}/GCM")
     })
 }
 
 #[test]
 fn wycheproof_aead_eax_tests() -> Result<(), botan::Error> {
     wycheproof_aead_test(wycheproof::aead::TestName::AesEax, |ks: usize| {
-        format!("AES-{}/EAX", ks)
+        format!("AES-{ks}/EAX")
     })
 }
 

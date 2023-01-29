@@ -16,13 +16,13 @@ macro_rules! pathbuf_to_string {
 fn env_name_for(opt: &'static str) -> String {
     assert!(opt[0..2] == *"--");
     let to_var = opt[2..].to_uppercase().replace('-', "_");
-    format!("BOTAN_CONFIGURE_{}", to_var)
+    format!("BOTAN_CONFIGURE_{to_var}")
 }
 
 fn configure(build_dir: &str) {
     let mut configure = Command::new("python3");
     configure.arg("configure.py");
-    configure.arg(format!("--with-build-dir={}", build_dir));
+    configure.arg(format!("--with-build-dir={build_dir}"));
     configure.arg("--build-targets=static");
     configure.arg("--without-documentation");
     configure.arg("--no-install-python-module");
@@ -73,7 +73,7 @@ fn configure(build_dir: &str) {
     for arg_name in &args {
         let env_name = env_name_for(arg_name);
         if let Ok(arg_val) = env::var(env_name) {
-            let arg = format!("{}={}", arg_name, arg_val);
+            let arg = format!("{arg_name}={arg_val}");
             configure.arg(arg);
         }
     }
@@ -107,7 +107,7 @@ fn make(build_dir: &str) {
     }
     let status = cmd
         .arg("-f")
-        .arg(format!("{}/Makefile", build_dir))
+        .arg(format!("{build_dir}/Makefile"))
         .arg("libs")
         .spawn()
         .expect(BUILD_ERROR_MSG)
