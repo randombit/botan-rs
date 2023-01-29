@@ -64,6 +64,7 @@ jobs:
 
     steps:
       - run: sudo apt-get -qq install ccache libbotan-2-dev
+      - run: ccache --get-config cache_dir
       - uses: actions/checkout@v2
       - uses: actions/cache@v3
         with:
