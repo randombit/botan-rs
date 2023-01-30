@@ -17,7 +17,7 @@ jobs:
           profile: minimal
           components: rustfmt
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - run: cargo fmt -- --check
   clippy:
@@ -30,7 +30,7 @@ jobs:
           profile: minimal
           components: clippy
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - run: cargo +nightly clippy -- --deny warnings
   ci:
@@ -64,7 +64,7 @@ jobs:
 
     steps:
       - run: sudo apt-get -qq install ccache libbotan-2-dev
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
             path: |
@@ -99,7 +99,7 @@ jobs:
 
     steps:
       - run: brew install ccache botan
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
             path: |
