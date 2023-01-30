@@ -27,6 +27,8 @@ if [ "x$FEATURES" == "xbotan3" ]; then
     cd ..
 fi
 
+rustc --version
+
 if [ "x$FEATURES" = "x" ]; then
     cargo build
     cargo test

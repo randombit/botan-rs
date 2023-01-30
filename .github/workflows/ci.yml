@@ -11,10 +11,9 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
-          profile: minimal
           components: rustfmt
 
       - uses: actions/checkout@v3
@@ -24,10 +23,9 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
-          profile: minimal
           components: clippy
 
       - uses: actions/checkout@v3
@@ -42,25 +40,16 @@ jobs:
       matrix:
         include:
           - toolchain: stable
-            target: x86_64-unknown-linux-gnu
           - toolchain: stable
             features: no-std
-            target: x86_64-unknown-linux-gnu
           - toolchain: stable
             features: botan3
-            target: x86_64-unknown-linux-gnu
-            cache_id: botan3
           - toolchain: stable
             features: vendored
-            target: x86_64-unknown-linux-gnu
-            cache_id: vendored
           - toolchain: 1.64.0 # MSRV
-            target: x86_64-unknown-linux-gnu
           - toolchain: nightly
-            target: x86_64-unknown-linux-gnu
           - toolchain: nightly
             features: no-std
-            target: x86_64-unknown-linux-gnu
 
     steps:
       - run: sudo apt-get -qq install ccache libbotan-2-dev
@@ -70,12 +59,11 @@ jobs:
             path: |
               ~/.cache/ccache
               ~/.cargo
-            key: ${{ matrix.target }}-${{ matrix.toolchain }}-${{ matrix.cache_id }}-${{ github.run_id }}
+            key: ${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
             restore-keys: |
-               ${{ matrix.target }}-${{ matrix.toolchain }}-${{ matrix.cache_id }}
-      - uses: actions-rs/toolchain@v1
+               ${{ matrix.toolchain }}-${{ matrix.features }}
+      - uses: dtolnay/rust-toolchain@master
         with:
-          override: true
           target: ${{ matrix.target }}
           toolchain: ${{ matrix.toolchain }}
       - run: ./.ci/build.sh ${{ matrix.features }}
@@ -89,13 +77,9 @@ jobs:
       matrix:
         include:
           - toolchain: stable
-            target: x86_64-apple-darwin
           - toolchain: stable
             features: vendored
-            target: x86_64-apple-darwin
-            cache_id: vendored
           - toolchain: nightly
-            target: x86_64-apple-darwin
 
     steps:
       - run: brew install ccache botan
@@ -105,12 +89,10 @@ jobs:
             path: |
               /Users/runner/Library/Caches/ccache
               ~/.cargo
-            key: ${{ matrix.target }}-${{ matrix.toolchain }}-${{ matrix.cache_id }}-${{ github.run_id }}
+            key: ${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
             restore-keys: |
-               ${{ matrix.target }}-${{ matrix.toolchain }}-${{ matrix.cache_id }}
-      - uses: actions-rs/toolchain@v1
+               ${{ matrix.toolchain }}-${{ matrix.features }}
+      - uses: dtolnay/rust-toolchain@master
         with:
-          override: true
-          target: ${{ matrix.target }}
           toolchain: ${{ matrix.toolchain }}
       - run: ./.ci/build.sh ${{ matrix.features }}
