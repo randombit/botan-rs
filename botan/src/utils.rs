@@ -49,6 +49,43 @@ pub(crate) fn call_botan_ffi_returning_vec_u8(
     Ok(output)
 }
 
+#[cfg(feature = "botan3")]
+pub(crate) fn call_botan_ffi_returning_vec_u8_pair(
+    mut initial_size1: usize,
+    mut initial_size2: usize,
+    cb: &dyn Fn(*mut u8, *mut usize, *mut u8, *mut usize) -> c_int,
+) -> Result<(Vec<u8>, Vec<u8>)> {
+    let mut out1 = vec![0; initial_size1];
+    let mut out1_len = out1.len();
+    let mut out2 = vec![0; initial_size2];
+    let mut out2_len = out2.len();
+    let rc = cb(
+        out1.as_mut_ptr(),
+        &mut out1_len,
+        out2.as_mut_ptr(),
+        &mut out2_len,
+    );
+    match rc {
+        0 => {
+            assert!(out1_len <= out1.len());
+            assert!(out2_len <= out2.len());
+            out1.resize(out1_len, 0);
+            out2.resize(out2_len, 0);
+            Ok((out1, out2))
+        }
+        BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE => {
+            if out1_len > out1.len() {
+                initial_size1 = out1_len;
+            }
+            if out2_len > out2.len() {
+                initial_size2 = out2_len;
+            }
+            call_botan_ffi_returning_vec_u8_pair(initial_size1, initial_size2, cb)
+        }
+        _ => Err(Error::from_rc(rc)),
+    }
+}
+
 fn cstr_slice_to_str(raw_cstr: &[u8]) -> Result<String> {
     let cstr = CStr::from_bytes_with_nul(raw_cstr).map_err(Error::conversion_error)?;
     Ok(cstr.to_str().map_err(Error::conversion_error)?.to_owned())
