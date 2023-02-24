@@ -21,6 +21,9 @@ pub struct Signer {
     sig_len: usize,
 }
 
+unsafe impl Sync for Signer {}
+unsafe impl Send for Signer {}
+
 botan_impl_drop!(Signer, botan_pk_op_sign_destroy);
 
 impl Signer {
@@ -55,6 +58,9 @@ impl Signer {
 pub struct Decryptor {
     obj: botan_pk_op_decrypt_t,
 }
+
+unsafe impl Sync for Decryptor {}
+unsafe impl Send for Decryptor {}
 
 botan_impl_drop!(Decryptor, botan_pk_op_decrypt_destroy);
 
@@ -93,6 +99,9 @@ impl Decryptor {
 pub struct Verifier {
     obj: botan_pk_op_verify_t,
 }
+
+unsafe impl Sync for Verifier {}
+unsafe impl Send for Verifier {}
 
 botan_impl_drop!(Verifier, botan_pk_op_verify_destroy);
 
@@ -145,6 +154,9 @@ pub struct Encryptor {
     obj: botan_pk_op_encrypt_t,
 }
 
+unsafe impl Sync for Encryptor {}
+unsafe impl Send for Encryptor {}
+
 botan_impl_drop!(Encryptor, botan_pk_op_encrypt_destroy);
 
 impl Encryptor {
@@ -188,6 +200,9 @@ impl Encryptor {
 pub struct KeyAgreement {
     obj: botan_pk_op_ka_t,
 }
+
+unsafe impl Sync for KeyAgreement {}
+unsafe impl Send for KeyAgreement {}
 
 botan_impl_drop!(KeyAgreement, botan_pk_op_key_agreement_destroy);
 

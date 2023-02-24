@@ -84,7 +84,7 @@ fn test_hash() -> Result<(), botan::Error> {
 
 #[test]
 fn test_mac() -> Result<(), botan::Error> {
-    let mac = botan::MsgAuthCode::new("HMAC(SHA-384)")?;
+    let mut mac = botan::MsgAuthCode::new("HMAC(SHA-384)")?;
 
     let key_spec = mac.key_spec()?;
     assert_eq!(mac.output_length()?, 48);

@@ -18,6 +18,9 @@ pub struct MPI {
     obj: botan_mp_t,
 }
 
+unsafe impl Sync for MPI {}
+unsafe impl Send for MPI {}
+
 botan_impl_drop!(MPI, botan_mp_destroy);
 
 impl Clone for MPI {

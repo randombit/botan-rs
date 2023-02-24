@@ -27,6 +27,9 @@ pub struct FPE {
     obj: botan_fpe_t,
 }
 
+unsafe impl Sync for FPE {}
+unsafe impl Send for FPE {}
+
 botan_impl_drop!(FPE, botan_fpe_destroy);
 
 impl FPE {
