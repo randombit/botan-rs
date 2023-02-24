@@ -71,10 +71,10 @@ impl MsgAuthCode {
     /// Set the key for the authentication code object
     /// # Examples
     /// ```
-    /// let hmac = botan::MsgAuthCode::new("HMAC(SHA-256)").unwrap();
+    /// let mut hmac = botan::MsgAuthCode::new("HMAC(SHA-256)").unwrap();
     /// hmac.set_key(&vec![0; 16]).unwrap();
     /// ```
-    pub fn set_key(&self, key: &[u8]) -> Result<()> {
+    pub fn set_key(&mut self, key: &[u8]) -> Result<()> {
         botan_call!(botan_mac_set_key, self.obj, key.as_ptr(), key.len())
     }
 
@@ -82,13 +82,13 @@ impl MsgAuthCode {
     ///
     /// # Examples
     /// ```
-    /// let hmac = botan::MsgAuthCode::new("HMAC(SHA-256)").unwrap();
+    /// let mut hmac = botan::MsgAuthCode::new("HMAC(SHA-256)").unwrap();
     /// assert!(hmac.update(&[23]).is_err()); // key not set yet
     /// hmac.set_key(&vec![0; 16]).unwrap();
     /// hmac.update(&[1,2,3]).unwrap();
     /// hmac.update(&[4,5,6]).unwrap();
     /// ```
-    pub fn update(&self, data: &[u8]) -> Result<()> {
+    pub fn update(&mut self, data: &[u8]) -> Result<()> {
         botan_call!(botan_mac_update, self.obj, data.as_ptr(), data.len())
     }
 
@@ -97,14 +97,14 @@ impl MsgAuthCode {
     ///
     /// # Examples
     /// ```
-    /// let hmac = botan::MsgAuthCode::new("HMAC(SHA-256)").unwrap();
+    /// let mut hmac = botan::MsgAuthCode::new("HMAC(SHA-256)").unwrap();
     /// assert!(hmac.update(&[23]).is_err()); // key not set yet
     /// hmac.set_key(&vec![0; 16]).unwrap();
     /// hmac.update(&[1,2,3]).unwrap();
     /// hmac.update(&[4,5,6]).unwrap();
     /// let mac = hmac.finish().unwrap();
     /// ```
-    pub fn finish(&self) -> Result<Vec<u8>> {
+    pub fn finish(&mut self) -> Result<Vec<u8>> {
         let mut output = vec![0; self.output_length];
         botan_call!(botan_mac_final, self.obj, output.as_mut_ptr())?;
         Ok(output)
@@ -114,13 +114,13 @@ impl MsgAuthCode {
     ///
     /// # Examples
     /// ```
-    /// let hmac = botan::MsgAuthCode::new("HMAC(SHA-256)").unwrap();
+    /// let mut hmac = botan::MsgAuthCode::new("HMAC(SHA-256)").unwrap();
     /// hmac.set_key(&vec![0; 16]).unwrap();
     /// hmac.update(&[1,2,3]).unwrap();
     /// hmac.clear().unwrap();
     /// assert!(hmac.update(&[23]).is_err()); // key not set anymore
     /// ```
-    pub fn clear(&self) -> Result<()> {
+    pub fn clear(&mut self) -> Result<()> {
         botan_call!(botan_mac_clear, self.obj)
     }
 }
