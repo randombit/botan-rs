@@ -14,6 +14,9 @@ impl Clone for HashFunction {
     }
 }
 
+unsafe impl Sync for HashFunction {}
+unsafe impl Send for HashFunction {}
+
 botan_impl_drop!(HashFunction, botan_hash_destroy);
 
 impl HashFunction {

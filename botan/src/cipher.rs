@@ -14,6 +14,9 @@ pub struct Cipher {
     mod_keylen: usize,
 }
 
+unsafe impl Sync for Cipher {}
+unsafe impl Send for Cipher {}
+
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 /// Which direction the cipher processes in
 pub enum CipherDirection {

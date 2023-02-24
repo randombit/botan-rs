@@ -8,6 +8,9 @@ pub struct HOTP {
     obj: botan_hotp_t,
 }
 
+unsafe impl Sync for HOTP {}
+unsafe impl Send for HOTP {}
+
 botan_impl_drop!(HOTP, botan_hotp_destroy);
 
 /// Generate or check TOTP tokens
@@ -16,6 +19,9 @@ botan_impl_drop!(HOTP, botan_hotp_destroy);
 pub struct TOTP {
     obj: botan_totp_t,
 }
+
+unsafe impl Sync for TOTP {}
+unsafe impl Send for TOTP {}
 
 botan_impl_drop!(TOTP, botan_totp_destroy);
 

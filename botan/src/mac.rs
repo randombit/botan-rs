@@ -11,6 +11,9 @@ pub struct MsgAuthCode {
     mod_keylen: usize,
 }
 
+unsafe impl Sync for MsgAuthCode {}
+unsafe impl Send for MsgAuthCode {}
+
 botan_impl_drop!(MsgAuthCode, botan_mac_destroy);
 
 impl MsgAuthCode {

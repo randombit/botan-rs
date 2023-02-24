@@ -13,6 +13,9 @@ pub struct BlockCipher {
     mod_keylen: usize,
 }
 
+unsafe impl Sync for BlockCipher {}
+unsafe impl Send for BlockCipher {}
+
 botan_impl_drop!(BlockCipher, botan_block_cipher_destroy);
 
 impl BlockCipher {

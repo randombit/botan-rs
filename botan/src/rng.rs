@@ -7,6 +7,9 @@ pub struct RandomNumberGenerator {
     obj: botan_rng_t,
 }
 
+unsafe impl Sync for RandomNumberGenerator {}
+unsafe impl Send for RandomNumberGenerator {}
+
 botan_impl_drop!(RandomNumberGenerator, botan_rng_destroy);
 
 impl RandomNumberGenerator {

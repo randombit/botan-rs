@@ -9,6 +9,9 @@ pub struct Certificate {
     obj: botan_x509_cert_t,
 }
 
+unsafe impl Sync for Certificate {}
+unsafe impl Send for Certificate {}
+
 botan_impl_drop!(Certificate, botan_x509_cert_destroy);
 
 impl Clone for Certificate {

@@ -11,6 +11,9 @@ pub struct Pubkey {
     obj: botan_pubkey_t,
 }
 
+unsafe impl Sync for Pubkey {}
+unsafe impl Send for Pubkey {}
+
 botan_impl_drop!(Pubkey, botan_pubkey_destroy);
 
 #[derive(Debug)]
@@ -18,6 +21,9 @@ botan_impl_drop!(Pubkey, botan_pubkey_destroy);
 pub struct Privkey {
     obj: botan_privkey_t,
 }
+
+unsafe impl Sync for Privkey {}
+unsafe impl Send for Privkey {}
 
 botan_impl_drop!(Privkey, botan_privkey_destroy);
 
