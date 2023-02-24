@@ -1,4 +1,11 @@
 
+## 0.9.2 2023-02-24
+
+- impl Send/Sync for the various types like ``BlockCipher``
+- Fix ``MsgAuthCode`` to use ``&mut self`` for internally mutating
+  operations; this was missed when the rest of the types were so
+  modified in 0.9.0
+
 ## 0.9.1 2023-01-29
 
 - Fix a problem building on Windows
