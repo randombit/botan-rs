@@ -1,4 +1,9 @@
 
+## 0.9.3 Not Yet Released
+
+- Add support for the zfec forward error correction API now
+  available in Botan 3
+
 ## 0.9.2 2023-02-24
 
 - impl Send/Sync for the various types like ``BlockCipher``
