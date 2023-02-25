@@ -913,3 +913,28 @@ fn test_totp() -> Result<(), botan::Error> {
     assert!(!totp.check(90693936, 59 + 31, 1)?);
     Ok(())
 }
+
+#[cfg(feature = "botan3")]
+#[test]
+fn test_zfec() -> Result<(), botan::Error> {
+    let k = 2;
+    let n = 3;
+    let input_bytes = b"abcdefghijklmnop";
+    let output_shares = botan::zfec_encode(k, n, input_bytes)?;
+
+    assert_eq!(output_shares.len(), n);
+    assert_eq!(output_shares[0], b"abcdefgh");
+    assert_eq!(output_shares[1], b"ijklmnop");
+    assert_eq!(output_shares[2], b"qrstuvwX");
+
+    let mut shares_for_decoding = Vec::new();
+    shares_for_decoding.push((2, output_shares[2].as_ref()));
+    shares_for_decoding.push((0, output_shares[0].as_ref()));
+    let share_size = output_shares[0].len();
+
+    let recovered = botan::zfec_decode(k, n, &shares_for_decoding, share_size)?;
+
+    assert_eq!(recovered, input_bytes);
+
+    Ok(())
+}

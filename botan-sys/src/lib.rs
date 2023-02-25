@@ -18,6 +18,7 @@ mod rng;
 mod utils;
 mod version;
 mod x509;
+mod zfec;
 
 pub use block::*;
 pub use cipher::*;
@@ -36,3 +37,4 @@ pub use rng::*;
 pub use utils::*;
 pub use version::*;
 pub use x509::*;
+pub use zfec::*;
