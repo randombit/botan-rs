@@ -99,6 +99,18 @@ impl Privkey {
         Ok(Privkey { obj })
     }
 
+    /// Load an DSA private key (p,q,g,x)
+    pub fn load_dsa(p: &MPI, q: &MPI, g: &MPI, x: &MPI) -> Result<Privkey> {
+        let obj = botan_init!(
+            botan_privkey_load_dsa,
+            p.handle(),
+            q.handle(),
+            g.handle(),
+            x.handle()
+        )?;
+        Ok(Privkey { obj })
+    }
+
     /// Load an ECDSA private key with specified curve and secret scalar
     pub fn load_ecdsa(s: &MPI, curve_name: &str) -> Result<Privkey> {
         let curve_name = make_cstr(curve_name)?;
@@ -410,6 +422,18 @@ impl Pubkey {
     /// Load an DH public key (p,g,y)
     pub fn load_dh(p: &MPI, g: &MPI, y: &MPI) -> Result<Pubkey> {
         let obj = botan_init!(botan_pubkey_load_dh, p.handle(), g.handle(), y.handle())?;
+        Ok(Pubkey { obj })
+    }
+
+    /// Load an DSA public key (p,q,g,y)
+    pub fn load_dsa(p: &MPI, q: &MPI, g: &MPI, y: &MPI) -> Result<Pubkey> {
+        let obj = botan_init!(
+            botan_pubkey_load_dsa,
+            p.handle(),
+            q.handle(),
+            g.handle(),
+            y.handle()
+        )?;
         Ok(Pubkey { obj })
     }
 
