@@ -118,6 +118,18 @@ impl Verifier {
         Ok(Verifier { obj })
     }
 
+    /// Create a new verifier object
+    pub fn new_with_der_formatted_signatures(key: &Pubkey, padding: &str) -> Result<Verifier> {
+        let padding = make_cstr(padding)?;
+        let obj = botan_init!(
+            botan_pk_op_verify_create,
+            key.handle(),
+            padding.as_ptr(),
+            1u32
+        )?;
+        Ok(Verifier { obj })
+    }
+
     /// Add more bytes of the message that will be verified
     pub fn update(&mut self, data: &[u8]) -> Result<()> {
         botan_call!(
