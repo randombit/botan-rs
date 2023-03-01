@@ -111,6 +111,17 @@ impl Privkey {
         Ok(Privkey { obj })
     }
 
+    /// Load an ElGamal private key (p,g,x)
+    pub fn load_elgamal(p: &MPI, g: &MPI, x: &MPI) -> Result<Privkey> {
+        let obj = botan_init!(
+            botan_privkey_load_elgamal,
+            p.handle(),
+            g.handle(),
+            x.handle()
+        )?;
+        Ok(Privkey { obj })
+    }
+
     /// Load an ECDSA private key with specified curve and secret scalar
     pub fn load_ecdsa(s: &MPI, curve_name: &str) -> Result<Privkey> {
         let curve_name = make_cstr(curve_name)?;
@@ -431,6 +442,17 @@ impl Pubkey {
             botan_pubkey_load_dsa,
             p.handle(),
             q.handle(),
+            g.handle(),
+            y.handle()
+        )?;
+        Ok(Pubkey { obj })
+    }
+
+    /// Load an ElGamal public key (p,g,y)
+    pub fn load_elgamal(p: &MPI, g: &MPI, y: &MPI) -> Result<Pubkey> {
+        let obj = botan_init!(
+            botan_pubkey_load_elgamal,
+            p.handle(),
             g.handle(),
             y.handle()
         )?;

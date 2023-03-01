@@ -6,6 +6,8 @@
 - Add more Wycheproof tests
 - Add support for loading DSA public and private keys using
   ``Pubkey::load_dsa`` and ``Privkey::load_dsa``
+- Add support for loading ElGamal public and private keys using
+  ``Pubkey::load_elgamal`` and ``Privkey::load_elgamal``
 
 ## 0.9.2 2023-02-24
 
