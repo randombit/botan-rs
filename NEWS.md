@@ -8,6 +8,9 @@
   ``Pubkey::load_dsa`` and ``Privkey::load_dsa``
 - Add support for loading ElGamal public and private keys using
   ``Pubkey::load_elgamal`` and ``Privkey::load_elgamal``
+- Add an interface to ``Cipher`` that avoids a heap allocation during
+  encryption and decryption: ``Cipher::update_into`` and
+  ``Cipher::finalize_into``
 
 ## 0.9.2 2023-02-24
 

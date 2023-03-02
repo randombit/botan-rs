@@ -221,6 +221,20 @@ fn test_incremental_cipher() -> Result<(), botan::Error> {
     assert_eq!(botan::hex_encode(&enc_out)?,
                "38C21B6430D9A3E4BC6749405765653AE91051E96CE0D076141DD7B515EC150FDB8A65EE988D206C9F64874664CDBF61257FFAE521B9A5EB5B35E3745F4232025B269A6CD7DCFE19153ECF7341CE2C6A6A87F95F2109841350DA3D24EEED4E4E32D2BED880737670FFE8ED76DB890FD72A0076300E50914984A777C9F2BC843977396C602B24E7A045F04D15CD2EAC01AD8808064CFE5A2DC1AE9FFFA4BF0A6F0C07668097DEEB9C5CA5EC1F9A52F96A403B73FEA2DBBF44473D355553EE7FB1B4D6630777DAF67804BE213089B9F78652CE970C582FD813F87FF0ECBACCE1CA46247E20D09F3E0B4EF6BFCD13244C6877F25E6646252CAD6EB7DBBA3476AAAC83BC3285FF70B50D6CDEDC8E5921944A");
 
+    // Try the same with the allocation-free interface.
+    cipher.set_key(&key)?;
+    cipher.start(&nonce)?;
+    let mut enc_out_prealloc = vec![0; input.len() + cipher.tag_length()];
+    let mut written = 0;
+    for (cnt, v) in input.chunks(cipher.update_granularity()).enumerate() {
+        if (cnt + 1) < chunks {
+            written += cipher.update_into(v, &mut enc_out_prealloc[written..])?
+        } else {
+            written += cipher.finish_into(v, &mut enc_out_prealloc[written..])?
+        }
+    }
+    assert_eq!(enc_out, enc_out_prealloc);
+
     // decode
     let mut cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Decrypt)?;
     cipher.set_key(&key)?;
@@ -249,6 +263,21 @@ fn test_incremental_cipher() -> Result<(), botan::Error> {
     dec_out.append(&mut res);
     assert_eq!(botan::hex_encode(&dec_out)?,
                "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
+
+    // Try the same with the allocation-free interface.
+    cipher.set_key(&key)?;
+    cipher.start(&nonce)?;
+    let mut dec_out_prealloc = vec![0; output.len() - cipher.tag_length()];
+    let mut written = 0;
+    for (cnt, v) in output.chunks(chunk_size).enumerate() {
+        if (cnt + 1) < chunks {
+            written += cipher.update_into(v, &mut dec_out_prealloc[written..])?
+        } else {
+            written += cipher.finish_into(v, &mut dec_out_prealloc[written..])?
+        }
+    }
+    assert_eq!(dec_out, dec_out_prealloc);
+
     Ok(())
 }
 
