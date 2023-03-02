@@ -216,7 +216,6 @@ impl Cipher {
         botan_call!(botan_cipher_start, self.obj, nonce.as_ptr(), nonce.len())
     }
 
-    /// Encrypt or decrypt a message with the provided nonce. The key must
     /// incremental update
     fn _update(&mut self, msg: &[u8], end: bool) -> Result<Vec<u8>> {
         let flags = u32::from(end);
