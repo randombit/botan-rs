@@ -3,6 +3,7 @@
 
 - Add support for the zfec forward error correction API now
   available in Botan 3
+- Add more Wycheproof tests
 
 ## 0.9.2 2023-02-24
 
