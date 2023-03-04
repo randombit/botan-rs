@@ -731,20 +731,41 @@ fn test_pubkey_key_agreement() -> Result<(), botan::Error> {
 }
 
 #[test]
-fn test_aes_key_wrap() -> Result<(), botan::Error> {
+fn test_rfc3394_aes_key_wrap() -> Result<(), botan::Error> {
     let kek =
         botan::hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F")?;
     let key =
         botan::hex_decode("00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F")?;
 
-    let wrapped = botan::nist_key_wrap(&kek, &key)?;
+    let wrapped = botan::rfc3394_key_wrap(&kek, &key)?;
 
     assert_eq!(
         botan::hex_encode(&wrapped)?,
         "28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21"
     );
 
-    let unwrapped = botan::nist_key_unwrap(&kek, &wrapped)?;
+    let unwrapped = botan::rfc3394_key_unwrap(&kek, &wrapped)?;
+
+    assert_eq!(unwrapped, key);
+    Ok(())
+}
+
+#[cfg(feature = "botan3")]
+#[test]
+fn test_aes_key_wrap() -> Result<(), botan::Error> {
+    let kek =
+        botan::hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F")?;
+    let key =
+        botan::hex_decode("00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F")?;
+
+    let wrapped = botan::nist_kw_enc("AES-256", false, &kek, &key)?;
+
+    assert_eq!(
+        botan::hex_encode(&wrapped)?,
+        "28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21"
+    );
+
+    let unwrapped = botan::nist_kw_dec("AES-256", false, &kek, &wrapped)?;
 
     assert_eq!(unwrapped, key);
     Ok(())
