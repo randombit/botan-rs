@@ -179,7 +179,8 @@ impl Cipher {
     /// aes_gcm.set_key(&vec![0; 16]).unwrap();
     /// let nonce = vec![0; aes_gcm.default_nonce_length()];
     /// let msg = vec![0; 48];
-    /// let ctext = aes_gcm.process(&nonce, &msg);
+    /// let ctext = aes_gcm.process(&nonce, &msg).unwrap();
+    /// assert_eq!(ctext.len(), msg.len() + aes_gcm.tag_length());
     /// ```
     pub fn process(&mut self, nonce: &[u8], msg: &[u8]) -> Result<Vec<u8>> {
         botan_call!(botan_cipher_start, self.obj, nonce.as_ptr(), nonce.len())?;
@@ -212,6 +213,17 @@ impl Cipher {
     }
 
     /// start processing a message
+    ///
+    /// # Examples
+    /// ```
+    /// let mut aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// aes_gcm.set_key(&vec![0; 16]).unwrap();
+    /// let nonce = vec![0; aes_gcm.default_nonce_length()];
+    /// let msg = vec![0; 48];
+    /// aes_gcm.start(&nonce).unwrap();
+    /// let ctext = aes_gcm.finish(&msg).unwrap();
+    /// assert_eq!(ctext.len(), msg.len() + aes_gcm.tag_length());
+    /// ```
     pub fn start(&mut self, nonce: &[u8]) -> Result<()> {
         botan_call!(botan_cipher_start, self.obj, nonce.as_ptr(), nonce.len())
     }
@@ -235,7 +247,7 @@ impl Cipher {
             &mut input_consumed
         )?;
 
-        assert!(input_consumed == msg.len());
+        assert_eq!(input_consumed, msg.len());
         assert!(output_written <= output.len());
 
         output.resize(output_written, 0);
@@ -244,11 +256,35 @@ impl Cipher {
     }
 
     /// incremental update
+    ///
+    /// # Examples
+    /// ```
+    /// let mut aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// aes_gcm.set_key(&vec![0; 16]).unwrap();
+    /// let nonce = vec![0; aes_gcm.default_nonce_length()];
+    /// let msg = vec![0; 96];
+    /// aes_gcm.start(&nonce).unwrap();
+    /// let mut ctext = vec![];
+    /// ctext.extend_from_slice(&aes_gcm.update(&msg[..64]).unwrap());
+    /// ctext.extend_from_slice(&aes_gcm.finish(&msg[64..]).unwrap());
+    /// assert_eq!(ctext.len(), msg.len() + aes_gcm.tag_length());
+    /// ```
     pub fn update(&mut self, msg: &[u8]) -> Result<Vec<u8>> {
         self._update(msg, false)
     }
 
     /// finish function
+    ///
+    /// # Examples
+    /// ```
+    /// let mut aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// aes_gcm.set_key(&vec![0; 16]).unwrap();
+    /// let nonce = vec![0; aes_gcm.default_nonce_length()];
+    /// let msg = vec![0; 48];
+    /// aes_gcm.start(&nonce).unwrap();
+    /// let ctext = aes_gcm.finish(&msg).unwrap();
+    /// assert_eq!(ctext.len(), msg.len() + aes_gcm.tag_length());
+    /// ```
     pub fn finish(&mut self, msg: &[u8]) -> Result<Vec<u8>> {
         self._update(msg, true)
     }
