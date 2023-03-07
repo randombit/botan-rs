@@ -16,7 +16,7 @@ edition = "2021"
 botan-sys = { version = "0.9.1", path = "../botan-sys" }
 
 [dev-dependencies]
-wycheproof = "0.4"
+wycheproof = "0.5"
 hex = "0.4"
 
 [features]
