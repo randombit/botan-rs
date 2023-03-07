@@ -1,5 +1,5 @@
 
-## 0.9.3 Not Yet Released
+## 0.10.0 Not Yet Released
 
 - Add support for the zfec forward error correction API now
   available in Botan 3
