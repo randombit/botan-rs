@@ -179,7 +179,8 @@ impl Cipher {
     /// aes_gcm.set_key(&vec![0; 16]).unwrap();
     /// let nonce = vec![0; aes_gcm.default_nonce_length()];
     /// let msg = vec![0; 48];
-    /// let ctext = aes_gcm.process(&nonce, &msg);
+    /// let ctext = aes_gcm.process(&nonce, &msg).unwrap();
+    /// assert_eq!(ctext.len(), msg.len() + aes_gcm.tag_length());
     /// ```
     pub fn process(&mut self, nonce: &[u8], msg: &[u8]) -> Result<Vec<u8>> {
         botan_call!(botan_cipher_start, self.obj, nonce.as_ptr(), nonce.len())?;
@@ -212,15 +213,51 @@ impl Cipher {
     }
 
     /// start processing a message
+    ///
+    /// # Examples
+    /// ```
+    /// let mut aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// aes_gcm.set_key(&vec![0; 16]).unwrap();
+    /// let nonce = vec![0; aes_gcm.default_nonce_length()];
+    /// let msg = vec![0; 48];
+    /// aes_gcm.start(&nonce).unwrap();
+    /// let ctext = aes_gcm.finish(&msg).unwrap();
+    /// assert_eq!(ctext.len(), msg.len() + aes_gcm.tag_length());
+    /// ```
     pub fn start(&mut self, nonce: &[u8]) -> Result<()> {
         botan_call!(botan_cipher_start, self.obj, nonce.as_ptr(), nonce.len())
     }
 
-    /// Encrypt or decrypt a message with the provided nonce. The key must
     /// incremental update
     fn _update(&mut self, msg: &[u8], end: bool) -> Result<Vec<u8>> {
-        let flags = u32::from(end);
         let mut output = vec![0; msg.len() + if end { self.tag_length() } else { 0 }];
+        let output_written = self._update_into(msg, end, &mut output)?;
+        output.resize(output_written, 0);
+        Ok(output)
+    }
+
+    /// incremental update, writing to provided buffer
+    ///
+    /// Returns the number of bytes written to `output`.
+    fn _update_into(&mut self, msg: &[u8], end: bool, output: &mut [u8]) -> Result<usize> {
+        let expected_len = match (self.direction, end) {
+            (CipherDirection::Encrypt, false) | (CipherDirection::Decrypt, false) => msg.len(),
+            (CipherDirection::Encrypt, true) => msg.len() + self.tag_length(),
+            (CipherDirection::Decrypt, true) => msg.len().saturating_sub(self.tag_length()),
+        };
+
+        if output.len() < expected_len {
+            return Err(Error::with_message(
+                ErrorType::BadParameter,
+                format!(
+                    "Provided output buffer has length {}, but expected at least {}",
+                    output.len(),
+                    expected_len
+                ),
+            ));
+        }
+
+        let flags = u32::from(end);
         let mut output_written = 0;
         let mut input_consumed = 0;
 
@@ -236,22 +273,88 @@ impl Cipher {
             &mut input_consumed
         )?;
 
-        assert!(input_consumed == msg.len());
+        assert_eq!(input_consumed, msg.len());
         assert!(output_written <= output.len());
 
-        output.resize(output_written, 0);
-
-        Ok(output)
+        Ok(output_written)
     }
 
     /// incremental update
+    ///
+    /// # Examples
+    /// ```
+    /// let mut aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// aes_gcm.set_key(&vec![0; 16]).unwrap();
+    /// let nonce = vec![0; aes_gcm.default_nonce_length()];
+    /// let msg = vec![0; 96];
+    /// aes_gcm.start(&nonce).unwrap();
+    /// let mut ctext = vec![];
+    /// ctext.extend_from_slice(&aes_gcm.update(&msg[..64]).unwrap());
+    /// ctext.extend_from_slice(&aes_gcm.finish(&msg[64..]).unwrap());
+    /// assert_eq!(ctext.len(), msg.len() + aes_gcm.tag_length());
+    /// ```
     pub fn update(&mut self, msg: &[u8]) -> Result<Vec<u8>> {
         self._update(msg, false)
     }
 
+    /// incremental update writing into the given buffer
+    ///
+    /// The length of `output` has to be at least `msg.len()`.
+    /// Returns the number of bytes written to `output`.
+    ///
+    /// # Examples
+    /// ```
+    /// let mut aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// aes_gcm.set_key(&vec![0; 16]).unwrap();
+    /// let nonce = vec![0; aes_gcm.default_nonce_length()];
+    /// let msg = vec![0; 96];
+    /// aes_gcm.start(&nonce).unwrap();
+    /// let mut ctext = vec![0; msg.len() + aes_gcm.tag_length()];
+    /// let mut written = 0;
+    /// written += aes_gcm.update_into(&msg[..64], &mut ctext[written..]).unwrap();
+    /// written += aes_gcm.finish_into(&msg[64..], &mut ctext[written..]).unwrap();
+    /// assert_eq!(written, msg.len() + aes_gcm.tag_length());
+    /// ```
+    pub fn update_into(&mut self, msg: &[u8], output: &mut [u8]) -> Result<usize> {
+        self._update_into(msg, false, output)
+    }
+
     /// finish function
+    ///
+    /// # Examples
+    /// ```
+    /// let mut aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// aes_gcm.set_key(&vec![0; 16]).unwrap();
+    /// let nonce = vec![0; aes_gcm.default_nonce_length()];
+    /// let msg = vec![0; 48];
+    /// aes_gcm.start(&nonce).unwrap();
+    /// let ctext = aes_gcm.finish(&msg).unwrap();
+    /// assert_eq!(ctext.len(), msg.len() + aes_gcm.tag_length());
+    /// ```
     pub fn finish(&mut self, msg: &[u8]) -> Result<Vec<u8>> {
         self._update(msg, true)
+    }
+
+    /// finish function writing into the given buffer
+    ///
+    /// The length of `output` has to be at least `msg.len() -
+    /// self.tag_length()` for decryption, and `msg.len() +
+    /// self.tag_length()` for encryption.  Returns the number of
+    /// bytes written to `output`.
+    ///
+    /// # Examples
+    /// ```
+    /// let mut aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
+    /// aes_gcm.set_key(&vec![0; 16]).unwrap();
+    /// let nonce = vec![0; aes_gcm.default_nonce_length()];
+    /// let msg = vec![0; 96];
+    /// aes_gcm.start(&nonce).unwrap();
+    /// let mut ctext = vec![0; msg.len() + aes_gcm.tag_length()];
+    /// let written = aes_gcm.finish_into(&msg, &mut ctext[..]).unwrap();
+    /// assert_eq!(written, msg.len() + aes_gcm.tag_length());
+    /// ```
+    pub fn finish_into(&mut self, msg: &[u8], output: &mut [u8]) -> Result<usize> {
+        self._update_into(msg, true, output)
     }
 
     /// Clear all state associated with the key
