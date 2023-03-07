@@ -1,7 +1,7 @@
-use core::ffi::c_int;
+use crate::ffi_types::c_int;
 
 #[cfg(feature = "botan3")]
-use core::ffi::c_char;
+use crate::ffi_types::c_char;
 
 extern "C" {
 

@@ -7,10 +7,13 @@ pub(crate) use alloc::{borrow::ToOwned, string::String, string::ToString, vec::V
 #[cfg(feature = "no-std")]
 pub(crate) use alloc::ffi::CString;
 
-#[cfg(not(feature = "no-std"))]
-pub(crate) use std::ffi::CString;
+#[cfg(feature = "no-std")]
+pub(crate) use core::ffi::CStr;
 
-pub(crate) use core::ffi::{c_char, c_int, c_void, CStr};
+#[cfg(not(feature = "no-std"))]
+pub(crate) use std::ffi::{CStr, CString};
+
+pub(crate) use botan_sys::ffi_types::{c_char, c_int, c_void};
 pub(crate) use core::mem;
 pub(crate) use core::ptr;
 

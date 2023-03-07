@@ -1,4 +1,4 @@
-use core::ffi::c_int;
+use crate::ffi_types::c_int;
 
 use crate::mp::botan_mp_t;
 

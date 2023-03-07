@@ -1,4 +1,4 @@
-use core::ffi::{c_char, c_int};
+use crate::ffi_types::{c_char, c_int};
 
 #[allow(clippy::upper_case_acronyms)]
 

@@ -1,4 +1,4 @@
-use core::ffi::{c_char, c_int, c_uint};
+use crate::ffi_types::{c_char, c_int, c_uint};
 
 use crate::pubkey::{botan_privkey_t, botan_pubkey_t};
 use crate::rng::botan_rng_t;
