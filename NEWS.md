@@ -1,5 +1,5 @@
 
-## 0.10.0 Not Yet Released
+## 0.10.0 2023-03-07
 
 - Add support for new Botan 3 APIs including zfec forward error correction,
   NIST keywrap with padding, and support for MACs with nonces
