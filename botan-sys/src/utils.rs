@@ -1,4 +1,4 @@
-use core::ffi::{c_char, c_int, c_void};
+use crate::ffi_types::{c_char, c_int, c_void};
 
 extern "C" {
 

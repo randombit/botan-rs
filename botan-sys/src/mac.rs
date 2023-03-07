@@ -1,4 +1,4 @@
-use core::ffi::{c_char, c_int};
+use crate::ffi_types::{c_char, c_int};
 
 pub enum botan_mac_struct {}
 pub type botan_mac_t = *mut botan_mac_struct;
