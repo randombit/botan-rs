@@ -36,6 +36,10 @@ fn botan_library_name() -> String {
 }
 
 fn main() {
+    if cfg!(feature = "vendored") && cfg!(feature = "botan3") {
+        panic!("The current vendored library does not support botan3 APIs");
+    }
+
     #[cfg(feature = "vendored")]
     {
         let (lib_dir, _) = botan_src::build();
