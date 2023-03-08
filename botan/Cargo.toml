@@ -11,6 +11,7 @@ keywords = [ "crypto" ]
 readme = "../README.md"
 categories = [ "cryptography", "api-bindings", "no-std" ]
 edition = "2021"
+rust-version = "1.58"
 
 [dependencies]
 botan-sys = { version = "0.10.0", path = "../botan-sys" }

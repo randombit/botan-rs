@@ -25,7 +25,7 @@ pub mod ffi_types {
     pub use core::ffi::{c_char, c_int, c_uint, c_void};
 
     #[cfg(not(feature = "no-std"))]
-    pub use std::ffi::{c_char, c_int, c_uint, c_void};
+    pub use std::os::raw::{c_char, c_int, c_uint, c_void};
 }
 
 pub use block::*;
