@@ -1,6 +1,6 @@
 [package]
 name = "botan"
-version = "0.10.0"
+version = "0.10.1"
 authors = ["Jack Lloyd <jack@randombit.net>"]
 description = "Rust wrapper for Botan cryptography library"
 license = "MIT"
@@ -14,7 +14,7 @@ edition = "2021"
 rust-version = "1.58"
 
 [dependencies]
-botan-sys = { version = "0.10.0", path = "../botan-sys" }
+botan-sys = { version = "0.10.1", path = "../botan-sys" }
 
 [dev-dependencies]
 wycheproof = "0.5"

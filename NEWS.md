@@ -1,5 +1,5 @@
 
-## 0.10.1 Not Yet Released
+## 0.10.1 2023-03-08
 
 - The MSRV for std builds has been reduced to Rust 1.58. The MSRV for
   no-std builds remains Rust 1.64
