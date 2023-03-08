@@ -129,7 +129,7 @@ impl MPI {
     pub fn to_string(&self) -> Result<String> {
         let bit_count = self.bit_count()? as f64;
         let log_base = core::f64::consts::LOG2_10;
-        let bn_digits = 1 + (bit_count / log_base) as usize;
+        let bn_digits = 2 + (bit_count / log_base) as usize;
 
         call_botan_ffi_returning_string(bn_digits, &|out_buf, out_len| unsafe {
             botan_mp_to_str(self.obj, 10, out_buf as *mut c_char, out_len)

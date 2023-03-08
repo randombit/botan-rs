@@ -212,8 +212,7 @@ impl Privkey {
 
     /// Return the name of the algorithm
     pub fn algo_name(&self) -> Result<String> {
-        let name_len = 32;
-        call_botan_ffi_returning_string(name_len, &|out_buf, out_len| unsafe {
+        call_botan_ffi_returning_string(32, &|out_buf, out_len| unsafe {
             botan_privkey_algo_name(self.obj, out_buf as *mut c_char, out_len)
         })
     }
@@ -541,8 +540,7 @@ impl Pubkey {
 
     /// Return the name of the algorithm
     pub fn algo_name(&self) -> Result<String> {
-        let name_len = 32;
-        call_botan_ffi_returning_string(name_len, &|out_buf, out_len| unsafe {
+        call_botan_ffi_returning_string(32, &|out_buf, out_len| unsafe {
             botan_pubkey_algo_name(self.obj, out_buf as *mut c_char, out_len)
         })
     }
