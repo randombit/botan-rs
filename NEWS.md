@@ -1,4 +1,9 @@
 
+## 0.10.1 Not Yet Released
+
+- The MSRV for std builds has been reduced to Rust 1.58. The MSRV for
+  no-std builds remains Rust 1.64
+
 ## 0.10.0 2023-03-07
 
 - Add support for new Botan 3 APIs including zfec forward error correction,

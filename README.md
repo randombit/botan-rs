@@ -6,11 +6,11 @@
 
 This crate wraps the C API exposed by the [Botan](https://botan.randombit.net/)
 cryptography library. The current version requires Botan 2.8.0 or higher
-and Rust 1.64.0 or higher.
+and Rust 1.58.0 or higher.
 
 The following features are supported:
 
-* `no-std`: Enable a no-std build (`alloc` support is required)
+* `no-std`: Enable a no-std build. This requires Rust 1.64.0 or higher.
 * `vendored`: Build a copy of the C++ library directly, without
   relying on a system installed version.
 * `botan3`: Link against (the currently unreleased) Botan 3.x rather
