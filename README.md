@@ -10,7 +10,8 @@ and Rust 1.58.0 or higher.
 
 The following features are supported:
 
-* `no-std`: Enable a no-std build. This requires Rust 1.64.0 or higher.
+* `no-std`: Enable a no-std build. This requires Rust 1.64.0 or higher,
+  as well as `alloc` support
 * `vendored`: Build a copy of the C++ library directly, without
   relying on a system installed version.
 * `botan3`: Link against (the currently unreleased) Botan 3.x rather
