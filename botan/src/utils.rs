@@ -52,6 +52,90 @@ pub(crate) fn call_botan_ffi_returning_vec_u8(
     Ok(output)
 }
 
+#[cfg(feature = "botan3")]
+pub(crate) mod view {
+    use super::*;
+
+    type FfiViewBinaryFn = extern "C" fn(*mut c_void, *const u8, usize) -> c_int;
+
+    extern "C" fn botan_ffi_view_u8_fn(ctx: *mut c_void, buf: *const u8, len: usize) -> c_int {
+        if ctx == std::ptr::null_mut() || buf == std::ptr::null_mut() {
+            return BOTAN_FFI_ERROR_NULL_POINTER;
+        }
+
+        let vec = ctx as *mut Vec<u8>;
+
+        unsafe {
+            let data = std::slice::from_raw_parts(buf, len);
+            (*vec).clear();
+            (*vec).extend_from_slice(&data);
+        }
+
+        0
+    }
+
+    pub(crate) fn call_botan_ffi_viewing_vec_u8(
+        cb: &dyn Fn(*mut c_void, FfiViewBinaryFn) -> c_int,
+    ) -> Result<Vec<u8>> {
+        let mut view_ctx: Vec<u8> = vec![];
+        let rc = cb(
+            &mut view_ctx as *mut Vec<u8> as *mut _,
+            botan_ffi_view_u8_fn,
+        );
+        if rc != 0 {
+            return Err(Error::from_rc(rc));
+        }
+
+        Ok(view_ctx)
+    }
+
+    type FfiViewStrFn = extern "C" fn(*mut c_void, *const c_char, usize) -> c_int;
+
+    extern "C" fn botan_ffi_view_str_fn(ctx: *mut c_void, buf: *const c_char, len: usize) -> c_int {
+        if ctx == std::ptr::null_mut() || buf == std::ptr::null_mut() {
+            return BOTAN_FFI_ERROR_NULL_POINTER;
+        }
+
+        if len == 0 {
+            return BOTAN_FFI_ERROR_STRING_CONVERSION_ERROR;
+        }
+
+        let str = ctx as *mut String;
+
+        let data = unsafe { std::slice::from_raw_parts(buf as *const u8, len - 1) };
+
+        let mut vec = Vec::new();
+        vec.extend_from_slice(&data);
+        match String::from_utf8(vec) {
+            Ok(decoded) => {
+                unsafe {
+                    *str = decoded;
+                }
+                0
+            }
+            Err(_) => BOTAN_FFI_ERROR_STRING_CONVERSION_ERROR,
+        }
+    }
+
+    pub(crate) fn call_botan_ffi_viewing_str_fn(
+        cb: &dyn Fn(*mut c_void, FfiViewStrFn) -> c_int,
+    ) -> Result<String> {
+        let mut view_ctx = String::new();
+        let rc = cb(
+            &mut view_ctx as *mut String as *mut _,
+            botan_ffi_view_str_fn,
+        );
+        if rc != 0 {
+            return Err(Error::from_rc(rc));
+        }
+
+        Ok(view_ctx)
+    }
+}
+
+#[cfg(feature = "botan3")]
+pub(crate) use crate::view::*;
+
 fn cstr_slice_to_str(raw_cstr: &[u8]) -> Result<String> {
     let cstr = CStr::from_bytes_with_nul(raw_cstr).map_err(Error::conversion_error)?;
     Ok(cstr.to_str().map_err(Error::conversion_error)?.to_owned())
@@ -158,6 +242,8 @@ pub enum ErrorType {
     ExceptionThrown,
     /// There was insufficient buffer space to write the output
     InsufficientBufferSpace,
+    /// Converting a string to UTF8 failed
+    StringConversionError,
     /// An internal error occurred (this is a bug in the library)
     InternalError,
     /// Something about the input was invalid
@@ -197,6 +283,7 @@ impl fmt::Display for ErrorType {
             Self::BadFlag => "A bad flag was passed to the library",
             Self::BadParameter => "An invalid parameter was provided to the library",
             Self::ExceptionThrown => "An exception was thrown while processing this request",
+            Self::StringConversionError => "Error converting a string into UTF-8",
             Self::InsufficientBufferSpace => {
                 "There was insufficient buffer space to write the output"
             }
@@ -237,6 +324,7 @@ impl From<i32> for ErrorType {
             BOTAN_FFI_ERROR_EXCEPTION_THROWN => Self::ExceptionThrown,
             BOTAN_FFI_ERROR_HTTP_ERROR => Self::HttpError,
             BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE => Self::InsufficientBufferSpace,
+            BOTAN_FFI_ERROR_STRING_CONVERSION_ERROR => Self::StringConversionError,
             BOTAN_FFI_ERROR_INTERNAL_ERROR => Self::InternalError,
             BOTAN_FFI_ERROR_INVALID_INPUT => Self::InvalidInput,
             BOTAN_FFI_ERROR_INVALID_KEY_LENGTH => Self::InvalidKeyLength,

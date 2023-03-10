@@ -1,4 +1,4 @@
-use crate::ffi_types::{c_char, c_int};
+use crate::ffi_types::*;
 
 use crate::mp::botan_mp_t;
 use crate::rng::botan_rng_t;
@@ -262,4 +262,40 @@ extern "C" {
         hash_algo: *const c_char,
         key: botan_pubkey_t,
     ) -> c_int;
+
+    #[cfg(feature = "botan3")]
+    pub fn botan_pubkey_view_der(
+        key: botan_pubkey_t,
+        view_ctx: *mut c_void,
+        view_fn: extern "C" fn(*mut c_void, *const u8, usize) -> c_int,
+    ) -> c_int;
+
+    #[cfg(feature = "botan3")]
+    pub fn botan_pubkey_view_pem(
+        key: botan_pubkey_t,
+        view_ctx: *mut c_void,
+        view_fn: extern "C" fn(*mut c_void, *const c_char, usize) -> c_int,
+    ) -> c_int;
+
+    #[cfg(feature = "botan3")]
+    pub fn botan_privkey_view_der(
+        key: botan_privkey_t,
+        view_ctx: *mut c_void,
+        view_fn: extern "C" fn(*mut c_void, *const u8, usize) -> c_int,
+    ) -> c_int;
+
+    #[cfg(feature = "botan3")]
+    pub fn botan_privkey_view_pem(
+        key: botan_privkey_t,
+        view_ctx: *mut c_void,
+        view_fn: extern "C" fn(*mut c_void, *const c_char, usize) -> c_int,
+    ) -> c_int;
+
+    #[cfg(feature = "botan3")]
+    pub fn botan_pubkey_view_ec_public_point(
+        key: botan_pubkey_t,
+        view_ctx: *mut c_void,
+        view_fn: extern "C" fn(*mut c_void, *const u8, usize) -> c_int,
+    ) -> c_int;
+
 }
