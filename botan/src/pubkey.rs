@@ -217,11 +217,37 @@ impl Privkey {
         })
     }
 
+    #[cfg(not(feature = "botan3"))]
     /// DER encode the key (unencrypted)
     pub fn der_encode(&self) -> Result<Vec<u8>> {
         let der_len = 4096; // fixme
         call_botan_ffi_returning_vec_u8(der_len, &|out_buf, out_len| unsafe {
             botan_privkey_export(self.obj, out_buf, out_len, 0u32)
+        })
+    }
+
+    #[cfg(feature = "botan3")]
+    /// DER encode the key (unencrypted)
+    pub fn der_encode(&self) -> Result<Vec<u8>> {
+        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
+            botan_privkey_view_der(self.obj, ctx, cb)
+        })
+    }
+
+    #[cfg(not(feature = "botan3"))]
+    /// PEM encode the private key (unencrypted)
+    pub fn pem_encode(&self) -> Result<String> {
+        let pem_len = 4096; // fixme
+        call_botan_ffi_returning_string(pem_len, &|out_buf, out_len| unsafe {
+            botan_privkey_export(self.obj, out_buf, out_len, 1u32)
+        })
+    }
+
+    #[cfg(feature = "botan3")]
+    /// PEM encode the private key (unencrypted)
+    pub fn pem_encode(&self) -> Result<String> {
+        call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
+            botan_privkey_view_pem(self.obj, ctx, cb)
         })
     }
 
@@ -316,14 +342,15 @@ impl Privkey {
         })
     }
 
-    /// PEM encode the private key (unencrypted)
-    pub fn pem_encode(&self) -> Result<String> {
-        let pem_len = 4096; // fixme
-        call_botan_ffi_returning_string(pem_len, &|out_buf, out_len| unsafe {
-            botan_privkey_export(self.obj, out_buf, out_len, 1u32)
+    #[cfg(feature = "botan3")]
+    /// Return the key agrement key, only valid for DH/ECDH
+    pub fn key_agreement_key(&self) -> Result<Vec<u8>> {
+        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
+            botan_pk_op_key_agreement_view_public(self.obj, ctx, cb)
         })
     }
 
+    #[cfg(not(feature = "botan3"))]
     /// Return the key agrement key, only valid for DH/ECDH
     pub fn key_agreement_key(&self) -> Result<Vec<u8>> {
         let ka_key_len = 512; // fixme
@@ -522,6 +549,7 @@ impl Pubkey {
         })
     }
 
+    #[cfg(not(feature = "botan3"))]
     /// DER encode this public key
     pub fn der_encode(&self) -> Result<Vec<u8>> {
         let der_len = 4096; // fixme
@@ -530,11 +558,38 @@ impl Pubkey {
         })
     }
 
+    #[cfg(feature = "botan3")]
+    /// DER encode this public key
+    pub fn der_encode(&self) -> Result<Vec<u8>> {
+        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
+            botan_pubkey_view_der(self.obj, ctx, cb)
+        })
+    }
+
+    #[cfg(not(feature = "botan3"))]
     /// PEM encode this public key
     pub fn pem_encode(&self) -> Result<String> {
         let pem_len = 4096; // fixme
         call_botan_ffi_returning_string(pem_len, &|out_buf, out_len| unsafe {
             botan_pubkey_export(self.obj, out_buf, out_len, 1u32)
+        })
+    }
+
+    #[cfg(feature = "botan3")]
+    /// PEM encode the private key (unencrypted)
+    pub fn pem_encode(&self) -> Result<String> {
+        call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
+            botan_pubkey_view_pem(self.obj, ctx, cb)
+        })
+    }
+
+    #[cfg(feature = "botan3")]
+    /// Return the encoded elliptic curve point associated with this key
+    ///
+    /// Only valid for EC based keys
+    pub fn ec_public_point(&self) -> Result<Vec<u8>> {
+        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
+            botan_pubkey_view_ec_public_point(self.obj, ctx, cb)
         })
     }
 

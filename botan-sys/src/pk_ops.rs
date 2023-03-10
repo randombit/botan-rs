@@ -1,4 +1,4 @@
-use crate::ffi_types::{c_char, c_int};
+use crate::ffi_types::*;
 
 use crate::pubkey::{botan_privkey_t, botan_pubkey_t};
 use crate::rng::botan_rng_t;
@@ -109,6 +109,14 @@ extern "C" {
         out: *mut u8,
         out_len: *mut usize,
     ) -> c_int;
+
+    #[cfg(feature = "botan3")]
+    pub fn botan_pk_op_key_agreement_view_public(
+        key: botan_privkey_t,
+        view_ctx: *mut c_void,
+        view_fn: extern "C" fn(*mut c_void, *const u8, usize) -> c_int,
+    ) -> c_int;
+
     pub fn botan_pk_op_key_agreement(
         op: botan_pk_op_ka_t,
         out: *mut u8,
