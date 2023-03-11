@@ -462,6 +462,11 @@ AzMCIEJSRDmXjX8TMTbSfoTLmhaYJnCL+AfHLZLdHlSLDIzh
 -----END CERTIFICATE-----";
 
     let ca = botan::Certificate::load(ca)?;
+
+    assert!(ca.to_string()?.starts_with("Version: 3"));
+
+    assert_eq!(ca.public_key_bits()?.len(), 89);
+
     let ee = botan::Certificate::load(ee)?;
     let bad_ee = botan::Certificate::load(bad_ee)?;
 

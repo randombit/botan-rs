@@ -266,36 +266,60 @@ extern "C" {
     #[cfg(feature = "botan3")]
     pub fn botan_pubkey_view_der(
         key: botan_pubkey_t,
-        view_ctx: *mut c_void,
-        view_fn: extern "C" fn(*mut c_void, *const u8, usize) -> c_int,
+        view_ctx: botan_view_ctx,
+        view_fn: botan_view_bin_fn,
     ) -> c_int;
 
     #[cfg(feature = "botan3")]
     pub fn botan_pubkey_view_pem(
         key: botan_pubkey_t,
-        view_ctx: *mut c_void,
-        view_fn: extern "C" fn(*mut c_void, *const c_char, usize) -> c_int,
+        view_ctx: botan_view_ctx,
+        view_fn: botan_view_str_fn,
     ) -> c_int;
 
     #[cfg(feature = "botan3")]
     pub fn botan_privkey_view_der(
         key: botan_privkey_t,
-        view_ctx: *mut c_void,
-        view_fn: extern "C" fn(*mut c_void, *const u8, usize) -> c_int,
+        view_ctx: botan_view_ctx,
+        view_fn: botan_view_bin_fn,
     ) -> c_int;
 
     #[cfg(feature = "botan3")]
     pub fn botan_privkey_view_pem(
         key: botan_privkey_t,
-        view_ctx: *mut c_void,
-        view_fn: extern "C" fn(*mut c_void, *const c_char, usize) -> c_int,
+        view_ctx: botan_view_ctx,
+        view_fn: botan_view_str_fn,
     ) -> c_int;
 
     #[cfg(feature = "botan3")]
     pub fn botan_pubkey_view_ec_public_point(
         key: botan_pubkey_t,
-        view_ctx: *mut c_void,
-        view_fn: extern "C" fn(*mut c_void, *const u8, usize) -> c_int,
+        view_ctx: botan_view_ctx,
+        view_fn: botan_view_bin_fn,
+    ) -> c_int;
+
+    #[cfg(feature = "botan3")]
+    pub fn botan_privkey_view_encrypted_der(
+        key: botan_privkey_t,
+        rng: botan_rng_t,
+        passphrase: *const c_char,
+        cipher_algo: *const c_char,
+        pbkdf_algo: *const c_char,
+        pbkdf_iterations: usize,
+        view_ctx: botan_view_ctx,
+        view_fn: botan_view_bin_fn,
+    ) -> c_int;
+
+    #[cfg(feature = "botan3")]
+    pub fn botan_privkey_view_encrypted_pem(
+        key: botan_privkey_t,
+        rng: botan_rng_t,
+        passphrase: *const c_char,
+        cipher_algo: *const c_char,
+        pbkdf_algo: *const c_char,
+        pbkdf_iterations: usize,
+        view_ctx: botan_view_ctx,
+        view_fn: botan_view_str_fn,
     ) -> c_int;
 
 }

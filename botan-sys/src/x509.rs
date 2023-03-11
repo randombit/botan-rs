@@ -1,4 +1,4 @@
-use crate::ffi_types::{c_char, c_int, c_uint};
+use crate::ffi_types::*;
 
 use crate::pubkey::{botan_privkey_t, botan_pubkey_t};
 use crate::rng::botan_rng_t;
@@ -120,4 +120,19 @@ extern "C" {
     ) -> c_int;
 
     pub fn botan_x509_cert_validation_status(code: c_int) -> *const c_char;
+
+    #[cfg(feature = "botan3")]
+    pub fn botan_x509_cert_view_public_key_bits(
+        cert: botan_x509_cert_t,
+        view_ctx: botan_view_ctx,
+        view_fn: botan_view_bin_fn,
+    ) -> c_int;
+
+    #[cfg(feature = "botan3")]
+    pub fn botan_x509_cert_view_as_string(
+        cert: botan_x509_cert_t,
+        view_ctx: botan_view_ctx,
+        view_fn: botan_view_str_fn,
+    ) -> c_int;
+
 }
