@@ -541,10 +541,10 @@ impl Pubkey {
     }
 
     /// Return hash of the public key data
-    pub fn fingerprint(&self, hash: &str) -> Result<String> {
+    pub fn fingerprint(&self, hash: &str) -> Result<Vec<u8>> {
         let hash = make_cstr(hash)?;
         let fprint_len = 64; // hashes > 512 bits are rare
-        call_botan_ffi_returning_string(fprint_len, &|out_buf, out_len| unsafe {
+        call_botan_ffi_returning_vec_u8(fprint_len, &|out_buf, out_len| unsafe {
             botan_pubkey_fingerprint(self.obj, hash.as_ptr(), out_buf, out_len)
         })
     }

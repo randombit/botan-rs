@@ -419,6 +419,11 @@ fn test_certs() -> Result<(), botan::Error> {
     let pubkey = cert.public_key()?;
 
     assert_eq!(pubkey.algo_name()?, "ECDSA");
+
+    assert_eq!(
+        botan::hex_encode(&pubkey.fingerprint("SHA-256")?)?,
+        "110467922A582F7F35E55DF1C787709A6D27B4F581C02586E9076F1A385404B3"
+    );
     Ok(())
 }
 
