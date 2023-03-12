@@ -1,4 +1,10 @@
 
+## 0.10.2 Not Yet Released
+
+- Fix Pubkey::fingerprint
+- Make use of new functionality in botan3 FFI which eliminates the need for
+  potentially retrying an operation if the provided output buffer was too small.
+
 ## 0.10.1 2023-03-08
 
 - The MSRV for std builds has been reduced to Rust 1.58. The MSRV for
