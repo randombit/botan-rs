@@ -113,8 +113,8 @@ extern "C" {
     #[cfg(feature = "botan3")]
     pub fn botan_pk_op_key_agreement_view_public(
         key: botan_privkey_t,
-        view_ctx: *mut c_void,
-        view_fn: extern "C" fn(*mut c_void, *const u8, usize) -> c_int,
+        view_ctx: botan_view_ctx,
+        view_fn: botan_view_bin_fn,
     ) -> c_int;
 
     pub fn botan_pk_op_key_agreement(

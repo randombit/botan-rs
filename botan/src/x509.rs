@@ -178,10 +178,20 @@ impl Certificate {
 
     /// Return the byte representation of the public key
     pub fn public_key_bits(&self) -> Result<Vec<u8>> {
-        let pk_len = 4096; // fixme
-        call_botan_ffi_returning_vec_u8(pk_len, &|out_buf, out_len| unsafe {
-            botan_x509_cert_get_public_key_bits(self.obj, out_buf, out_len)
-        })
+        #[cfg(not(feature = "botan3"))]
+        {
+            let pk_len = 4096; // fixme
+            call_botan_ffi_returning_vec_u8(pk_len, &|out_buf, out_len| unsafe {
+                botan_x509_cert_get_public_key_bits(self.obj, out_buf, out_len)
+            })
+        }
+
+        #[cfg(feature = "botan3")]
+        {
+            call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
+                botan_x509_cert_view_public_key_bits(self.obj, ctx, cb)
+            })
+        }
     }
 
     /// Return the public key included in this certificate
@@ -193,10 +203,20 @@ impl Certificate {
 
     /// Return a free-form string representation of this certificate
     pub fn to_string(&self) -> Result<String> {
-        let as_str_len = 4096;
-        call_botan_ffi_returning_string(as_str_len, &|out_buf, out_len| unsafe {
-            botan_x509_cert_to_string(self.obj, out_buf as *mut c_char, out_len)
-        })
+        #[cfg(not(feature = "botan3"))]
+        {
+            let as_str_len = 4096;
+            call_botan_ffi_returning_string(as_str_len, &|out_buf, out_len| unsafe {
+                botan_x509_cert_to_string(self.obj, out_buf as *mut c_char, out_len)
+            })
+        }
+
+        #[cfg(feature = "botan3")]
+        {
+            call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
+                botan_x509_cert_view_as_string(self.obj, ctx, cb)
+            })
+        }
     }
 
     /// Test if the certificate is allowed for a particular usage

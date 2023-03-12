@@ -26,6 +26,17 @@ pub mod ffi_types {
 
     #[cfg(not(feature = "no-std"))]
     pub use std::os::raw::{c_char, c_int, c_uint, c_void};
+
+    #[cfg(feature = "botan3")]
+    pub type botan_view_ctx = *mut c_void;
+
+    #[cfg(feature = "botan3")]
+    pub type botan_view_bin_fn =
+        extern "C" fn(view_ctx: botan_view_ctx, data: *const u8, len: usize) -> c_int;
+
+    #[cfg(feature = "botan3")]
+    pub type botan_view_str_fn =
+        extern "C" fn(view_ctx: botan_view_ctx, data: *const c_char, len: usize) -> c_int;
 }
 
 pub use block::*;
