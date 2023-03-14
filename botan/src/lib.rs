@@ -115,6 +115,9 @@ mod version;
 mod x509;
 
 #[cfg(feature = "botan3")]
+mod pk_ops_kem;
+
+#[cfg(feature = "botan3")]
 mod zfec;
 
 pub use crate::mp::*;
@@ -135,6 +138,9 @@ pub use pk_ops::*;
 pub use pubkey::*;
 pub use version::*;
 pub use x509::*;
+
+#[cfg(feature = "botan3")]
+pub use pk_ops_kem::*;
 
 #[cfg(feature = "botan3")]
 pub use zfec::*;
