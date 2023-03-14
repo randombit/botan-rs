@@ -761,7 +761,7 @@ fn test_pubkey_key_agreement() -> Result<(), botan::Error> {
     let mut a_ka = botan::KeyAgreement::new(&a_priv, "Raw")?;
     let mut b_ka = botan::KeyAgreement::new(&b_priv, "Raw")?;
 
-    let a_key = a_ka.agree(0, &b_pub, &salt)?;
+    let a_key = a_ka.agree(0, &b_pub, &[])?;
     let b_key = b_ka.agree(0, &a_pub, &[])?;
 
     assert_eq!(a_key, b_key);
@@ -995,6 +995,31 @@ fn test_zfec() -> Result<(), botan::Error> {
     let recovered = botan::zfec_decode(k, n, &shares_for_decoding, share_size)?;
 
     assert_eq!(recovered, input_bytes);
+
+    Ok(())
+}
+
+#[cfg(feature = "botan3")]
+#[test]
+fn test_kyber() -> Result<(), botan::Error> {
+    let mut rng = botan::RandomNumberGenerator::new()?;
+    let kyber_priv = botan::Privkey::create("Kyber", "Kyber-1024-r3", &mut rng)?;
+    let kyber_pub = kyber_priv.pubkey()?;
+
+    let salt = rng.read(12)?;
+    let shared_key_len = 32;
+    let kdf = "KDF2(SHA-256)";
+
+    let kem_e = botan::KeyEncapsulation::new(&kyber_pub, kdf)?;
+    let (shared_key, encap_key) = kem_e.create_shared_key(&mut rng, &salt, shared_key_len)?;
+
+    assert_eq!(shared_key.len(), shared_key_len);
+    assert_eq!(encap_key.len(), 1568);
+
+    let kem_d = botan::KeyDecapsulation::new(&kyber_priv, kdf)?;
+    let shared_key_d = kem_d.decrypt_shared_key(&encap_key, &salt, shared_key_len)?;
+
+    assert_eq!(shared_key, shared_key_d);
 
     Ok(())
 }

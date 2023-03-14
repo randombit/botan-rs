@@ -4,6 +4,7 @@
 - Fix Pubkey::fingerprint
 - Make use of new functionality in botan3 FFI which eliminates the need for
   potentially retrying an operation if the provided output buffer was too small.
+- Add support for key encapsulation added in botan3
 
 ## 0.10.1 2023-03-08
 
