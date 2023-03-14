@@ -761,7 +761,7 @@ fn test_pubkey_key_agreement() -> Result<(), botan::Error> {
     let mut a_ka = botan::KeyAgreement::new(&a_priv, "Raw")?;
     let mut b_ka = botan::KeyAgreement::new(&b_priv, "Raw")?;
 
-    let a_key = a_ka.agree(0, &b_pub, &salt)?;
+    let a_key = a_ka.agree(0, &b_pub, &[])?;
     let b_key = b_ka.agree(0, &a_pub, &[])?;
 
     assert_eq!(a_key, b_key);
