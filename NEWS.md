@@ -1,5 +1,5 @@
 
-## 0.10.2 Not Yet Released
+## 0.10.2 2023-03-27
 
 - Fix Pubkey::fingerprint
 - Make use of new functionality in botan3 FFI which eliminates the need for
