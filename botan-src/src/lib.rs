@@ -56,8 +56,8 @@ fn configure(build_dir: &str) {
         "--library-suffix",
         "--prefix",
         "--libdir",
-        "--mandir",
         "--includedir",
+        "--link-method",
     ];
 
     let flags = [
