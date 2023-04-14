@@ -1,15 +1,18 @@
 #[cfg(feature = "vendored")]
-fn os_uses_gnu_libstdcpp() -> bool {
-    /*
-     * Possibly other OSes should default to libstdc++ as well.  But
-     * given macOS, iOS, Android, FreeBSD, etc should all use libc++
-     * probably defaulting to libc++ when in doubt is the correct move.
-     */
-    if cfg!(any(target_os = "linux")) {
-        true
-    } else {
-        false
+fn emit_dylibs() -> Vec<&'static str> {
+    // Windows doesn't need to dynamically link the C++ runtime
+    // but we do need to link to DLLs with needed functionality:
+    if cfg!(target_os = "windows") {
+        return vec!["user32", "crypt32"];
     }
+
+    // On Linux we use libstdc++
+    if cfg!(any(target_os = "linux")) {
+        return vec!["stdc++"];
+    }
+
+    // For all other platforms, link to libc++ from LLVM/Clang
+    vec!["c++"]
 }
 
 fn botan_lib_major_version() -> i32 {
@@ -40,10 +43,8 @@ fn main() {
         println!("cargo:rustc-link-search=native={}", &lib_dir);
         println!("cargo:rustc-link-lib=static={}", botan_library_name(),);
 
-        if os_uses_gnu_libstdcpp() {
-            println!("cargo:rustc-flags=-l dylib=stdc++");
-        } else {
-            println!("cargo:rustc-flags=-l dylib=c++");
+        for dylib in emit_dylibs() {
+            println!("cargo:rustc-flags=-l dylib={}", dylib);
         }
     }
     #[cfg(not(feature = "vendored"))]

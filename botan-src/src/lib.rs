@@ -30,6 +30,11 @@ fn configure(build_dir: &str) {
     #[cfg(debug_assertions)]
     configure.arg("--with-debug-info");
 
+    // On Windows we require the amalgamation, to work around the fact that
+    // otherwise the linker command lines become too long for Windows
+    #[cfg(target_os = "windows")]
+    configure.arg("--amalgamation");
+
     let args = [
         "--os",
         "--cpu",
@@ -95,6 +100,15 @@ fn configure(build_dir: &str) {
     }
 }
 
+#[cfg(target_os = "windows")]
+fn hack_the_makefile(path: &str) {
+    let mut contents = std::fs::read_to_string(path).expect("Unable to read makefile contents");
+
+    contents = contents.replace("/botan.lib", "\\botan.lib");
+
+    std::fs::write(path, contents).expect("WRITE FAILED");
+}
+
 fn make(build_dir: &str) {
     let mut cmd = Command::new("make");
     // Set MAKEFLAGS to the content of CARGO_MAKEFLAGS
@@ -105,6 +119,10 @@ fn make(build_dir: &str) {
     } else {
         eprintln!("Can't set MAKEFLAGS as CARGO_MAKEFLAGS couldn't be read");
     }
+
+    #[cfg(target_os = "windows")]
+    hack_the_makefile(&format!("{build_dir}/Makefile"));
+
     let status = cmd
         .arg("-f")
         .arg(format!("{build_dir}/Makefile"))

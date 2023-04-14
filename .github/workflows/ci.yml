@@ -100,3 +100,32 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
       - run: ./.ci/build.py ${{ matrix.features }}
+
+  ci_windows:
+    runs-on: windows-2022
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        include:
+          - toolchain: stable
+            features: vendored
+#          - toolchain: nightly
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+            # FIXME this is wrong and also we need sccache
+            path: ~/.cargo
+            key: ${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
+            restore-keys: |
+               ${{ matrix.toolchain }}-${{ matrix.features }}
+      - uses: egor-tensin/vs-shell@v2
+        with:
+          arch: amd64
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - run: python3 ./.ci/build.py ${{ matrix.features }}

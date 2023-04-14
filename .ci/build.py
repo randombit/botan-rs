@@ -21,15 +21,6 @@ def main(args = None):
     if args is None:
         args = sys.argv
 
-    if "CCACHE_MAXSIZE" not in os.environ:
-        os.environ["CCACHE_MAXSIZE"] = "2G"
-
-    os.environ["RUSTFLAGS"] = "-D warnings"
-    os.environ["BOTAN_CONFIGURE_COMPILER_CACHE"] = "ccache"
-    os.environ["INSTALL_PREFIX"] = "/usr/local"
-    os.environ["LD_LIBRARY_PATH"] = "/usr/local/lib"
-    os.environ["DYLD_LIBRARY_PATH"] = "/usr/local/lib"
-
     if len(args) > 2:
         print("ERROR: Unexpected extra arguments")
         return 1
@@ -42,6 +33,24 @@ def main(args = None):
         if feat not in KNOWN_FEATURES:
             print("ERROR: Unknown feature %s" % (feat))
             return 1
+
+    if "CCACHE_MAXSIZE" not in os.environ:
+        os.environ["CCACHE_MAXSIZE"] = "2G"
+
+    # Disable functionality that is slow to build and that we do not / can not
+    # use since it is not available via the C interface:
+    disabled_modules = "tls,pkcs11,sodium,filters"
+
+    os.environ["RUSTFLAGS"] = "-D warnings"
+
+    if 'vendored' in features:
+        os.environ["BOTAN_CONFIGURE_COMPILER_CACHE"] = "ccache"
+        os.environ["BOTAN_CONFIGURE_DISABLE_MODULES"] = disabled_modules
+
+    if 'git' in features:
+        os.environ["INSTALL_PREFIX"] = "/usr/local"
+        os.environ["LD_LIBRARY_PATH"] = "/usr/local/lib"
+        os.environ["DYLD_LIBRARY_PATH"] = "/usr/local/lib"
 
     run_command(['ccache', '--show-stats'])
 
@@ -56,8 +65,12 @@ def main(args = None):
         nproc = multiprocessing.cpu_count()
         botan_src = 'botan-git'
         run_command(['git', 'clone', '--depth', '1', 'https://github.com/randombit/botan.git', botan_src])
-        run_command(['./configure.py', '--compiler-cache=ccache', '--disable-modules=tls'], botan_src)
-        run_command(['make', '-j', str(nproc), 'libs', 'cli'], botan_src)
+        run_command(['./configure.py',
+                     '--compiler-cache=ccache',
+                     '--without-documentation',
+                     '--build-targets=shared',
+                     '--disable-modules=%s' % (disabled_modules)], botan_src)
+        run_command(['make', '-j', str(nproc)], botan_src)
         run_command(['sudo', 'make', 'install'], botan_src)
 
     run_command(['rustc', '--version'])
