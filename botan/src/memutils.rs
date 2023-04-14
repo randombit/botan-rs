@@ -10,7 +10,7 @@ pub fn const_time_compare<T: Copy>(a: &[T], b: &[T]) -> bool {
         return false;
     }
 
-    let bytes = mem::size_of::<T>() * a.len();
+    let bytes = mem::size_of_val(a);
     let rc = unsafe {
         botan_constant_time_compare(a.as_ptr() as *const u8, b.as_ptr() as *const u8, bytes)
     };
@@ -23,7 +23,7 @@ pub fn const_time_compare<T: Copy>(a: &[T], b: &[T]) -> bool {
 /// Write zeros to the array (eg to clear out a key) in a way that is
 /// unlikely to be removed by the compiler.
 pub fn scrub_mem<T: Copy>(a: &mut [T]) {
-    let bytes = mem::size_of::<T>() * a.len();
+    let bytes = mem::size_of_val(a);
     unsafe { botan_scrub_mem(a.as_mut_ptr() as *mut c_void, bytes) };
 }
 
