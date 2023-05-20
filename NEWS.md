@@ -1,5 +1,5 @@
 
-## 0.10.3 Not Yet Released
+## 0.10.3 2023-5-20
 
 - Fix an error that prevented compiling on 1.58.0 with botan3 flag
 - Fix a new clippy warning
