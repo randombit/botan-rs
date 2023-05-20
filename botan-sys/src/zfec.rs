@@ -7,7 +7,7 @@ extern "C" {
         input: *const u8,
         input_len: usize,
         outputs: *mut *mut u8,
-    ) -> core::ffi::c_int;
+    ) -> crate::ffi_types::c_int;
 
     #[cfg(feature = "botan3")]
     pub fn botan_zfec_decode(
@@ -17,5 +17,5 @@ extern "C" {
         shares: *const *const u8,
         share_size: usize,
         outputs: *mut *mut u8,
-    ) -> core::ffi::c_int;
+    ) -> crate::ffi_types::c_int;
 }
