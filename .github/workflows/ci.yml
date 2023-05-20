@@ -84,7 +84,7 @@ jobs:
           - toolchain: nightly
 
     steps:
-      - run: brew install ccache botan
+      - run: brew install ccache botan@2.19.3
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
