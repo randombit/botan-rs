@@ -1,4 +1,11 @@
 
+## 0.10.3 Not Yet Released
+
+- Fix an error that prevented compiling on 1.58.0 with botan3 flag
+- Fix a new clippy warning
+- When building the vendored library, add support for setting the
+  method that source files are linked with (symlink, hardlink, copy).
+
 ## 0.10.2 2023-03-27
 
 - Fix Pubkey::fingerprint
