@@ -14,8 +14,8 @@ The following features are supported:
   as well as `alloc` support
 * `vendored`: Build a copy of the C++ library directly, without
   relying on a system installed version.
-* `botan3`: Link against (the currently unreleased) Botan 3.x rather
-  than the default Botan 2.x
+* `botan3`: Link against Botan 3 rather than the current default Botan 2.
+  This enables several new features, and more efficient operation
 
 Currently the crate exposes ciphers, hashes, MACs, KDFs, password based key
 derivation (PBKDF2, Scrypt, Argon2, etc), bcrypt password hashes, random number
