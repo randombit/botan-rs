@@ -109,6 +109,7 @@ impl Privkey {
         Ok(Privkey { obj })
     }
 
+    #[cfg(feature = "botan3")]
     /// Load a kyber private key
     ///
     /// # Examples
@@ -132,7 +133,6 @@ impl Privkey {
     /// let v = vec![0x42; 1631];
     /// let key512 = botan::Privkey::load_kyber(&v).unwrap();
     /// ```
-    #[cfg(feature = "botan3")]
     pub fn load_kyber(key: &[u8]) -> Result<Privkey> {
         let obj = botan_init!(botan_privkey_load_kyber, key.as_ptr(), key.len())?;
         Ok(Privkey { obj })
@@ -484,6 +484,7 @@ impl Privkey {
         Ok(out)
     }
 
+    #[cfg(feature = "botan3")]
     /// Get the Kyber private key
     ///
     /// # Examples
@@ -639,6 +640,7 @@ impl Pubkey {
         Ok(Pubkey { obj })
     }
 
+    #[cfg(feature = "botan3")]
     /// Load an Kyber key
     ///
     /// # Examples
@@ -774,6 +776,7 @@ impl Pubkey {
         Ok(out)
     }
 
+    #[cfg(feature = "botan3")]
     /// Get an Kyber key
     ///
     /// # Examples
