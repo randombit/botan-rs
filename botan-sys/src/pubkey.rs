@@ -211,20 +211,10 @@ extern "C" {
     pub fn botan_privkey_x25519_get_privkey(key: botan_privkey_t, output: *mut u8) -> c_int;
     pub fn botan_pubkey_x25519_get_pubkey(key: botan_pubkey_t, pubkey: *mut u8) -> c_int;
 
-    pub fn botan_privkey_load_kyber512(key: *mut botan_privkey_t, privkey: *const u8) -> c_int;
-    pub fn botan_pubkey_load_kyber512(key: *mut botan_pubkey_t, pubkey: *const u8) -> c_int;
-    pub fn botan_privkey_kyber512_get_privkey(key: botan_privkey_t, output: *mut u8) -> c_int;
-    pub fn botan_pubkey_kyber512_get_pubkey(key: botan_pubkey_t, pubkey: *mut u8) -> c_int;
-
-    pub fn botan_privkey_load_kyber768(key: *mut botan_privkey_t, privkey: *const u8) -> c_int;
-    pub fn botan_pubkey_load_kyber768(key: *mut botan_pubkey_t, pubkey: *const u8) -> c_int;
-    pub fn botan_privkey_kyber768_get_privkey(key: botan_privkey_t, output: *mut u8) -> c_int;
-    pub fn botan_pubkey_kyber768_get_pubkey(key: botan_pubkey_t, pubkey: *mut u8) -> c_int;
-
-    pub fn botan_privkey_load_kyber1024(key: *mut botan_privkey_t, privkey: *const u8) -> c_int;
-    pub fn botan_pubkey_load_kyber1024(key: *mut botan_pubkey_t, pubkey: *const u8) -> c_int;
-    pub fn botan_privkey_kyber1024_get_privkey(key: botan_privkey_t, output: *mut u8) -> c_int;
-    pub fn botan_pubkey_kyber1024_get_pubkey(key: botan_pubkey_t, pubkey: *mut u8) -> c_int;
+    pub fn botan_privkey_load_kyber(key: *mut botan_privkey_t, privkey: *const u8, key_len: usize) -> c_int;
+    pub fn botan_pubkey_load_kyber(key: *mut botan_pubkey_t, privkey: *const u8, key_len: usize) -> c_int;
+    pub fn botan_privkey_view_kyber_raw_key(key: botan_privkey_t, ctx: botan_view_ctx, view: botan_view_bin_fn) -> c_int;
+    pub fn botan_pubkey_view_kyber_raw_key(key: botan_pubkey_t, ctx: botan_view_ctx, view: botan_view_bin_fn) -> c_int;
 
     pub fn botan_privkey_load_ecdsa(
         key: *mut botan_privkey_t,
