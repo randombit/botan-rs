@@ -82,8 +82,11 @@ fn test_version() {
 
         #[cfg(not(feature = "botan3"))]
         {
-            assert_eq!(botan_version_major(), 2);
-            assert!(botan_version_minor() > 8);
+            if botan_version_major() == 2 {
+                assert!(botan_version_minor() > 8);
+            } else {
+                assert_eq!(botan_version_major(), 3);
+            }
         }
     }
 }
