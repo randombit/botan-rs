@@ -16,6 +16,11 @@ fn test_version() -> Result<(), botan::Error> {
         assert_eq!(version.major, 3);
     }
 
+    #[cfg(feature = "vendored")]
+    {
+        assert_eq!(version.major, 3);
+    }
+
     #[cfg(not(feature = "botan3"))]
     {
         assert!(version.major == 2 || version.major == 3);
