@@ -145,7 +145,7 @@ impl MPI {
                 botan_mp_to_str(self.obj, 16, out_buf as *mut c_char, out_len)
             })?;
 
-        if cfg!(feature = "botan3") {
+        if crate::Version::major_version() >= 3 {
             Ok(r.split_off(2)) // remove leading 0x
         } else {
             Ok(r)
@@ -410,7 +410,7 @@ impl fmt::Debug for MPI {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         let s = self.to_string().map_err(|_| fmt::Error)?;
 
-        if cfg!(feature = "botan3") {
+        if crate::Version::major_version() >= 3 {
             write!(formatter, "{s}")
         } else {
             let is_positive = self.is_positive().map_err(|_| fmt::Error)?;
