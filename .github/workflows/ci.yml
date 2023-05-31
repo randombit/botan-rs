@@ -78,10 +78,10 @@ jobs:
 
       matrix:
         include:
-#          - toolchain: stable
+          - toolchain: stable
           - toolchain: stable
             features: vendored
-#          - toolchain: nightly
+          - toolchain: nightly
 
     steps:
       - run: brew install ccache botan
