@@ -20,6 +20,10 @@ pub struct Version {
 }
 
 impl Version {
+    pub(crate) fn major_version() -> u32 {
+        unsafe { botan_version_major() }
+    }
+
     /// Read the version information of the currently linked lib
     pub fn current() -> Result<Version> {
         unsafe {

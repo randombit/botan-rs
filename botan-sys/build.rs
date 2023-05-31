@@ -13,12 +13,9 @@ fn os_uses_gnu_libstdcpp() -> bool {
 }
 
 fn botan_lib_major_version() -> i32 {
-    #[cfg(feature = "botan3")]
-    {
+    if cfg!(any(feature = "vendored", feature = "botan3")) {
         3
-    }
-    #[cfg(not(feature = "botan3"))]
-    {
+    } else {
         2
     }
 }

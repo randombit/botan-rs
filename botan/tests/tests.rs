@@ -18,8 +18,11 @@ fn test_version() -> Result<(), botan::Error> {
 
     #[cfg(not(feature = "botan3"))]
     {
-        assert_eq!(version.major, 2);
-        assert!(version.minor >= 8);
+        assert!(version.major == 2 || version.major == 3);
+
+        if version.major == 2 {
+            assert!(version.minor >= 8);
+        }
     }
 
     assert!(version.release_date == 0 || version.release_date >= 20181001);
@@ -33,12 +36,6 @@ fn test_version() -> Result<(), botan::Error> {
     assert!(version.at_least(2, 8));
     assert!(version.at_least(2, 4));
     assert!(version.at_least(1, 100));
-
-    /*
-    We know we are not linked against Botan 3.x because botan-sys crate
-    links to botan-2 and the library name will change in a new major release.
-    */
-    assert!(!version.at_least(3, 1));
 
     Ok(())
 }
