@@ -26,6 +26,9 @@ impl MsgAuthCode {
     /// ```
     /// let poly1305 = botan::MsgAuthCode::new("Poly1305").unwrap();
     /// ```
+    /// ```
+    /// let hmac = botan::MsgAuthCode::new("KMAC256(512)").unwrap();
+    /// ```
     pub fn new(name: &str) -> Result<MsgAuthCode> {
         let obj = botan_init!(botan_mac_init, make_cstr(name)?.as_ptr(), 0u32)?;
         let output_length = botan_usize!(botan_mac_output_length, obj)?;
@@ -121,6 +124,16 @@ impl MsgAuthCode {
     /// hmac.update(&[1,2,3]).unwrap();
     /// hmac.update(&[4,5,6]).unwrap();
     /// let mac = hmac.finish().unwrap();
+    /// ```
+    /// ```
+    /// let mut kmac = botan::MsgAuthCode::new("KMAC256(128)").unwrap();
+    /// assert_eq!(kmac.algo_name().unwrap(), "KMAC256(128)");
+    /// kmac.set_key(&vec![0x6B, 0x65, 0x79, 0x31, 0x32, 0x33, 0x34]).unwrap();
+    /// kmac.set_nonce(&vec![0; 0]).unwrap();
+    /// kmac.update(&vec![0x48, 0x65, 0x6C, 0x6C, 0x6F]).unwrap();
+    ///
+    /// let produced = kmac.finish().unwrap();
+    /// assert_eq!(vec![0x74, 0x9a, 0x07, 0x3a, 0x39, 0xcb, 0x16, 0xc6, 0x86, 0x44, 0x2a, 0x24, 0x5d, 0x44, 0x9e, 0xeb], produced);
     /// ```
     pub fn finish(&mut self) -> Result<Vec<u8>> {
         let mut output = vec![0; self.output_length];
