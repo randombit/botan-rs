@@ -31,8 +31,4 @@ botan_srp6_generate_verifier
 botan_srp6_client_agree
 botan_srp6_group_size
 
-botan_x509_crl_load_file
-botan_x509_crl_load
-botan_x509_crl_destroy
-botan_x509_is_revoked
 botan_x509_cert_verify_with_crl
