@@ -17,7 +17,7 @@ rust-version = "1.58"
 [features]
 default = []
 no-std = []
-vendored = ["botan-src"]
+vendored = ["botan-src", "botan3"]
 botan3 = []
 
 [build-dependencies]
