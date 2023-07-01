@@ -112,7 +112,8 @@ mod pubkey;
 mod rng;
 mod utils;
 mod version;
-mod x509;
+mod x509_cert;
+mod x509_crl;
 
 #[cfg(feature = "botan3")]
 mod pk_ops_kem;
@@ -137,7 +138,8 @@ pub use pbkdf::*;
 pub use pk_ops::*;
 pub use pubkey::*;
 pub use version::*;
-pub use x509::*;
+pub use x509_cert::*;
+pub use x509_crl::*;
 
 #[cfg(feature = "botan3")]
 pub use pk_ops_kem::*;

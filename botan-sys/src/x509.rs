@@ -6,6 +6,9 @@ use crate::rng::botan_rng_t;
 pub enum botan_x509_cert_struct {}
 pub type botan_x509_cert_t = *mut botan_x509_cert_struct;
 
+pub enum botan_x509_crl_struct {}
+pub type botan_x509_crl_t = *mut botan_x509_crl_struct;
+
 #[repr(u32)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum X509KeyConstraints {
@@ -134,5 +137,19 @@ extern "C" {
         view_ctx: botan_view_ctx,
         view_fn: botan_view_str_fn,
     ) -> c_int;
+
+    pub fn botan_x509_crl_load_file(crl: *mut botan_x509_crl_t, file_path: *const c_char) -> c_int;
+
+    pub fn botan_x509_crl_load(
+        crl: *mut botan_x509_crl_t,
+        data: *const u8,
+        data_len: usize,
+    ) -> c_int;
+
+    pub fn botan_x509_crl_destroy(crl: botan_x509_crl_t) -> c_int;
+
+    pub fn botan_x509_is_revoked(crl: botan_x509_crl_t, cert: botan_x509_cert_t) -> c_int;
+
+    // TODO: botan_x509_cert_verify_with_crl
 
 }
