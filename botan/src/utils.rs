@@ -59,14 +59,14 @@ pub(crate) mod view {
     type FfiViewBinaryFn = extern "C" fn(*mut c_void, *const u8, usize) -> c_int;
 
     extern "C" fn botan_ffi_view_u8_fn(ctx: *mut c_void, buf: *const u8, len: usize) -> c_int {
-        if ctx == std::ptr::null_mut() || buf == std::ptr::null_mut() {
+        if ctx == core::ptr::null_mut() || buf == core::ptr::null_mut() {
             return BOTAN_FFI_ERROR_NULL_POINTER;
         }
 
         let vec = ctx as *mut Vec<u8>;
 
         unsafe {
-            let data = std::slice::from_raw_parts(buf, len);
+            let data = core::slice::from_raw_parts(buf, len);
             (*vec).clear();
             (*vec).extend_from_slice(&data);
         }
@@ -92,7 +92,7 @@ pub(crate) mod view {
     type FfiViewStrFn = extern "C" fn(*mut c_void, *const c_char, usize) -> c_int;
 
     extern "C" fn botan_ffi_view_str_fn(ctx: *mut c_void, buf: *const c_char, len: usize) -> c_int {
-        if ctx == std::ptr::null_mut() || buf == std::ptr::null_mut() {
+        if ctx == core::ptr::null_mut() || buf == core::ptr::null_mut() {
             return BOTAN_FFI_ERROR_NULL_POINTER;
         }
 
@@ -102,7 +102,7 @@ pub(crate) mod view {
 
         let str = ctx as *mut String;
 
-        let data = unsafe { std::slice::from_raw_parts(buf as *const u8, len - 1) };
+        let data = unsafe { core::slice::from_raw_parts(buf as *const u8, len - 1) };
 
         let mut vec = Vec::new();
         vec.extend_from_slice(&data);
