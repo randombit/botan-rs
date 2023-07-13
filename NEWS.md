@@ -1,5 +1,5 @@
 
-## 0.10.4 Not Yet Released
+## 0.10.4 2023-07-13
 
 - Add basic support for X.509 CRLs
 - Add Cipher::ideal_update_granularity
@@ -11,7 +11,7 @@
 - The published version of `botan-src` now excludes the C++ library
   tests, which improves the package size.
 
-## 0.10.3 2023-5-20
+## 0.10.3 2023-05-20
 
 - Fix an error that prevented compiling on 1.58.0 with botan3 flag
 - Fix a new clippy warning
