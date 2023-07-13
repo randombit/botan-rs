@@ -8,6 +8,8 @@
 - Fix some problems building with "botan3" feature flag in no-std builds
 - The vendored Botan library is now 3.1.1 instead of 2.19.3; building with
   feature "vendored" implicitly enables also "botan3" feature.
+- The published version of `botan-src` now excludes the C++ library
+  tests, which improves the package size.
 
 ## 0.10.3 2023-5-20
 
