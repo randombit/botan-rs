@@ -1,4 +1,14 @@
 
+## 0.10.4 Not Yet Released
+
+- Add basic support for X.509 CRLs
+- Add Cipher::ideal_update_granularity
+- Fix test failures when compiling against Botan3 without "botan3" feature
+  flag enabled.
+- Fix some problems building with "botan3" feature flag in no-std builds
+- The vendored Botan library is now 3.1.1 instead of 2.19.3; building with
+  feature "vendored" implicitly enables also "botan3" feature.
+
 ## 0.10.3 2023-5-20
 
 - Fix an error that prevented compiling on 1.58.0 with botan3 flag

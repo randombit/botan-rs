@@ -36,6 +36,6 @@ The following features are supported:
   as well as `alloc` support
 * `vendored`: Build a copy of the C++ library directly, without
   relying on a system installed version.
-* `botan3`: Link against Botan 3 rather than the current default Botan 2.
-  This enables several new features, and more efficient operation
-
+* `botan3`: Enable support for using APIs added in Botan 3.
+  This enables several new features, and more efficient operation.
+  This feature is implicitly enabled if you use `vendored`.
