@@ -21,4 +21,4 @@ vendored = ["botan-src", "botan3"]
 botan3 = []
 
 [build-dependencies]
-botan-src = { version = "0.30000.1", optional = true, path = "../botan-src" }
+botan-src = { version = "0.30101.1", optional = true, path = "../botan-src" }
