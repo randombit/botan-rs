@@ -15,8 +15,8 @@ edition = "2021"
 rust-version = "1.58"
 
 [features]
-default = []
-no-std = []
+default = ["std"]
+std = []
 vendored = ["botan-src", "botan3"]
 botan3 = []
 

@@ -1,16 +1,16 @@
 use botan_sys::*;
 use core::fmt;
 
-#[cfg(feature = "no-std")]
+#[cfg(not(feature = "std"))]
 pub(crate) use alloc::{borrow::ToOwned, string::String, string::ToString, vec::Vec};
 
-#[cfg(feature = "no-std")]
+#[cfg(not(feature = "std"))]
 pub(crate) use alloc::ffi::CString;
 
-#[cfg(feature = "no-std")]
+#[cfg(not(feature = "std"))]
 pub(crate) use core::ffi::CStr;
 
-#[cfg(not(feature = "no-std"))]
+#[cfg(feature = "std")]
 pub(crate) use std::ffi::{CStr, CString};
 
 pub(crate) use botan_sys::ffi_types::{c_char, c_int, c_void};
@@ -202,7 +202,7 @@ impl Error {
         }
     }
 
-    #[cfg(not(feature = "no-std"))]
+    #[cfg(feature = "std")]
     pub(crate) fn conversion_error<T: std::error::Error>(e: T) -> Self {
         Self {
             err_type: ErrorType::ConversionError,
@@ -211,7 +211,7 @@ impl Error {
     }
 
     // Hack to deal with missing std::error::Error in no-std
-    #[cfg(feature = "no-std")]
+    #[cfg(not(feature = "std"))]
     pub(crate) fn conversion_error<T: core::fmt::Display>(e: T) -> Self {
         Self {
             err_type: ErrorType::ConversionError,
@@ -312,7 +312,7 @@ impl fmt::Display for ErrorType {
     }
 }
 
-#[cfg(not(feature = "no-std"))]
+#[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
 impl From<i32> for ErrorType {
