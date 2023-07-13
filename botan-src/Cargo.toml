@@ -9,6 +9,12 @@ homepage = "https://botan.randombit.net/"
 repository = "https://github.com/randombit/botan-rs"
 readme = "README.md"
 categories = ["cryptography"]
+exclude = ["botan/doc",
+           "botan/src/cli",
+           "botan/src/tests",
+           "botan/src/bogo_shim",
+           "botan/src/examples",
+           "botan/src/fuzzer"]
 
 [dependencies]
 
