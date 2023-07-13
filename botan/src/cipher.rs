@@ -8,6 +8,7 @@ pub struct Cipher {
     direction: CipherDirection,
     tag_length: usize,
     update_granularity: usize,
+    ideal_update_granularity: Option<usize>,
     default_nonce_length: usize,
     min_keylen: usize,
     max_keylen: usize,
@@ -50,11 +51,21 @@ impl Cipher {
 
         let (min_keylen, max_keylen, mod_keylen) = botan_usize3!(botan_cipher_get_keyspec, obj)?;
 
+        #[cfg(feature = "botan3")]
+        let ideal_update_granularity = Some(botan_usize!(
+            botan_cipher_get_ideal_update_granularity,
+            obj
+        )?);
+
+        #[cfg(not(feature = "botan3"))]
+        let ideal_update_granularity = None;
+
         Ok(Cipher {
             obj,
             direction,
             tag_length,
             update_granularity,
+            ideal_update_granularity,
             default_nonce_length,
             min_keylen,
             max_keylen,
@@ -115,9 +126,16 @@ impl Cipher {
         self.tag_length
     }
 
-    /// update_granularity
+    /// Return the minimum input size that must be provided
     pub fn update_granularity(&self) -> usize {
         self.update_granularity
+    }
+
+    /// Return the ideal input size for best performance
+    ///
+    /// This function returns None if the C++ API does not support this
+    pub fn ideal_update_granularity(&self) -> Option<usize> {
+        self.ideal_update_granularity
     }
 
     /// Return the default nonce length for the cipher. Some ciphers only

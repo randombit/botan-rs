@@ -163,6 +163,12 @@ fn test_cipher() -> Result<(), botan::Error> {
 
     cipher.set_key(&zero16)?;
 
+    assert!(cipher.update_granularity() > 0);
+
+    if let Some(i) = cipher.ideal_update_granularity() {
+        assert!(i >= cipher.update_granularity());
+    }
+
     cipher.set_associated_data(&[1, 2, 3])?;
     cipher.set_associated_data(&[])?;
 

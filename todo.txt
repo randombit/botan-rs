@@ -20,7 +20,6 @@ botan_pubkey_load_sm2
 
 botan_rng_init_custom
 botan_system_rng_get
-botan_cipher_get_ideal_update_granularity
 
 botan_srp6_server_session_init
 botan_srp6_server_session_destroy
