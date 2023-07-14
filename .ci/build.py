@@ -7,6 +7,8 @@ import multiprocessing
 
 def run_command(cmdline, cwd = None):
     print("Running '%s'" % (' '.join(cmdline)))
+    sys.stdout.flush()
+    sys.stderr.flush()
     proc = subprocess.Popen(cmdline, cwd=cwd)
 
     proc.communicate()
@@ -14,10 +16,6 @@ def run_command(cmdline, cwd = None):
     if proc.returncode != 0:
         print("ERROR: Running %s failed with rc %d" % (cmdline, proc.returncode))
         sys.exit(1)
-
-    # GH actions hack
-    sys.stdout.flush()
-    sys.stderr.flush()
 
 def main(args = None):
     if args is None:
