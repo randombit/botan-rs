@@ -117,8 +117,9 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
-            # FIXME this is wrong and also we need sccache
-            path: ~/.cargo
+            path: |
+               C:/Users/runneradmin/AppData/Roaming/ccache
+               ~/.cargo
             key: ${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
             restore-keys: |
                ${{ matrix.toolchain }}-${{ matrix.features }}
