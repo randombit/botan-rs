@@ -43,7 +43,7 @@ jobs:
           - toolchain: stable
             features: no-std
           - toolchain: stable
-            features: botan3
+            features: git
           - toolchain: stable
             features: vendored
           - toolchain: 1.64.0 # no-std MSRV
@@ -68,7 +68,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           toolchain: ${{ matrix.toolchain }}
-      - run: ./.ci/build.sh ${{ matrix.features }}
+      - run: ./.ci/build.py ${{ matrix.features }}
 
   ci_mac:
     runs-on: macos-latest
@@ -78,10 +78,12 @@ jobs:
 
       matrix:
         include:
-#          - toolchain: stable
+          - toolchain: stable
+            features: botan3
           - toolchain: stable
             features: vendored
-#          - toolchain: nightly
+          - toolchain: nightly
+            features: botan3
 
     steps:
       - run: brew install ccache botan
@@ -97,4 +99,4 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.toolchain }}
-      - run: ./.ci/build.sh ${{ matrix.features }}
+      - run: ./.ci/build.py ${{ matrix.features }}
