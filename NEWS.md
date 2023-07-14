@@ -1,4 +1,4 @@
-## 0.10.5 Not Yet Released
+## 0.10.5 2023-07-14
 
 - Improve support for building on Windows
 - Rewrote the CI script in Python so it can be used on Windows as well
