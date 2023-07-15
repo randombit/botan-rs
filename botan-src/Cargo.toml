@@ -11,6 +11,10 @@ readme = "README.md"
 categories = ["cryptography"]
 exclude = ["botan/doc",
            "botan/src/cli",
+           "botan/src/lib/compat/sodium",
+           "botan/src/lib/filters",
+           "botan/src/lib/prov/pkcs11",
+           "botan/src/lib/prov/tpm",
            "botan/src/tests",
            "botan/src/bogo_shim",
            "botan/src/examples",
