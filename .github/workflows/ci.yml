@@ -60,10 +60,9 @@ jobs:
         with:
             path: |
               ~/.cache/ccache
-              ~/.cargo
-            key: ${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
+            key: linux-${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
             restore-keys: |
-               ${{ matrix.toolchain }}-${{ matrix.features }}
+               linux-${{ matrix.toolchain }}-${{ matrix.features }}
       - uses: dtolnay/rust-toolchain@master
         with:
           target: ${{ matrix.target }}
@@ -92,10 +91,9 @@ jobs:
         with:
             path: |
               /Users/runner/Library/Caches/ccache
-              ~/.cargo
-            key: ${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
+            key: mac-${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
             restore-keys: |
-               ${{ matrix.toolchain }}-${{ matrix.features }}
+               mac-${{ matrix.toolchain }}-${{ matrix.features }}
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.toolchain }}
@@ -114,19 +112,19 @@ jobs:
 #          - toolchain: nightly
 
     steps:
+      - run: choco install -y sccache
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
             path: |
-               C:/Users/runneradmin/AppData/Roaming/ccache
-               ~/.cargo
-            key: ${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
+               C:/Users/runneradmin/AppData/Local/Mozilla/sccache/cache
+            key: windows-${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
             restore-keys: |
-               ${{ matrix.toolchain }}-${{ matrix.features }}
+               windows-${{ matrix.toolchain }}-${{ matrix.features }}
       - uses: egor-tensin/vs-shell@v2
         with:
           arch: amd64
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.toolchain }}
-      - run: python3 ./.ci/build.py ${{ matrix.features }}
+      - run: python3 ./.ci/build.py ${{ matrix.features }} --compiler-cache=sccache
