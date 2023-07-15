@@ -4,6 +4,7 @@ import subprocess
 import sys
 import os
 import multiprocessing
+import optparse
 
 def run_command(cmdline, cwd = None):
     print("Running '%s'" % (' '.join(cmdline)))
@@ -21,9 +22,27 @@ def main(args = None):
     if args is None:
         args = sys.argv
 
+    parser = optparse.OptionParser()
+
+    parser.add_option('--compiler-cache', default='ccache',
+                      help='Specify the compiler cache to use')
+
+    (options, args) = parser.parse_args(args)
+
     if len(args) > 2:
         print("ERROR: Unexpected extra arguments")
         return 1
+
+    if options.compiler_cache not in ['ccache', 'sccache']:
+        print("ERROR: Unknown compiler cache '%s'" % (options.compiler_cache))
+        return 1
+
+    if options.compiler_cache == 'ccache':
+        if "CCACHE_MAXSIZE" not in os.environ:
+            os.environ["CCACHE_MAXSIZE"] = "2G"
+    elif options.compiler_cache == 'sccache':
+        if "SCCACHE_MAXSIZE" not in os.environ:
+            os.environ["SCCACHE_MAXSIZE"] = "2G"
 
     KNOWN_FEATURES = ['vendored', 'git', 'no-std', 'botan3']
 
@@ -34,9 +53,6 @@ def main(args = None):
             print("ERROR: Unknown feature %s" % (feat))
             return 1
 
-    if "CCACHE_MAXSIZE" not in os.environ:
-        os.environ["CCACHE_MAXSIZE"] = "2G"
-
     # Disable functionality that is slow to build and that we do not / can not
     # use since it is not available via the C interface:
     disabled_modules = "tls,pkcs11,sodium,filters"
@@ -44,7 +60,7 @@ def main(args = None):
     os.environ["RUSTFLAGS"] = "-D warnings"
 
     if 'vendored' in features:
-        os.environ["BOTAN_CONFIGURE_COMPILER_CACHE"] = "ccache"
+        os.environ["BOTAN_CONFIGURE_COMPILER_CACHE"] = options.compiler_cache
         os.environ["BOTAN_CONFIGURE_DISABLE_MODULES"] = disabled_modules
 
     if 'git' in features:
@@ -52,7 +68,7 @@ def main(args = None):
         os.environ["LD_LIBRARY_PATH"] = "/usr/local/lib"
         os.environ["DYLD_LIBRARY_PATH"] = "/usr/local/lib"
 
-    run_command(['ccache', '--show-stats'])
+    run_command([options.compiler_cache, '--show-stats'])
 
     if 'vendored' in features and 'git' in features:
         print("ERROR: Incompatible features vendored and git")
@@ -66,7 +82,7 @@ def main(args = None):
         botan_src = 'botan-git'
         run_command(['git', 'clone', '--depth', '1', 'https://github.com/randombit/botan.git', botan_src])
         run_command(['./configure.py',
-                     '--compiler-cache=ccache',
+                     '--compiler-cache=%s' % (options.compiler_cache),
                      '--without-documentation',
                      '--build-targets=shared',
                      '--disable-modules=%s' % (disabled_modules)], botan_src)
@@ -109,7 +125,7 @@ def main(args = None):
     run_command(['cargo', 'build'] + lib_features, 'botan')
     run_command(['cargo', 'test'] + lib_features, 'botan')
 
-    run_command(['ccache', '--show-stats'])
+    run_command([options.compiler_cache, '--show-stats'])
 
 if __name__ == '__main__':
     sys.exit(main())
