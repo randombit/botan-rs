@@ -14,7 +14,6 @@ Missing Functions
 These are functions currently exposed by Botan's C API which are not
 exposed by the high level Rust wrapper:
 
-botan_privkey_create_dsa
 botan_privkey_load_sm2
 botan_pubkey_load_sm2
 
