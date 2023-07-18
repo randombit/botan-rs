@@ -45,6 +45,28 @@ impl Privkey {
         Ok(Privkey { obj })
     }
 
+    /// Create a new ElGamal private key with a random group
+    pub fn create_elgamal(
+        p_bits: usize,
+        q_bits: usize,
+        rng: &mut RandomNumberGenerator,
+    ) -> Result<Self> {
+        let obj = botan_init!(botan_privkey_create_elgamal, rng.handle(), p_bits, q_bits)?;
+
+        Ok(Self { obj })
+    }
+
+    /// Create a new DSA private key with a random group
+    pub fn create_dsa(
+        p_bits: usize,
+        q_bits: usize,
+        rng: &mut RandomNumberGenerator,
+    ) -> Result<Self> {
+        let obj = botan_init!(botan_privkey_create_dsa, rng.handle(), p_bits, q_bits)?;
+
+        Ok(Self { obj })
+    }
+
     /// Load an RSA private key (p,q,e)
     ///
     /// # Examples

@@ -1028,6 +1028,81 @@ fn test_totp() -> Result<(), botan::Error> {
     Ok(())
 }
 
+#[test]
+fn test_elgamal() -> Result<(), botan::Error> {
+    let mut rng = botan::RandomNumberGenerator::new()?;
+
+    let p_bits = 1024;
+    let q_bits = 256;
+
+    let elg = botan::Privkey::create_elgamal(p_bits, q_bits, &mut rng)?;
+
+    // extract the elements:
+    let p = elg.get_field("p")?;
+    let q = elg.get_field("q")?;
+    let g = elg.get_field("g")?;
+    let x = elg.get_field("x")?;
+    let y = elg.get_field("y")?;
+
+    // check the lengths:
+    assert_eq!(p.bit_count()?, p_bits);
+    assert_eq!(q.bit_count()?, q_bits);
+    assert!(x.bit_count()? <= q_bits);
+    assert!(y.bit_count()? <= p_bits);
+
+    // create a public key:
+    let elgp = botan::Pubkey::load_elgamal(&p, &g, &y)?;
+
+    // encrypt a message:
+    let padding = "PKCS1v15";
+    let ptext = rng.read(16)?;
+    let ctext = elgp.encrypt(&ptext, padding, &mut rng)?;
+
+    // decrypt with the private key:
+    let recovered = elg.decrypt(&ctext, padding)?;
+    assert_eq!(recovered, ptext);
+
+    Ok(())
+}
+
+#[test]
+fn test_dsa() -> Result<(), botan::Error> {
+    let mut rng = botan::RandomNumberGenerator::new()?;
+
+    let p_bits = 1024;
+    let q_bits = 256;
+
+    let dsa = botan::Privkey::create_dsa(p_bits, q_bits, &mut rng)?;
+
+    // extract the elements:
+    let p = dsa.get_field("p")?;
+    let q = dsa.get_field("q")?;
+    let g = dsa.get_field("g")?;
+    let x = dsa.get_field("x")?;
+    let y = dsa.get_field("y")?;
+
+    // check the lengths:
+    assert_eq!(p.bit_count()?, p_bits);
+    assert_eq!(q.bit_count()?, q_bits);
+    assert!(x.bit_count()? <= q_bits);
+    assert!(y.bit_count()? <= p_bits);
+
+    // create a public key:
+    let dsap = botan::Pubkey::load_dsa(&p, &q, &g, &y)?;
+
+    // sign a message:
+    let padding = "EMSA1(SHA-256)";
+    let message = rng.read(16)?;
+
+    let signature = dsa.sign(&message, &padding, &mut rng)?;
+
+    // verify the signature:
+
+    assert!(dsap.verify(&message, &signature, &padding)?);
+
+    Ok(())
+}
+
 #[cfg(feature = "botan3")]
 #[test]
 fn test_zfec() -> Result<(), botan::Error> {
