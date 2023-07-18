@@ -1,6 +1,6 @@
 [package]
 name = "botan"
-version = "0.10.5"
+version = "0.10.6"
 authors = ["Jack Lloyd <jack@randombit.net>"]
 description = "Rust wrapper for Botan cryptography library"
 license = "MIT"

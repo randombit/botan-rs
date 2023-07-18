@@ -1,3 +1,9 @@
+## 0.10.6 2023-07-18
+
+- Add support for generating ElGamal and DSA keys using randomly
+  generated groups
+- Fix a new clippy from nightly
+
 ## 0.10.5 2023-07-14
 
 - Improve support for building on Windows
