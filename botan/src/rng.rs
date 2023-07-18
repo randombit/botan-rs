@@ -19,7 +19,7 @@ impl RandomNumberGenerator {
         Ok(RandomNumberGenerator { obj })
     }
 
-    pub(crate) fn handle(&self) -> botan_rng_t {
+    pub(crate) fn handle(&mut self) -> botan_rng_t {
         self.obj
     }
 

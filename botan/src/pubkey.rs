@@ -280,12 +280,14 @@ impl Privkey {
         let cipher = make_cstr(cipher)?;
         let pbkdf = make_cstr(pbkdf)?;
 
+        let rng_handle = rng.handle();
+
         #[cfg(feature = "botan3")]
         {
             call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
                 botan_privkey_view_encrypted_der(
                     self.obj,
-                    rng.handle(),
+                    rng_handle,
                     passphrase.as_ptr(),
                     cipher.as_ptr(),
                     pbkdf.as_ptr(),
@@ -303,7 +305,7 @@ impl Privkey {
                     self.obj,
                     out_buf,
                     out_len,
-                    rng.handle(),
+                    rng_handle,
                     passphrase.as_ptr(),
                     pbkdf_iter,
                     cipher.as_ptr(),
@@ -342,13 +344,14 @@ impl Privkey {
         let passphrase = make_cstr(passphrase)?;
         let cipher = make_cstr(cipher)?;
         let pbkdf = make_cstr(pbkdf)?;
+        let rng_handle = rng.handle();
 
         #[cfg(feature = "botan3")]
         {
             call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
                 botan_privkey_view_encrypted_pem(
                     self.obj,
-                    rng.handle(),
+                    rng_handle,
                     passphrase.as_ptr(),
                     cipher.as_ptr(),
                     pbkdf.as_ptr(),
@@ -366,7 +369,7 @@ impl Privkey {
                     self.obj,
                     out_buf,
                     out_len,
-                    rng.handle(),
+                    rng_handle,
                     passphrase.as_ptr(),
                     pbkdf_iter,
                     cipher.as_ptr(),

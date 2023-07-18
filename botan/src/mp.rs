@@ -34,6 +34,10 @@ impl MPI {
         self.obj
     }
 
+    pub(crate) fn handle_mut(&mut self) -> botan_mp_t {
+        self.obj
+    }
+
     /// Crate a new (zero-valued) MPI
     pub fn new() -> Result<MPI> {
         let obj = botan_init!(botan_mp_init)?;
@@ -329,7 +333,7 @@ impl MPI {
 
     /// Swap two MPI values
     pub fn swap(&mut self, other: &mut MPI) -> Result<()> {
-        botan_call!(botan_mp_swap, self.obj, other.obj)
+        botan_call!(botan_mp_swap, self.obj, other.handle_mut())
     }
 
     /// Perform a primality test on self
