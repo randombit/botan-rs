@@ -47,8 +47,9 @@ impl Signer {
 
     /// Complete and return the signature
     pub fn finish(&mut self, rng: &mut RandomNumberGenerator) -> Result<Vec<u8>> {
+        let rng_handle = rng.handle();
         call_botan_ffi_returning_vec_u8(self.sig_len, &|out_buf, out_len| unsafe {
-            botan_pk_op_sign_finish(self.obj, rng.handle(), out_buf, out_len)
+            botan_pk_op_sign_finish(self.obj, rng_handle, out_buf, out_len)
         })
     }
 }
@@ -194,10 +195,12 @@ impl Encryptor {
             &mut ctext_len
         )?;
 
+        let rng_handle = rng.handle();
+
         call_botan_ffi_returning_vec_u8(ctext_len, &|out_buf, out_len| unsafe {
             botan_pk_op_encrypt(
                 self.obj,
-                rng.handle(),
+                rng_handle,
                 out_buf,
                 out_len,
                 ptext.as_ptr(),
