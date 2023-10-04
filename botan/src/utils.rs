@@ -142,7 +142,7 @@ fn cstr_slice_to_str(raw_cstr: &[u8]) -> Result<String> {
 }
 
 #[cfg(feature = "botan3")]
-unsafe fn cstr_to_str(raw_cstr: *const i8) -> Result<String> {
+unsafe fn cstr_to_str(raw_cstr: *const c_char) -> Result<String> {
     let cstr = CStr::from_ptr(raw_cstr);
     Ok(cstr.to_str().map_err(Error::conversion_error)?.to_owned())
 }
