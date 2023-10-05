@@ -21,7 +21,7 @@ wycheproof = "0.5"
 hex = "0.4"
 
 [features]
-default = []
-no-std = ["botan-sys/no-std"]
+default = ["std"]
+std = ["botan-sys/std"]
 vendored = ["botan-sys/vendored"]
 botan3 = ["botan-sys/botan3"]
