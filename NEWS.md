@@ -1,3 +1,8 @@
+## 0.10.7 2023-10-05
+
+- Fix a bug which prevented compilation on systems where C chars
+  are unsigned, such as aarch64
+
 ## 0.10.6 2023-07-18
 
 - Add support for generating ElGamal and DSA keys using randomly
