@@ -7,8 +7,7 @@ use botan_sys::*;
 #[test]
 fn test_hex() {
     let bin = vec![0x42, 0x23, 0x45, 0x8F];
-    let mut out = Vec::new();
-    out.resize(bin.len() * 2, 0);
+    let mut out = vec![0; bin.len() * 2];
 
     unsafe {
         assert_eq!(
@@ -48,7 +47,7 @@ fn test_hash() {
         let hash_name = CString::new("SHA-384").unwrap();
         assert_eq!(botan_hash_init(&mut hash, hash_name.as_ptr(), 0u32), 0);
 
-        let input = vec![97, 98, 99];
+        let input = [97, 98, 99];
         assert_eq!(botan_hash_update(hash, input.as_ptr(), input.len()), 0);
         assert_eq!(botan_hash_update(hash, input.as_ptr(), input.len()), 0);
 
