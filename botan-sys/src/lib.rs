@@ -56,4 +56,3 @@ pub use rng::*;
 pub use utils::*;
 pub use version::*;
 pub use x509::*;
-pub use zfec::*;
