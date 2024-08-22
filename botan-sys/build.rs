@@ -41,7 +41,7 @@ fn main() {
         let (lib_dir, _) = botan_src::build();
         println!("cargo:vendored=1");
         println!("cargo:rustc-link-search=native={}", &lib_dir);
-        println!("cargo:rustc-link-lib=static={}", botan_library_name(),);
+        println!("cargo:rustc-link-lib=static={}", botan_library_name());
 
         for dylib in emit_dylibs() {
             println!("cargo:rustc-flags=-l dylib={}", dylib);
@@ -49,6 +49,20 @@ fn main() {
     }
     #[cfg(not(feature = "vendored"))]
     {
-        println!("cargo:rustc-link-lib={}", botan_library_name());
+        #[cfg(feature = "static")]
+        {
+            #[cfg(feature = "pkg-config")]
+            {
+                pkg_config::Config::new().statik(true).probe(&botan_library_name()).unwrap();
+            }
+            #[cfg(not(feature = "pkg-config"))]
+            {
+                println!("cargo:rustc-link-lib=static={}", botan_library_name());
+            }
+        }
+        #[cfg(not(feature = "static"))]
+        {
+            println!("cargo:rustc-link-lib={}", botan_library_name());
+        }
     }
 }
