@@ -62,7 +62,14 @@ fn main() {
         }
         #[cfg(not(feature = "static"))]
         {
-            println!("cargo:rustc-link-lib={}", botan_library_name());
+            #[cfg(feature = "pkg-config")]
+            {
+                pkg_config::Config::new().probe(&botan_library_name()).unwrap();
+            }
+            #[cfg(not(feature = "pkg-config"))]
+            {
+                println!("cargo:rustc-link-lib={}", botan_library_name());
+            }
         }
     }
 }
