@@ -32,9 +32,9 @@ Features
 
 The following features are supported:
 
-* `std` (enabled by default): Enable using std library. If disabled
-  (resulting in a `no_std` build), then Rust 1.64.0 or higher is
-  required.
+* `std` (enabled by default): Enable using std library features.  If
+  disabled then the crates are `no_std`, however support for `alloc`
+  is still required.
 * `vendored`: Build a copy of the C++ library directly, without
   relying on a system installed version.
 * `botan3`: Enable support for using APIs added in Botan 3.
