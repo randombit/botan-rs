@@ -1,3 +1,7 @@
+## 0.11.0 Not Yet Released
+
+- Bump MSRV to 1.64.0 for both std and no-std builds
+
 ## 0.10.7 2023-10-05
 
 - Fix a bug which prevented compilation on systems where C chars
