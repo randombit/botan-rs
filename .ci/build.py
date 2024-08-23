@@ -18,6 +18,26 @@ def run_command(cmdline, cwd = None):
         print("ERROR: Running %s failed with rc %d" % (cmdline, proc.returncode))
         sys.exit(1)
 
+def compute_features(features, for_who):
+    feat = []
+    if 'vendored' in features:
+        feat.append('vendored')
+
+    if 'git' in features or 'botan3' in features:
+        feat.append('botan3')
+
+    if for_who == 'lib' and 'no-std' not in features:
+        feat.append('std')
+
+    feature_flag = []
+    if feat != []:
+        feature_flag = ['--features', ','.join(feat)]
+
+    if 'no-std' in features:
+        feature_flag += ['--no-default-features']
+
+    return feature_flag
+
 def main(args = None):
     if args is None:
         args = sys.argv
@@ -97,33 +117,8 @@ def main(args = None):
 
     run_command(['rustc', '--version'])
 
-    def compute_features(features):
-        sys = []
-        lib = []
-
-        if 'vendored' in features:
-            sys.append('vendored')
-            lib.append('vendored')
-
-        if 'no-std' in features:
-            # sys is always no_std
-            lib.append('no-std')
-
-        if 'git' in features or 'botan3' in features:
-            sys.append('botan3')
-            lib.append('botan3')
-
-        if sys != []:
-            feat = ','.join(sys)
-            sys = ['--features', feat]
-
-        if lib != []:
-            feat = ','.join(lib)
-            lib = ['--features', feat]
-
-        return (sys, lib)
-
-    (sys_features, lib_features) = compute_features(features)
+    sys_features = compute_features(features, 'sys')
+    lib_features = compute_features(features, 'lib')
 
     run_command(['cargo', 'build'] + sys_features, 'botan-sys')
     run_command(['cargo', 'test'] + sys_features, 'botan-sys')
