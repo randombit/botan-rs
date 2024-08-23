@@ -1,6 +1,6 @@
 [package]
 name = "botan"
-version = "0.10.7"
+version = "0.11.0"
 authors = ["Jack Lloyd <jack@randombit.net>"]
 description = "Rust wrapper for Botan cryptography library"
 license = "MIT"
@@ -11,10 +11,10 @@ keywords = [ "crypto" ]
 readme = "../README.md"
 categories = [ "cryptography", "api-bindings", "no-std" ]
 edition = "2021"
-rust-version = "1.58"
+rust-version = "1.64"
 
 [dependencies]
-botan-sys = { version = "0.10.5", path = "../botan-sys" }
+botan-sys = { version = "0.11", path = "../botan-sys" }
 
 [dev-dependencies]
 wycheproof = "0.5"
@@ -22,6 +22,6 @@ hex = "0.4"
 
 [features]
 default = []
-no-std = ["botan-sys/no-std"]
+no-std = []
 vendored = ["botan-sys/vendored"]
 botan3 = ["botan-sys/botan3"]

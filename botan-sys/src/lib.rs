@@ -1,5 +1,5 @@
+#![no_std]
 #![allow(non_camel_case_types)]
-#![cfg_attr(feature = "no-std", no_std)]
 
 mod block;
 mod cipher;
@@ -21,11 +21,7 @@ mod x509;
 mod zfec;
 
 pub mod ffi_types {
-    #[cfg(feature = "no-std")]
     pub use core::ffi::{c_char, c_int, c_uint, c_void};
-
-    #[cfg(not(feature = "no-std"))]
-    pub use std::os::raw::{c_char, c_int, c_uint, c_void};
 
     #[cfg(feature = "botan3")]
     pub type botan_view_ctx = *mut c_void;

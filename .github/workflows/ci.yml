@@ -46,9 +46,9 @@ jobs:
             features: git
           - toolchain: stable
             features: vendored
-          - toolchain: 1.64.0 # no-std MSRV
+          - toolchain: 1.64.0 # MSRV no-std
             features: no-std
-          - toolchain: 1.58.0 # MSRV
+          - toolchain: 1.64.0 # MSRV
           - toolchain: nightly
           - toolchain: nightly
             features: no-std

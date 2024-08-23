@@ -9,6 +9,8 @@ homepage = "https://botan.randombit.net/"
 repository = "https://github.com/randombit/botan-rs"
 readme = "README.md"
 categories = ["cryptography"]
+rust-version = "1.64"
+
 exclude = ["botan/doc",
            "botan/src/cli",
            "botan/src/lib/compat/sodium",
