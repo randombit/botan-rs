@@ -18,6 +18,8 @@ mod rng;
 mod utils;
 mod version;
 mod x509;
+
+#[cfg(feature = "botan3")]
 mod zfec;
 
 pub mod ffi_types {
@@ -56,4 +58,6 @@ pub use rng::*;
 pub use utils::*;
 pub use version::*;
 pub use x509::*;
+
+#[cfg(feature = "botan3")]
 pub use zfec::*;

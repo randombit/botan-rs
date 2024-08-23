@@ -8,7 +8,7 @@ on:
 
 jobs:
   rustfmt:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: dtolnay/rust-toolchain@master
@@ -16,11 +16,11 @@ jobs:
           toolchain: nightly
           components: rustfmt
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - run: cargo fmt -- --check
   clippy:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: dtolnay/rust-toolchain@master
@@ -28,11 +28,11 @@ jobs:
           toolchain: nightly
           components: clippy
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - run: cargo +nightly clippy -- --deny warnings
   ci:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
@@ -55,8 +55,8 @@ jobs:
 
     steps:
       - run: sudo apt-get -qq install ccache libbotan-2-dev
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         with:
             path: |
               ~/.cache/ccache
@@ -86,8 +86,9 @@ jobs:
 
     steps:
       - run: brew install ccache botan
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - run: ls -l /opt/homebrew/*
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         with:
             path: |
               /Users/runner/Library/Caches/ccache
@@ -113,8 +114,8 @@ jobs:
 
     steps:
       - run: choco install -y sccache
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         with:
             path: |
                C:/Users/runneradmin/AppData/Local/Mozilla/sccache/cache
