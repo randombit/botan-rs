@@ -68,6 +68,12 @@ def main(args = None):
         os.environ["LD_LIBRARY_PATH"] = "/usr/local/lib"
         os.environ["DYLD_LIBRARY_PATH"] = "/usr/local/lib"
 
+    homebrew_dir = "/opt/homebrew/lib"
+    if 'botan3' in features and os.access(homebrew_dir, os.R_OK):
+        os.environ["RUSTFLAGS"] = "-D warnings -L/opt/homebrew/lib"
+        os.environ["RUSTDOCFLAGS"] = "-D warnings -L/opt/homebrew/lib"
+        os.environ["DYLD_LIBRARY_PATH"] = homebrew_dir
+
     run_command([options.compiler_cache, '--show-stats'])
 
     if 'vendored' in features and 'git' in features:

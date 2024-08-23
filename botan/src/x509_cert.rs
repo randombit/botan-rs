@@ -100,8 +100,8 @@ impl CertValidationStatus {
     }
 }
 
-impl ToString for CertValidationStatus {
-    fn to_string(&self) -> String {
+impl core::fmt::Display for CertValidationStatus {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let code = match self {
             CertValidationStatus::Success(x) => x,
             CertValidationStatus::Failed(x) => x,
@@ -111,7 +111,7 @@ impl ToString for CertValidationStatus {
             let result_str = botan_x509_cert_validation_status(*code);
 
             let cstr = CStr::from_ptr(result_str);
-            cstr.to_str().unwrap().to_owned()
+            write!(f, "{}", cstr.to_str().unwrap())
         }
     }
 }
