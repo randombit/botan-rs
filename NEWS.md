@@ -1,6 +1,8 @@
 ## 0.11.0 Not Yet Released
 
 - Bump MSRV to 1.64.0 for both std and no-std builds
+- The `no-std` feature has been replaced by a `std` feature;
+  use `no-default-features` to request a no_std enabled build.
 
 ## 0.10.7 2023-10-05
 
