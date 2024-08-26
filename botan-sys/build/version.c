@@ -1,0 +1,9 @@
+#include <botan/build.h>
+
+MAJOR_VERSION BOTAN_VERSION_MAJOR
+
+#if defined(BOTAN_HAS_FFI)
+FFI_VERSION BOTAN_HAS_FFI
+#else
+FFI_VERSION 0
+#endif

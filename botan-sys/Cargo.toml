@@ -21,3 +21,4 @@ botan3 = []
 
 [build-dependencies]
 botan-src = { version = "0.30101.2", optional = true, path = "../botan-src" }
+cc = "1"
