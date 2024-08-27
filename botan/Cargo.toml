@@ -17,7 +17,7 @@ rust-version = "1.64"
 botan-sys = { version = "0.11", path = "../botan-sys" }
 
 [dev-dependencies]
-wycheproof = "0.5"
+wycheproof = { version = "0.6", default-features = false, features = ["aead", "cipher", "dsa", "ecdh", "ecdsa", "eddsa", "hkdf", "keywrap", "mac", "primality", "rsa_enc", "rsa_sig", "xdh"] }
 hex = "0.4"
 
 [features]
