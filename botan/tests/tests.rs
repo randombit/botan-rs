@@ -76,7 +76,7 @@ fn test_hash() -> Result<(), botan::Error> {
 
     let bad_hash = botan::HashFunction::new("BunnyHash9000");
 
-    assert_eq!(bad_hash.is_err(), true);
+    assert!(bad_hash.is_err());
     assert_eq!(
         bad_hash.as_ref().unwrap_err().error_type(),
         botan::ErrorType::NotImplemented
@@ -210,14 +210,14 @@ fn test_incremental_cipher() -> Result<(), botan::Error> {
     cipher.set_key(&key)?;
     cipher.start(&nonce)?;
 
-    let mut enc_iter = input.chunks(cipher.update_granularity()).enumerate();
+    let enc_iter = input.chunks(cipher.update_granularity()).enumerate();
     let chunks = if input.len() % cipher.update_granularity() == 0 {
         input.len() / cipher.update_granularity()
     } else {
         input.len() / cipher.update_granularity() + 1
     };
     let mut enc_out = vec![0; 0];
-    while let Some((cnt, v)) = enc_iter.next() {
+    for (cnt, v) in enc_iter {
         let mut res = if (cnt + 1) < chunks {
             cipher.update(v)?
         } else {
@@ -255,7 +255,7 @@ fn test_incremental_cipher() -> Result<(), botan::Error> {
         output.len() / chunk_size + 1
     };
     let mut dec_out = vec![0; 0];
-    while let Some((cnt, v)) = dec_iter.next() {
+    for (cnt, v) in dec_iter.by_ref() {
         let mut res = cipher.update(v)?;
         dec_out.append(&mut res);
         if (cnt + 3) == chunks {
@@ -466,9 +466,9 @@ fn test_certs() -> Result<(), botan::Error> {
     assert_eq!(cert.authority_key_id()?, key_id);
     assert_eq!(cert.subject_key_id()?, key_id);
 
-    assert_eq!(cert.allows_usage(botan::CertUsage::CertificateSign)?, true);
-    assert_eq!(cert.allows_usage(botan::CertUsage::CrlSign)?, true);
-    assert_eq!(cert.allows_usage(botan::CertUsage::KeyEncipherment)?, false);
+    assert!(cert.allows_usage(botan::CertUsage::CertificateSign)?);
+    assert!(cert.allows_usage(botan::CertUsage::CrlSign)?);
+    assert!(!(cert.allows_usage(botan::CertUsage::KeyEncipherment)?));
 
     let pubkey = cert.public_key()?;
 
@@ -532,26 +532,26 @@ AzMCIEJSRDmXjX8TMTbSfoTLmhaYJnCL+AfHLZLdHlSLDIzh
     let ca_dup = ca.clone();
 
     let result = ee.verify(&[], &[&ca], None, None, None)?;
-    assert_eq!(result.success(), true);
+    assert!(result.success());
     assert_eq!(result.to_string(), "Verified");
 
     let result = ee.verify(&[], &[&ca], None, None, Some(300))?;
-    assert_eq!(result.success(), false);
+    assert!(!result.success());
     assert_eq!(result.to_string(), "Certificate is not yet valid");
 
     let result = ee.verify(&[], &[&ca], None, Some("no.hostname.com"), None)?;
-    assert_eq!(result.success(), false);
+    assert!(!result.success());
     assert_eq!(
         result.to_string(),
         "Certificate does not match provided name"
     );
 
     let result = ee.verify(&[], &[], None, None, None)?;
-    assert_eq!(result.success(), false);
+    assert!(!result.success());
     assert_eq!(result.to_string(), "Certificate issuer not found");
 
     let result = bad_ee.verify(&[], &[&ca_dup], None, None, None)?;
-    assert_eq!(result.success(), false);
+    assert!(!result.success());
     assert_eq!(result.to_string(), "Signature error");
     Ok(())
 }
@@ -574,7 +574,7 @@ fn test_bcrypt() -> Result<(), botan::Error> {
     assert!(botan::bcrypt_verify(pass, &bcrypt1)?);
     assert!(botan::bcrypt_verify(pass, &bcrypt2)?);
 
-    assert_eq!(botan::bcrypt_verify("passwurd", &bcrypt2)?, false);
+    assert!(!(botan::bcrypt_verify("passwurd", &bcrypt2)?));
     Ok(())
 }
 
@@ -584,7 +584,7 @@ fn test_pubkey() -> Result<(), botan::Error> {
 
     let ecdsa_key = botan::Privkey::create("ECDSA", "secp256r1", &mut rng)?;
 
-    assert_eq!(ecdsa_key.check_key(&mut rng)?, true);
+    assert!(ecdsa_key.check_key(&mut rng)?);
     assert_eq!(ecdsa_key.algo_name()?, "ECDSA");
 
     assert!(ecdsa_key.get_field("n").is_err());
@@ -608,10 +608,10 @@ fn test_pubkey() -> Result<(), botan::Error> {
     assert!(pub_pem.ends_with("-----END PUBLIC KEY-----\n"));
 
     let loaded_key = botan::Privkey::load_der(&bits)?;
-    assert_eq!(loaded_key.check_key(&mut rng)?, true);
+    assert!(loaded_key.check_key(&mut rng)?);
 
     let loaded_pem_key = botan::Pubkey::load_pem(&pub_pem)?;
-    assert_eq!(loaded_pem_key.check_key(&mut rng)?, true);
+    assert!(loaded_pem_key.check_key(&mut rng)?);
 
     let loaded_bits = loaded_key.der_encode()?;
     let loaded_pub_key = loaded_key.pubkey()?;
@@ -758,15 +758,15 @@ fn test_pubkey_sign() -> Result<(), botan::Error> {
     verifier.update(&[1])?;
     verifier.update(&[23, 42])?;
 
-    assert_eq!(verifier.finish(&signature)?, true);
+    assert!(verifier.finish(&signature)?);
 
     verifier.update(&[1])?;
-    assert_eq!(verifier.finish(&signature)?, false);
+    assert!(!(verifier.finish(&signature)?));
 
     verifier.update(&[1])?;
     verifier.update(&[23, 42])?;
 
-    assert_eq!(verifier.finish(&signature)?, true);
+    assert!(verifier.finish(&signature)?);
     Ok(())
 }
 
@@ -881,11 +881,11 @@ fn test_pkcs_hash_id() -> Result<(), botan::Error> {
 fn test_ct_compare() -> Result<(), botan::Error> {
     let a = vec![1, 2, 3];
 
-    assert_eq!(botan::const_time_compare(&a, &[1, 2, 3]), true);
-    assert_eq!(botan::const_time_compare(&a, &[1, 2, 3, 4]), false);
-    assert_eq!(botan::const_time_compare(&a, &[1, 2, 4]), false);
-    assert_eq!(botan::const_time_compare(&a, &a), true);
-    assert_eq!(botan::const_time_compare(&a, &[1, 2, 3]), true);
+    assert!(botan::const_time_compare(&a, &[1, 2, 3]));
+    assert!(!botan::const_time_compare(&a, &[1, 2, 3, 4]));
+    assert!(!botan::const_time_compare(&a, &[1, 2, 4]));
+    assert!(botan::const_time_compare(&a, &a));
+    assert!(botan::const_time_compare(&a, &[1, 2, 3]));
     Ok(())
 }
 
@@ -971,7 +971,7 @@ fn test_mp() -> Result<(), botan::Error> {
 
     let t = -t * &ten;
 
-    assert_eq!(t.is_negative()?, true);
+    assert!(t.is_negative()?);
 
     assert_eq!(format!("{t}"), "-39814346982240");
     Ok(())
@@ -1094,11 +1094,11 @@ fn test_dsa() -> Result<(), botan::Error> {
     let padding = "EMSA1(SHA-256)";
     let message = rng.read(16)?;
 
-    let signature = dsa.sign(&message, &padding, &mut rng)?;
+    let signature = dsa.sign(&message, padding, &mut rng)?;
 
     // verify the signature:
 
-    assert!(dsap.verify(&message, &signature, &padding)?);
+    assert!(dsap.verify(&message, &signature, padding)?);
 
     Ok(())
 }

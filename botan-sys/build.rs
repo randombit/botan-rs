@@ -53,7 +53,10 @@ fn main() {
         {
             #[cfg(feature = "pkg-config")]
             {
-                pkg_config::Config::new().statik(true).probe(&botan_library_name()).unwrap();
+                pkg_config::Config::new()
+                    .statik(true)
+                    .probe(&botan_library_name())
+                    .unwrap();
             }
             #[cfg(not(feature = "pkg-config"))]
             {
@@ -64,7 +67,9 @@ fn main() {
         {
             #[cfg(feature = "pkg-config")]
             {
-                pkg_config::Config::new().probe(&botan_library_name()).unwrap();
+                pkg_config::Config::new()
+                    .probe(&botan_library_name())
+                    .unwrap();
             }
             #[cfg(not(feature = "pkg-config"))]
             {
