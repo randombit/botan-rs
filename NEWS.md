@@ -3,6 +3,9 @@
 - Bump MSRV to 1.64.0 for both std and no-std builds
 - The `no-std` feature has been replaced by a `std` feature;
   use `no-default-features` to request a no_std enabled build.
+- Add `pkg-config` and `static` features
+- Update `botan-src` to 3.5.0
+- Fix various clippy warnings
 
 ## 0.10.7 2023-10-05
 
