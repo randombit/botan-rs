@@ -48,7 +48,7 @@ fn test_hash() {
         let hash_name = CString::new("SHA-384").unwrap();
         assert_eq!(botan_hash_init(&mut hash, hash_name.as_ptr(), 0u32), 0);
 
-        let input = vec![97, 98, 99];
+        let input = [97, 98, 99];
         assert_eq!(botan_hash_update(hash, input.as_ptr(), input.len()), 0);
         assert_eq!(botan_hash_update(hash, input.as_ptr(), input.len()), 0);
 

@@ -18,6 +18,9 @@ rust-version = "1.64"
 default = []
 vendored = ["botan-src", "botan3"]
 botan3 = []
+static = []
+pkg-config = ["dep:pkg-config"]
 
 [build-dependencies]
-botan-src = { version = "0.30101.2", optional = true, path = "../botan-src" }
+botan-src = { version = "0.30500.1", optional = true, path = "../botan-src" }
+pkg-config = { version = "0.3.30", optional = true }

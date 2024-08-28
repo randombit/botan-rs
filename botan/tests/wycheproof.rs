@@ -206,12 +206,12 @@ fn wycheproof_aead_gcm_tests() -> Result<(), botan::Error> {
 
     fn seed_gcm_name(ks: usize, ts: usize, _ns: usize) -> Option<String> {
         assert!(ks == 128 && ts == 128);
-        Some(format!("SEED/GCM"))
+        Some("SEED/GCM".to_string())
     }
 
     fn sm4_gcm_name(ks: usize, ts: usize, _ns: usize) -> Option<String> {
         assert!(ks == 128 && ts == 128);
-        Some(format!("SM4/GCM"))
+        Some("SM4/GCM".to_string())
     }
 
     wycheproof_aead_test(wycheproof::aead::TestName::AesGcm, aes_gcm_name)?;
@@ -235,7 +235,7 @@ fn wycheproof_aead_ccm_tests() -> Result<(), botan::Error> {
             return None;
         }
         let ccm_l = 15 - (ns / 8);
-        if ccm_l < 2 || ccm_l > 8 {
+        if !(2..=8).contains(&ccm_l) {
             return None;
         }
         Some(format!("AES-{ks}/CCM({tag_bytes},{ccm_l})"))
@@ -529,7 +529,7 @@ fn wycheproof_primality_tests() -> Result<(), botan::Error> {
 
                 // The primality test data encodes negative numbers using
                 // twos complement encoding
-                let mpi = if test.value.len() > 0 && (test.value[0] & 0x80 == 0x80) {
+                let mpi = if !test.value.is_empty() && (test.value[0] & 0x80 == 0x80) {
                     let mut flipped: Vec<u8> = test.value.to_vec();
                     for i in 0..flipped.len() {
                         flipped[i] = !flipped[i];
@@ -612,7 +612,7 @@ fn wycheproof_rsa_oaep_decrypt_tests() -> Result<(), botan::Error> {
         let test_set = TestSet::load(test_name).expect("Loading tests failed");
 
         for test_group in &test_set.test_groups {
-            let oaep_string = match gen_oaep_string(&test_group) {
+            let oaep_string = match gen_oaep_string(test_group) {
                 Some(s) => s,
                 None => continue,
             };
@@ -843,7 +843,7 @@ fn wycheproof_ecdsa_verify_tests() -> Result<(), botan::Error> {
         let test_set = TestSet::load(test_name).expect("Loading tests failed");
 
         for test_group in &test_set.test_groups {
-            if curve_id_to_str(test_group.key.curve) == None {
+            if curve_id_to_str(test_group.key.curve).is_none() {
                 continue;
             }
 
@@ -975,7 +975,7 @@ fn wycheproof_ecdh_tests() -> Result<(), botan::Error> {
 
             for test in &test_group.tests {
                 let s = botan::MPI::new_from_bytes(&test.private_key)?;
-                let priv_key = botan::Privkey::load_ecdh(&s, &curve_id)?;
+                let priv_key = botan::Privkey::load_ecdh(&s, curve_id)?;
 
                 let mut ka = botan::KeyAgreement::new(&priv_key, "Raw")?;
 

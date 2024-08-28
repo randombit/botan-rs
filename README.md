@@ -40,3 +40,7 @@ The following features are supported:
 * `botan3`: Enable support for using APIs added in Botan 3.
   This enables several new features, and more efficient operation.
   This feature is implicitly enabled if you use `vendored`.
+* `static`: Enable static linking for a non-vendored, externally
+  provided Botan dependency.
+* `pkg-config`: Enable finding a non-vendored, externally provided
+  Botan with pkg-config. Can be used in combination with `static`.
