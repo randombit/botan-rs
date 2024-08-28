@@ -6,6 +6,7 @@
 - Add `pkg-config` and `static` features
 - Update `botan-src` to 3.5.0
 - Fix various clippy warnings
+- Update wycheproof test dependency to 0.6
 
 ## 0.10.7 2023-10-05
 
