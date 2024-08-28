@@ -1,4 +1,4 @@
-## 0.11.0 Not Yet Released
+## 0.11.0 2024-08-28
 
 - Bump MSRV to 1.64.0 for both std and no-std builds
 - The `no-std` feature has been replaced by a `std` feature;
