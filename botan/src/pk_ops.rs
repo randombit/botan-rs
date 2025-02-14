@@ -40,6 +40,19 @@ impl Signer {
         Ok(Signer { obj, sig_len })
     }
 
+    /// Create a new signature operator that outputs DER-formatted signatures
+    pub fn new_with_der_formatted_signatures(key: &Privkey, padding: &str) -> Result<Signer> {
+        let padding = make_cstr(padding)?;
+        let obj = botan_init!(
+            botan_pk_op_sign_create,
+            key.handle(),
+            padding.as_ptr(),
+            1u32
+        )?;
+        let sig_len = botan_usize!(botan_pk_op_sign_output_length, obj)?;
+        Ok(Signer { obj, sig_len })
+    }
+
     /// Add more bytes of the message that will be signed
     pub fn update(&mut self, data: &[u8]) -> Result<()> {
         botan_call!(botan_pk_op_sign_update, self.obj, data.as_ptr(), data.len())
