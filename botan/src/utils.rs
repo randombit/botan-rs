@@ -202,6 +202,10 @@ impl Error {
         }
     }
 
+    pub(crate) fn bad_parameter(message: &'static str) -> Self {
+        Self::with_message(ErrorType::BadParameter, message.to_owned())
+    }
+
     #[cfg(feature = "std")]
     pub(crate) fn conversion_error<T: std::error::Error>(e: T) -> Self {
         Self {

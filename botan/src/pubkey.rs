@@ -92,6 +92,9 @@ impl Privkey {
     /// let key = botan::Privkey::load_ed25519(&v).unwrap();
     /// ```
     pub fn load_ed25519(key: &[u8]) -> Result<Privkey> {
+        if key.len() != 32 {
+            return Err(Error::bad_parameter("Invalid input length"));
+        }
         let obj = botan_init!(botan_privkey_load_ed25519, key.as_ptr())?;
         Ok(Privkey { obj })
     }
@@ -105,6 +108,9 @@ impl Privkey {
     /// let key = botan::Privkey::load_x25519(&v).unwrap();
     /// ```
     pub fn load_x25519(key: &[u8]) -> Result<Privkey> {
+        if key.len() != 32 {
+            return Err(Error::bad_parameter("Invalid input length"));
+        }
         let obj = botan_init!(botan_privkey_load_x25519, key.as_ptr())?;
         Ok(Privkey { obj })
     }
