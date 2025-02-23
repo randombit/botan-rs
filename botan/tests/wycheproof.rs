@@ -1000,6 +1000,9 @@ fn wycheproof_ecdh_tests() -> Result<(), botan::Error> {
 fn wycheproof_xdh_tests() -> Result<(), botan::Error> {
     use wycheproof::xdh::*;
 
+    let version = botan::Version::current()?;
+    let will_accept_zeros = !version.at_least(3, 6);
+
     for test_name in TestName::all() {
         if test_name == TestName::X448 {
             continue;
@@ -1015,7 +1018,19 @@ fn wycheproof_xdh_tests() -> Result<(), botan::Error> {
 
                 let shared_secret = ka.agree(0, &test.public_key, &[]);
 
-                if test.result == TestResult::Valid || test.result == TestResult::Acceptable {
+                let should_accept = match test.result {
+                    TestResult::Valid => true,
+                    TestResult::Acceptable => {
+                        if test.flags.contains(&TestFlag::ZeroSharedSecret) {
+                            will_accept_zeros
+                        } else {
+                            true
+                        }
+                    }
+                    TestResult::Invalid => false,
+                };
+
+                if should_accept {
                     match shared_secret {
                         Ok(shared_secret) => assert_eq!(shared_secret, test.shared_secret.as_ref()),
                         Err(e) => panic!("Unable to compute shared secret ({:?})", e),
