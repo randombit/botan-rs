@@ -446,7 +446,7 @@ impl fmt::LowerHex for MPI {
     }
 }
 
-impl<'a> Add<&'a MPI> for MPI {
+impl Add<&MPI> for MPI {
     type Output = MPI;
 
     fn add(mut self, other: &MPI) -> MPI {
@@ -456,7 +456,7 @@ impl<'a> Add<&'a MPI> for MPI {
     }
 }
 
-impl<'a, 'b> Add<&'a MPI> for &'b MPI {
+impl Add<&MPI> for &MPI {
     type Output = MPI;
 
     fn add(self, other: &MPI) -> MPI {
@@ -474,7 +474,7 @@ impl Add<u32> for MPI {
     }
 }
 
-impl<'a> Add<u32> for &'a MPI {
+impl Add<u32> for &MPI {
     type Output = MPI;
 
     fn add(self, other: u32) -> MPI {
@@ -482,7 +482,7 @@ impl<'a> Add<u32> for &'a MPI {
     }
 }
 
-impl<'a> AddAssign<&'a MPI> for MPI {
+impl AddAssign<&MPI> for MPI {
     fn add_assign(&mut self, other: &MPI) {
         self.mp_add_assign(other)
             .expect("MPI::mp_add_assign succeeded");
@@ -496,7 +496,7 @@ impl AddAssign<u32> for MPI {
     }
 }
 
-impl<'a> Sub<&'a MPI> for MPI {
+impl Sub<&MPI> for MPI {
     type Output = MPI;
 
     fn sub(mut self, other: &MPI) -> MPI {
@@ -506,7 +506,7 @@ impl<'a> Sub<&'a MPI> for MPI {
     }
 }
 
-impl<'a, 'b> Sub<&'a MPI> for &'b MPI {
+impl Sub<&MPI> for &MPI {
     type Output = MPI;
 
     fn sub(self, other: &MPI) -> MPI {
@@ -524,7 +524,7 @@ impl Sub<u32> for MPI {
     }
 }
 
-impl<'a> Sub<u32> for &'a MPI {
+impl Sub<u32> for &MPI {
     type Output = MPI;
 
     fn sub(self, other: u32) -> MPI {
@@ -532,7 +532,7 @@ impl<'a> Sub<u32> for &'a MPI {
     }
 }
 
-impl<'a> SubAssign<&'a MPI> for MPI {
+impl SubAssign<&MPI> for MPI {
     fn sub_assign(&mut self, other: &MPI) {
         self.mp_sub_assign(other)
             .expect("MPI::mp_sub_assign succeeded");
@@ -546,7 +546,7 @@ impl SubAssign<u32> for MPI {
     }
 }
 
-impl<'a> Mul<&'a MPI> for MPI {
+impl Mul<&MPI> for MPI {
     type Output = MPI;
 
     fn mul(mut self, other: &MPI) -> MPI {
@@ -556,7 +556,7 @@ impl<'a> Mul<&'a MPI> for MPI {
     }
 }
 
-impl<'a, 'b> Mul<&'a MPI> for &'b MPI {
+impl Mul<&MPI> for &MPI {
     type Output = MPI;
 
     fn mul(self, other: &MPI) -> MPI {
@@ -564,14 +564,14 @@ impl<'a, 'b> Mul<&'a MPI> for &'b MPI {
     }
 }
 
-impl<'a> MulAssign<&'a MPI> for MPI {
+impl MulAssign<&MPI> for MPI {
     fn mul_assign(&mut self, other: &MPI) {
         self.mp_mul_assign(other)
             .expect("MPI::mp_mul_assign succeeded");
     }
 }
 
-impl<'a, 'b> Div<&'b MPI> for &'a MPI {
+impl Div<&MPI> for &MPI {
     type Output = MPI;
 
     #[inline]
@@ -587,7 +587,7 @@ impl<'a> DivAssign<&'a MPI> for MPI {
     }
 }
 
-impl<'a, 'b> Rem<&'b MPI> for &'a MPI {
+impl Rem<&MPI> for &MPI {
     type Output = MPI;
 
     fn rem(self, other: &MPI) -> MPI {
@@ -596,13 +596,13 @@ impl<'a, 'b> Rem<&'b MPI> for &'a MPI {
     }
 }
 
-impl<'a> RemAssign<&'a MPI> for MPI {
+impl RemAssign<&MPI> for MPI {
     fn rem_assign(&mut self, other: &MPI) {
         *self = &*self % other;
     }
 }
 
-impl<'a> Shl<usize> for &'a MPI {
+impl Shl<usize> for &MPI {
     type Output = MPI;
 
     fn shl(self, shift: usize) -> MPI {
@@ -617,7 +617,7 @@ impl ShlAssign<usize> for MPI {
     }
 }
 
-impl<'a> Shr<usize> for &'a MPI {
+impl Shr<usize> for &MPI {
     type Output = MPI;
 
     fn shr(self, shift: usize) -> MPI {

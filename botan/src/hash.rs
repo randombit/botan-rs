@@ -124,7 +124,6 @@ impl HashFunction {
     /// let result1 = hash.finish().unwrap(); // hash of 1,2,3
     /// let result2 = hash2.finish().unwrap(); // hash of 1,2,3,4,5,6
     /// ```
-
     pub fn duplicate(&self) -> Result<HashFunction> {
         let obj = botan_init!(botan_hash_copy_state, self.obj)?;
         Ok(HashFunction {
