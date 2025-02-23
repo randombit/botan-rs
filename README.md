@@ -1,6 +1,6 @@
 # botan-rs
 
-[![Build status](https://github.com/randombit/botan-rs/workflows/ci/badge.svg?branch=master)](https://github.com/randombit/botan-rs/actions)
+[![Build status](https://github.com/randombit/botan-rs/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/randombit/botan-rs/actions)
 [![crates.io](https://img.shields.io/crates/v/botan.svg)](https://crates.io/crates/botan)
 [![docs.rs](https://docs.rs/botan/badge.svg)](https://docs.rs/botan)
 
