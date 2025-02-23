@@ -466,6 +466,21 @@ fn test_certs() -> Result<(), botan::Error> {
     assert_eq!(cert.authority_key_id()?, key_id);
     assert_eq!(cert.subject_key_id()?, key_id);
 
+    assert_eq!(cert.not_before_raw()?, 1184858838);
+    assert_eq!(cert.not_after_raw()?, 1831907880);
+
+    #[cfg(feature = "std")]
+    {
+        assert_eq!(
+            cert.not_before()?,
+            std::time::UNIX_EPOCH + std::time::Duration::from_secs(1184858838)
+        );
+        assert_eq!(
+            cert.not_after()?,
+            std::time::UNIX_EPOCH + std::time::Duration::from_secs(1831907880)
+        );
+    }
+
     assert!(cert.allows_usage(botan::CertUsage::CertificateSign)?);
     assert!(cert.allows_usage(botan::CertUsage::CrlSign)?);
     assert!(!(cert.allows_usage(botan::CertUsage::KeyEncipherment)?));

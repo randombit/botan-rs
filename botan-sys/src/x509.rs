@@ -53,6 +53,8 @@ extern "C" {
         out: *mut c_char,
         out_len: *mut usize,
     ) -> c_int;
+    pub fn botan_x509_cert_not_before(cert: botan_x509_cert_t, timestamp: *mut u64) -> c_int;
+    pub fn botan_x509_cert_not_after(cert: botan_x509_cert_t, timestamp: *mut u64) -> c_int;
     pub fn botan_x509_cert_get_fingerprint(
         cert: botan_x509_cert_t,
         hash: *const c_char,

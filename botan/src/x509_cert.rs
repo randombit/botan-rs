@@ -176,6 +176,42 @@ impl Certificate {
         })
     }
 
+    /// Return the certificate notBefore time in seconds since epoch
+    pub fn not_before_raw(&self) -> Result<u64> {
+        let mut timestamp = 0u64;
+        let rc = unsafe { botan_x509_cert_not_before(self.obj, &mut timestamp) };
+        if rc != 0 {
+            Err(Error::from_rc(rc))
+        } else {
+            Ok(timestamp)
+        }
+    }
+
+    /// Return the certificate notAfter time in seconds since epoch
+    pub fn not_after_raw(&self) -> Result<u64> {
+        let mut timestamp = 0u64;
+        let rc = unsafe { botan_x509_cert_not_after(self.obj, &mut timestamp) };
+        if rc != 0 {
+            Err(Error::from_rc(rc))
+        } else {
+            Ok(timestamp)
+        }
+    }
+
+    #[cfg(feature = "std")]
+    /// Return the certificate notBefore time as a SystemTime
+    pub fn not_before(&self) -> Result<std::time::SystemTime> {
+        use std::time::{Duration, UNIX_EPOCH};
+        Ok(UNIX_EPOCH + Duration::from_secs(self.not_before_raw()?))
+    }
+
+    #[cfg(feature = "std")]
+    /// Return the certificate notBefore time as a SystemTime
+    pub fn not_after(&self) -> Result<std::time::SystemTime> {
+        use std::time::{Duration, UNIX_EPOCH};
+        Ok(UNIX_EPOCH + Duration::from_secs(self.not_after_raw()?))
+    }
+
     /// Return the byte representation of the public key
     pub fn public_key_bits(&self) -> Result<Vec<u8>> {
         #[cfg(not(feature = "botan3"))]
