@@ -1,3 +1,10 @@
+## 0.11.1 Not Yet Released
+
+- Add getters for X.509 certificate notBefore and notAfter fields
+- Update `botan-src` to 3.7.1
+- Fix various new clippy warnings
+- Fix a test to handle differing behavior for X25519 key agreement
+
 ## 0.11.0 2024-08-28
 
 - Bump MSRV to 1.64.0 for both std and no-std builds
