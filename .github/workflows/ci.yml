@@ -34,6 +34,9 @@ jobs:
   ci:
     runs-on: ubuntu-24.04
 
+    env:
+        RUST_BACKTRACE: 1
+
     strategy:
       fail-fast: false
 
@@ -72,6 +75,9 @@ jobs:
   ci_mac:
     runs-on: macos-latest
 
+    env:
+        RUST_BACKTRACE: 1
+
     strategy:
       fail-fast: false
 
@@ -86,7 +92,6 @@ jobs:
 
     steps:
       - run: brew install ccache botan
-      - run: ls -l /opt/homebrew/*
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
         with:
@@ -102,6 +107,9 @@ jobs:
 
   ci_windows:
     runs-on: windows-2022
+
+    env:
+        RUST_BACKTRACE: 1
 
     strategy:
       fail-fast: false
