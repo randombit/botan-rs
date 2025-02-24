@@ -16,7 +16,7 @@ exclude = ["botan/doc",
            "botan/src/cli",
            "botan/src/ct_selftest",
            "botan/src/examples",
-           "botan/src/fuzzer"
+           "botan/src/fuzzer",
            "botan/src/lib/compat/sodium",
            "botan/src/lib/filters",
            "botan/src/lib/prov/pkcs11",
