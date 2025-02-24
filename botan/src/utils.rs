@@ -242,6 +242,8 @@ pub enum ErrorType {
     BadFlag,
     /// An invalid parameter was provided to the library
     BadParameter,
+    /// No value available
+    NoValueAvailable,
     /// An exception was thrown while processing this request
     ExceptionThrown,
     /// There was insufficient buffer space to write the output
@@ -286,6 +288,7 @@ impl fmt::Display for ErrorType {
             Self::BadAuthCode => "A provided authentication code was incorrect",
             Self::BadFlag => "A bad flag was passed to the library",
             Self::BadParameter => "An invalid parameter was provided to the library",
+            Self::NoValueAvailable => "No value was available",
             Self::ExceptionThrown => "An exception was thrown while processing this request",
             Self::StringConversionError => "Error converting a string into UTF-8",
             Self::InsufficientBufferSpace => {
@@ -325,6 +328,7 @@ impl From<i32> for ErrorType {
             BOTAN_FFI_ERROR_BAD_FLAG => Self::BadFlag,
             BOTAN_FFI_ERROR_BAD_MAC => Self::BadAuthCode,
             BOTAN_FFI_ERROR_BAD_PARAMETER => Self::BadParameter,
+            BOTAN_FFI_ERROR_NO_VALUE => Self::NoValueAvailable,
             BOTAN_FFI_ERROR_EXCEPTION_THROWN => Self::ExceptionThrown,
             BOTAN_FFI_ERROR_HTTP_ERROR => Self::HttpError,
             BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE => Self::InsufficientBufferSpace,
