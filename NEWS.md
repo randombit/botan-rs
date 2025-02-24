@@ -1,9 +1,13 @@
 ## 0.11.1 Not Yet Released
 
 - Add getters for X.509 certificate notBefore and notAfter fields
-- Update `botan-src` to 3.7.1
+- Add function to create signatures with DER encoding
+- Update `botan-src` to Botan 3.7.1
 - Fix various new clippy warnings
 - Fix a test to handle differing behavior for X25519 key agreement
+- The `botan-src` crate now takes target CPU and OS from the cargo
+  target triple rather than requiring it be set separately using
+  environment variables.
 
 ## 0.11.0 2024-08-28
 
