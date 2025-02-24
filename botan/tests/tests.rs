@@ -786,6 +786,49 @@ fn test_pubkey_sign() -> Result<(), botan::Error> {
 }
 
 #[test]
+fn test_pubkey_sign_der() -> Result<(), botan::Error> {
+    let msg = vec![1, 23, 42];
+
+    let mut rng = botan::RandomNumberGenerator::new_system()?;
+
+    let ecdsa_key = botan::Privkey::create("ECDSA", "secp256r1", &mut rng)?;
+    assert!(ecdsa_key.key_agreement_key().is_err());
+
+    let hash = "EMSA1(SHA-256)";
+
+    let mut signer = botan::Signer::new_with_der_formatted_signatures(&ecdsa_key, hash)?;
+    signer.update(&msg)?;
+    let signature = signer.finish(&mut rng)?;
+
+    let pub_key = ecdsa_key.pubkey()?;
+
+    let mut verifier = botan::Verifier::new_with_der_formatted_signatures(&pub_key, hash)?;
+
+    verifier.update(&[1])?;
+    verifier.update(&[23, 42])?;
+
+    assert!(verifier.finish(&signature)?);
+
+    verifier.update(&[1])?;
+    assert!(!(verifier.finish(&signature)?));
+
+    verifier.update(&[1])?;
+    verifier.update(&[23, 42])?;
+
+    assert!(verifier.finish(&signature)?);
+
+    // DER Signatures start with a SEQUENCE
+    assert_eq!(signature[0], 0x30);
+
+    // The SEQUENCE contains the whole signature (for ECDSA w/ secp256r1, the length can always be encoded with a single byte)
+    assert_eq!(signature[1], (signature.len() - 2) as u8);
+
+    // The first element is an INTEGER
+    assert_eq!(signature[2], 0x02);
+    Ok(())
+}
+
+#[test]
 fn test_pubkey_encrypt() -> Result<(), botan::Error> {
     let msg = vec![1, 23, 42];
 
