@@ -1,6 +1,6 @@
 [package]
 name = "botan"
-version = "0.11.1"
+version = "0.12.0"
 authors = ["Jack Lloyd <jack@randombit.net>"]
 description = "Rust wrapper for Botan cryptography library"
 license = "MIT"
@@ -14,7 +14,7 @@ edition = "2021"
 rust-version = "1.64"
 
 [dependencies]
-botan-sys = { version = "0.11", path = "../botan-sys" }
+botan-sys = { version = "0.12", path = "../botan-sys" }
 
 [dev-dependencies]
 wycheproof = { version = "0.6", default-features = false, features = ["aead", "cipher", "dsa", "ecdh", "ecdsa", "eddsa", "hkdf", "keywrap", "mac", "primality", "rsa_enc", "rsa_sig", "xdh"] }
@@ -24,6 +24,5 @@ hex = "0.4"
 default = ["std"]
 std = []
 vendored = ["botan-sys/vendored"]
-botan3 = ["botan-sys/botan3"]
 static = ["botan-sys/static"]
 pkg-config = ["botan-sys/pkg-config"]

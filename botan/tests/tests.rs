@@ -6,30 +6,6 @@ use std::str::FromStr;
 fn test_version() -> Result<(), botan::Error> {
     let version = botan::Version::current()?;
 
-    /*
-    If we are running against a released version we know it must be at
-    least 2.8 since we require APIs added after the 2.7 release.
-    */
-
-    #[cfg(feature = "botan3")]
-    {
-        assert_eq!(version.major, 3);
-    }
-
-    #[cfg(feature = "vendored")]
-    {
-        assert_eq!(version.major, 3);
-    }
-
-    #[cfg(not(feature = "botan3"))]
-    {
-        assert!(version.major == 2 || version.major == 3);
-
-        if version.major == 2 {
-            assert!(version.minor >= 8);
-        }
-    }
-
     assert!(version.release_date == 0 || version.release_date >= 20181001);
 
     assert!(version.ffi_api >= 20180713);
@@ -38,9 +14,35 @@ fn test_version() -> Result<(), botan::Error> {
     assert!(botan::Version::supports_version(20180713));
     assert!(!botan::Version::supports_version(20180712));
 
-    assert!(version.at_least(2, 8));
+    assert!(version.at_least(2, 13));
     assert!(version.at_least(2, 4));
     assert!(version.at_least(1, 100));
+
+    println!("{:?}", version);
+
+    if cfg!(botan_ffi_20250506) {
+        assert!(version.at_least(3, 8));
+    }
+
+    if cfg!(botan_ffi_20240408) {
+        assert!(version.at_least(3, 4));
+    }
+
+    if cfg!(botan_ffi_20231009) {
+        assert!(version.at_least(3, 2));
+    }
+
+    if cfg!(botan_ffi_20230711) {
+        assert!(version.at_least(3, 1));
+    }
+
+    if cfg!(botan_ffi_20230403) {
+        assert!(version.at_least(3, 0));
+    }
+
+    if cfg!(botan_ffi_20191214) {
+        assert!(version.at_least(2, 13));
+    }
 
     Ok(())
 }
@@ -901,7 +903,7 @@ fn test_rfc3394_aes_key_wrap() -> Result<(), botan::Error> {
     Ok(())
 }
 
-#[cfg(feature = "botan3")]
+#[cfg(botan_ffi_20230403)]
 #[test]
 fn test_aes_key_wrap() -> Result<(), botan::Error> {
     let kek =
@@ -915,10 +917,10 @@ fn test_aes_key_wrap() -> Result<(), botan::Error> {
         botan::hex_encode(&wrapped)?,
         "28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21"
     );
-
     let unwrapped = botan::nist_kw_dec("AES-256", false, &kek, &wrapped)?;
 
     assert_eq!(unwrapped, key);
+
     Ok(())
 }
 
@@ -1161,12 +1163,13 @@ fn test_dsa() -> Result<(), botan::Error> {
     Ok(())
 }
 
-#[cfg(feature = "botan3")]
+#[cfg(botan_ffi_20230403)]
 #[test]
 fn test_zfec() -> Result<(), botan::Error> {
     let k = 2;
     let n = 3;
     let input_bytes = b"abcdefghijklmnop";
+
     let output_shares = botan::zfec_encode(k, n, input_bytes)?;
 
     assert_eq!(output_shares.len(), n);
@@ -1186,7 +1189,7 @@ fn test_zfec() -> Result<(), botan::Error> {
     Ok(())
 }
 
-#[cfg(feature = "botan3")]
+#[cfg(botan_ffi_20230403)]
 #[test]
 fn test_kyber() -> Result<(), botan::Error> {
     let mut rng = botan::RandomNumberGenerator::new()?;
@@ -1207,6 +1210,37 @@ fn test_kyber() -> Result<(), botan::Error> {
     let shared_key_d = kem_d.decrypt_shared_key(&encap_key, &salt, shared_key_len)?;
 
     assert_eq!(shared_key, shared_key_d);
+
+    Ok(())
+}
+
+#[cfg(botan_ffi_20250506)]
+#[test]
+fn test_ml_kem() -> Result<(), botan::Error> {
+    let mut rng = botan::RandomNumberGenerator::new()?;
+
+    for kl in [512, 768, 1024] {
+        let params = format!("ML-KEM-{}", kl);
+        let sk = botan::Privkey::create("ML-KEM", &params, &mut rng)?;
+        let pk = sk.pubkey()?;
+
+        let pk_bytes = pk.raw_bytes()?;
+        let pk2 = botan::Pubkey::load_ml_kem(&pk_bytes)?;
+
+        let salt = rng.read(12)?;
+        let shared_key_len = 32;
+        let kdf = "KDF2(SHA-256)";
+
+        let kem_e = botan::KeyEncapsulation::new(&pk2, kdf)?;
+        let (shared_key, encap_key) = kem_e.create_shared_key(&mut rng, &salt, shared_key_len)?;
+
+        assert_eq!(shared_key.len(), shared_key_len);
+
+        let kem_d = botan::KeyDecapsulation::new(&sk, kdf)?;
+        let shared_key_d = kem_d.decrypt_shared_key(&encap_key, &salt, shared_key_len)?;
+
+        assert_eq!(shared_key, shared_key_d);
+    }
 
     Ok(())
 }

@@ -1,7 +1,7 @@
 use crate::utils::*;
 use botan_sys::*;
 
-#[cfg(feature = "botan3")]
+#[cfg(botan_ffi_20230403)]
 /// Wrap a key using NIST key wrap algorithm
 pub fn nist_kw_enc(cipher_algo: &str, padding: bool, kek: &[u8], key: &[u8]) -> Result<Vec<u8>> {
     let mut output = vec![0; key.len() + if padding { 32 } else { 8 }];
@@ -24,8 +24,8 @@ pub fn nist_kw_enc(cipher_algo: &str, padding: bool, kek: &[u8], key: &[u8]) -> 
     Ok(output)
 }
 
-#[cfg(feature = "botan3")]
 /// Unwrap a key using NIST key wrap algorithm
+#[cfg(botan_ffi_20230403)]
 pub fn nist_kw_dec(
     cipher_algo: &str,
     padding: bool,

@@ -1,5 +1,6 @@
 #![no_std]
 #![allow(non_camel_case_types)]
+#![allow(unused_imports)]
 
 mod block;
 mod cipher;
@@ -18,21 +19,19 @@ mod rng;
 mod utils;
 mod version;
 mod x509;
-
-#[cfg(feature = "botan3")]
 mod zfec;
 
 pub mod ffi_types {
     pub use core::ffi::{c_char, c_int, c_uint, c_void};
 
-    #[cfg(feature = "botan3")]
+    #[cfg(botan_ffi_20230403)]
     pub type botan_view_ctx = *mut c_void;
 
-    #[cfg(feature = "botan3")]
+    #[cfg(botan_ffi_20230403)]
     pub type botan_view_bin_fn =
         extern "C" fn(view_ctx: botan_view_ctx, data: *const u8, len: usize) -> c_int;
 
-    #[cfg(feature = "botan3")]
+    #[cfg(botan_ffi_20230403)]
     pub type botan_view_str_fn =
         extern "C" fn(view_ctx: botan_view_ctx, data: *const c_char, len: usize) -> c_int;
 }
@@ -54,6 +53,4 @@ pub use rng::*;
 pub use utils::*;
 pub use version::*;
 pub use x509::*;
-
-#[cfg(feature = "botan3")]
 pub use zfec::*;

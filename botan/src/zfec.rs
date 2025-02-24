@@ -1,6 +1,7 @@
 use crate::utils::*;
 use botan_sys::*;
 
+#[cfg(botan_ffi_20230403)]
 /// Forward Error Correction Encoding
 pub fn zfec_encode(k: usize, n: usize, input: &[u8]) -> Result<Vec<Vec<u8>>> {
     let share_size = input.len() / k;
@@ -26,6 +27,7 @@ pub fn zfec_encode(k: usize, n: usize, input: &[u8]) -> Result<Vec<Vec<u8>>> {
     Ok(outputs)
 }
 
+#[cfg(botan_ffi_20230403)]
 /// Forward Error Correction Decoding
 pub fn zfec_decode(
     k: usize,
