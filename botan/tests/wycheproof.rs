@@ -82,7 +82,7 @@ fn wycheproof_keywrap_tests() -> Result<(), botan::Error> {
     Ok(())
 }
 
-#[cfg(feature = "botan3")]
+#[cfg(botan_ffi_20230403)]
 #[test]
 fn wycheproof_nist_kw_tests() -> Result<(), botan::Error> {
     use wycheproof::keywrap::*;
@@ -482,7 +482,7 @@ fn wycheproof_mac_test(
     Ok(())
 }
 
-#[cfg(feature = "botan3")]
+#[cfg(botan_ffi_20230403)]
 #[test]
 fn wycheproof_mac_with_nonce_tests() -> Result<(), botan::Error> {
     use wycheproof::mac_with_nonce::*;
@@ -512,6 +512,7 @@ fn wycheproof_mac_with_nonce_tests() -> Result<(), botan::Error> {
 
     Ok(())
 }
+
 #[test]
 fn wycheproof_primality_tests() -> Result<(), botan::Error> {
     use wycheproof::{primality::*, TestResult};
@@ -909,9 +910,10 @@ fn wycheproof_eddsa_verify_tests() -> Result<(), botan::Error> {
     use wycheproof::eddsa::*;
 
     let is_botan2 = botan::Version::current()?.major == 2;
+    let supports_ed448 = cfg!(botan_ffi_20240408);
 
     for test_name in TestName::all() {
-        if test_name == TestName::Ed448 {
+        if test_name == TestName::Ed448 && !supports_ed448 {
             continue;
         }
 
@@ -1003,8 +1005,10 @@ fn wycheproof_xdh_tests() -> Result<(), botan::Error> {
     let version = botan::Version::current()?;
     let will_accept_zeros = !version.at_least(3, 6);
 
+    let supports_x448 = botan::Version::supports_version(20240408);
+
     for test_name in TestName::all() {
-        if test_name == TestName::X448 {
+        if test_name == TestName::X448 && !supports_x448 {
             continue;
         }
 
@@ -1012,7 +1016,11 @@ fn wycheproof_xdh_tests() -> Result<(), botan::Error> {
 
         for test_group in &test_set.test_groups {
             for test in &test_group.tests {
-                let priv_key = botan::Privkey::load_x25519(&test.private_key)?;
+                let priv_key = match test_name {
+                    #[cfg(botan_ffi_20240408)]
+                    TestName::X448 => botan::Privkey::load_x448(&test.private_key),
+                    _ => botan::Privkey::load_x25519(&test.private_key),
+                }?;
 
                 let mut ka = botan::KeyAgreement::new(&priv_key, "Raw")?;
 

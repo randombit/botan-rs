@@ -130,35 +130,38 @@ extern "C" {
         pkcs_id: *mut u8,
         pkcs_id_len: *mut usize,
     ) -> c_int;
-}
 
-#[cfg(feature = "botan3")]
-extern "C" {
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_pk_op_key_agreement_view_public(
         key: botan_privkey_t,
         view_ctx: botan_view_ctx,
         view_fn: botan_view_bin_fn,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_pk_op_kem_encrypt_create(
         op: *mut botan_pk_op_kem_encrypt_t,
         key: botan_pubkey_t,
         kdf: *const c_char,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_pk_op_kem_encrypt_destroy(op: botan_pk_op_kem_encrypt_t) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_pk_op_kem_encrypt_shared_key_length(
         op: botan_pk_op_kem_encrypt_t,
         desired_shared_key_length: usize,
         output_shared_key_length: *mut usize,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_pk_op_kem_encrypt_encapsulated_key_length(
         op: botan_pk_op_kem_encrypt_t,
         output_encapsulated_key_length: *mut usize,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_pk_op_kem_encrypt_create_shared_key(
         op: botan_pk_op_kem_encrypt_t,
         rng: botan_rng_t,
@@ -171,20 +174,24 @@ extern "C" {
         encapsulated_key_len: *mut usize,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_pk_op_kem_decrypt_destroy(op: botan_pk_op_kem_decrypt_t) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_pk_op_kem_decrypt_create(
         op: *mut botan_pk_op_kem_decrypt_t,
         key: botan_privkey_t,
         kdf: *const c_char,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_pk_op_kem_decrypt_shared_key_length(
         op: botan_pk_op_kem_decrypt_t,
         desired_shared_key_length: usize,
         output_shared_key_length: *mut usize,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_pk_op_kem_decrypt_shared_key(
         op: botan_pk_op_kem_decrypt_t,
         salt: *const u8,

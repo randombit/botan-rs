@@ -1,5 +1,6 @@
 #![warn(missing_docs)]
 #![deny(missing_docs)]
+#![allow(unused_imports)]
 
 //! A wrapper for the Botan cryptography library
 
@@ -108,17 +109,13 @@ mod mp;
 mod otp;
 mod pbkdf;
 mod pk_ops;
+
 mod pubkey;
 mod rng;
 mod utils;
 mod version;
 mod x509_cert;
 mod x509_crl;
-
-#[cfg(feature = "botan3")]
-mod pk_ops_kem;
-
-#[cfg(feature = "botan3")]
 mod zfec;
 
 pub use crate::mp::*;
@@ -140,9 +137,10 @@ pub use pubkey::*;
 pub use version::*;
 pub use x509_cert::*;
 pub use x509_crl::*;
-
-#[cfg(feature = "botan3")]
-pub use pk_ops_kem::*;
-
-#[cfg(feature = "botan3")]
 pub use zfec::*;
+
+#[cfg(botan_ffi_20230403)]
+mod pk_ops_kem;
+
+#[cfg(botan_ffi_20230403)]
+pub use pk_ops_kem::*;

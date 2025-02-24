@@ -1,6 +1,6 @@
 extern "C" {
 
-    #[cfg(feature = "botan3")]
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_zfec_encode(
         k: usize,
         n: usize,
@@ -9,7 +9,7 @@ extern "C" {
         outputs: *mut *mut u8,
     ) -> crate::ffi_types::c_int;
 
-    #[cfg(feature = "botan3")]
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_zfec_decode(
         k: usize,
         n: usize,

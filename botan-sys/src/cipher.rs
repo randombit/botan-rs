@@ -11,7 +11,7 @@ extern "C" {
     pub fn botan_cipher_get_default_nonce_length(cipher: botan_cipher_t, nl: *mut usize) -> c_int;
     pub fn botan_cipher_get_update_granularity(cipher: botan_cipher_t, ug: *mut usize) -> c_int;
 
-    #[cfg(feature = "botan3")]
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_cipher_get_ideal_update_granularity(
         cipher: botan_cipher_t,
         ug: *mut usize,

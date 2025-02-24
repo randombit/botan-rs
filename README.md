@@ -39,10 +39,15 @@ The following features are supported:
   is still required.
 * `vendored`: Build a copy of the C++ library directly, without
   relying on a system installed version.
-* `botan3`: Enable support for using APIs added in Botan 3.
-  This enables several new features, and more efficient operation.
-  This feature is implicitly enabled if you use `vendored`.
 * `static`: Enable static linking for a non-vendored, externally
   provided Botan dependency.
 * `pkg-config`: Enable finding a non-vendored, externally provided
   Botan with pkg-config. Can be used in combination with `static`.
+
+The crate detects at build time what features are exported from the C interface,
+and adjusts itself accordingly. These feature sets can be checked using
+`#[cfg(botan_ffi_YYYYMMDD)]` where YYYYMMDD can be any of
+
+* 20230403: Botan 3.0
+* 20240408: Botan 3.4
+* 20250506: Botan 3.8
