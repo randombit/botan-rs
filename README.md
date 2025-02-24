@@ -18,14 +18,16 @@ PRs and comments/issues happily accepted.
 MSRV
 -----
 
-The Minimum Supported Rust Version of this crate is Rust 1.64.0.
+The Minimum Supported Rust Version (MSRV) of this crate is Rust 1.64.0.
+
+Any future increase in the MSRV will be accompanied by increasing the minor
+version number.
 
 Botan Versions Supported
 --------------------------
 
-This crate requires Botan 2.13.0 or higher. However the latest
-available version of Botan3 is highly recomended for best security and
-performance.
+The latest version of Botan3 is highly recomended for best security and
+performance. At least 2.13.0 is required.
 
 Features
 ---------
