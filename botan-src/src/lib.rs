@@ -27,6 +27,13 @@ fn configure(build_dir: &str) {
     configure.arg("--without-documentation");
     configure.arg("--no-install-python-module");
     configure.arg("--distribution-info=https://crates.io/crates/botan-src");
+
+    configure.arg(format!(
+        "--cpu={}",
+        env::var("CARGO_CFG_TARGET_ARCH").unwrap()
+    ));
+    configure.arg(format!("--os={}", env::var("CARGO_CFG_TARGET_OS").unwrap()));
+
     #[cfg(debug_assertions)]
     configure.arg("--with-debug-info");
 
@@ -36,11 +43,8 @@ fn configure(build_dir: &str) {
     configure.arg("--amalgamation");
 
     let args = [
-        "--os",
-        "--cpu",
         "--compiler-cache",
         "--cc",
-        "--cc-min-version",
         "--cc-bin",
         "--cc-abi-flags",
         "--cxxflags",
@@ -49,28 +53,15 @@ fn configure(build_dir: &str) {
         "--ar-command",
         "--ar-options",
         "--msvc-runtime",
-        "--with-endian",
-        "--with-os-features",
-        "--without-os-features",
         "--system-cert-bundle",
-        "--with-local-config",
-        "--boost-library-name",
         "--module-policy",
         "--enable-modules",
         "--disable-modules",
-        "--library-suffix",
-        "--prefix",
-        "--libdir",
-        "--includedir",
-        "--link-method",
     ];
 
     let flags = [
         "--optimize-for-size",
-        "--no-optimizations",
         "--amalgamation",
-        "--minimized-build",
-        "--with-openssl",
         "--with-commoncrypto",
         "--with-sqlite3",
     ];
