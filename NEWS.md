@@ -1,4 +1,4 @@
-## 0.11.1 Not Yet Released
+## 0.11.1 2025-02-24
 
 - Add getters for X.509 certificate notBefore and notAfter fields
 - Add function to create signatures with DER encoding
