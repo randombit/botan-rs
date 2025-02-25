@@ -317,4 +317,28 @@ extern "C" {
         view_ctx: botan_view_ctx,
         view_fn: botan_view_str_fn,
     ) -> c_int;
+
+    pub fn botan_privkey_load_kyber(
+        key: *mut botan_privkey_t,
+        privkey: *const u8,
+        key_len: usize
+    ) -> c_int;
+
+    pub fn botan_pubkey_load_kyber(
+        key: *mut botan_pubkey_t,
+        privkey: *const u8,
+        key_len: usize
+    ) -> c_int;
+
+    pub fn botan_privkey_view_kyber_raw_key(
+        key: botan_privkey_t,
+        ctx: botan_view_ctx, view:
+        botan_view_bin_fn
+    ) -> c_int;
+
+    pub fn botan_pubkey_view_kyber_raw_key(
+        key: botan_pubkey_t,
+        ctx: botan_view_ctx,
+        view: botan_view_bin_fn
+    ) -> c_int;
 }
