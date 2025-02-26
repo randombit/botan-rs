@@ -37,6 +37,12 @@ fn configure(build_dir: &str) {
     #[cfg(debug_assertions)]
     configure.arg("--with-debug-info");
 
+    // The --extra-cxxflags is cummulative so using it here does not prevent
+    // the user from specifying more values via the environment
+    // TODO: when the crate is updated to 3.8 this can be removed
+    #[cfg(not(target_os = "windows"))]
+    configure.arg("--extra-cxxflags=-fPIC");
+
     // On Windows we require the amalgamation, to work around the fact that
     // otherwise the linker command lines become too long for Windows
     #[cfg(target_os = "windows")]
