@@ -115,6 +115,20 @@ impl Privkey {
         Ok(Privkey { obj })
     }
 
+    #[cfg(botan_ffi_20240408)]
+    /// Load an X448 private key
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let v = vec![0x42; 56];
+    /// let key = botan::Privkey::load_x448(&v);
+    /// ```
+    pub fn load_x448(key: &[u8]) -> Result<Privkey> {
+        let obj = botan_init!(botan_privkey_load_x448, key.as_ptr())?;
+        Ok(Privkey { obj })
+    }
+
     /// Load a PKCS#1 encoded RSA private key
     pub fn load_rsa_pkcs1(pkcs1: &[u8]) -> Result<Privkey> {
         let obj = botan_init!(botan_privkey_load_rsa_pkcs1, pkcs1.as_ptr(), pkcs1.len())?;
@@ -247,14 +261,14 @@ impl Privkey {
 
     /// DER encode the key (unencrypted)
     pub fn der_encode(&self) -> Result<Vec<u8>> {
-        #[cfg(feature = "botan3")]
+        #[cfg(botan_ffi_20230403)]
         {
             call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
                 botan_privkey_view_der(self.obj, ctx, cb)
             })
         }
 
-        #[cfg(not(feature = "botan3"))]
+        #[cfg(not(botan_ffi_20230403))]
         {
             call_botan_ffi_returning_vec_u8(4096, &|out_buf, out_len| unsafe {
                 botan_privkey_export(self.obj, out_buf, out_len, 0u32)
@@ -264,14 +278,14 @@ impl Privkey {
 
     /// PEM encode the private key (unencrypted)
     pub fn pem_encode(&self) -> Result<String> {
-        #[cfg(feature = "botan3")]
+        #[cfg(botan_ffi_20230403)]
         {
             call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
                 botan_privkey_view_pem(self.obj, ctx, cb)
             })
         }
 
-        #[cfg(not(feature = "botan3"))]
+        #[cfg(not(botan_ffi_20230403))]
         {
             call_botan_ffi_returning_string(4096, &|out_buf, out_len| unsafe {
                 botan_privkey_export(self.obj, out_buf, out_len, 1u32)
@@ -310,7 +324,7 @@ impl Privkey {
 
         let rng_handle = rng.handle();
 
-        #[cfg(feature = "botan3")]
+        #[cfg(botan_ffi_20230403)]
         {
             call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
                 botan_privkey_view_encrypted_der(
@@ -326,7 +340,7 @@ impl Privkey {
             })
         }
 
-        #[cfg(not(feature = "botan3"))]
+        #[cfg(not(botan_ffi_20230403))]
         {
             call_botan_ffi_returning_vec_u8(4096, &|out_buf, out_len| unsafe {
                 botan_privkey_export_encrypted_pbkdf_iter(
@@ -374,7 +388,7 @@ impl Privkey {
         let pbkdf = make_cstr(pbkdf)?;
         let rng_handle = rng.handle();
 
-        #[cfg(feature = "botan3")]
+        #[cfg(botan_ffi_20230403)]
         {
             call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
                 botan_privkey_view_encrypted_pem(
@@ -390,7 +404,7 @@ impl Privkey {
             })
         }
 
-        #[cfg(not(feature = "botan3"))]
+        #[cfg(not(botan_ffi_20230403))]
         {
             call_botan_ffi_returning_string(4096, &|out_buf, out_len| unsafe {
                 botan_privkey_export_encrypted_pbkdf_iter(
@@ -408,18 +422,42 @@ impl Privkey {
         }
     }
 
+    #[cfg(botan_ffi_20250506)]
+    /// Check if the key in question is stateful (eg XMMS, LMS)
+    pub fn is_stateful(&self) -> Result<bool> {
+        let mut stateful = 0;
+        let rc = unsafe { botan_privkey_stateful_operation(self.obj, &mut stateful) };
+        if rc == 0 {
+            if stateful == 0 {
+                Ok(false)
+            } else if stateful == 1 {
+                Ok(true)
+            } else {
+                Err(Error::with_message(
+                    ErrorType::InternalError,
+                    format!(
+                        "Unexpected return {} from botan_privkey_stateful_operation",
+                        stateful
+                    ),
+                ))
+            }
+        } else {
+            Err(Error::from_rc(rc))
+        }
+    }
+
     /// Return the key agrement key, only valid for DH/ECDH
     pub fn key_agreement_key(&self) -> Result<Vec<u8>> {
-        #[cfg(feature = "botan3")]
+        #[cfg(botan_ffi_20230403)]
         {
             call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
                 botan_pk_op_key_agreement_view_public(self.obj, ctx, cb)
             })
         }
 
-        #[cfg(not(feature = "botan3"))]
+        #[cfg(not(botan_ffi_20230403))]
         {
-            let ka_key_len = 512; // fixme
+            let ka_key_len = 512;
             call_botan_ffi_returning_vec_u8(ka_key_len, &|out_buf, out_len| unsafe {
                 botan_pk_op_key_agreement_export_public(self.obj, out_buf, out_len)
             })
@@ -441,6 +479,17 @@ impl Privkey {
         Ok(r)
     }
 
+    #[cfg(botan_ffi_20250506)]
+    /// Get the raw bytes associated with this key
+    ///
+    /// This is not defined for certain schemes which do not have an obvious
+    /// encoding (eg RSA), so will return an error for some keys
+    pub fn raw_bytes(&self) -> Result<Vec<u8>> {
+        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
+            botan_privkey_view_raw(self.obj, ctx, cb)
+        })
+    }
+
     /// Get the public and private key associated with this key
     pub fn get_ed25519_key(&self) -> Result<(Vec<u8>, Vec<u8>)> {
         let mut out = vec![0; 64];
@@ -456,9 +505,17 @@ impl Privkey {
 
     /// Get the X25519 private key
     pub fn get_x25519_key(&self) -> Result<Vec<u8>> {
-        let mut out = vec![0; 32];
-        botan_call!(botan_privkey_x25519_get_privkey, self.obj, out.as_mut_ptr())?;
-        Ok(out)
+        #[cfg(botan_ffi_20250506)]
+        {
+            self.raw_bytes()
+        }
+
+        #[cfg(not(botan_ffi_20250506))]
+        {
+            let mut out = vec![0; 32];
+            botan_call!(botan_privkey_x25519_get_privkey, self.obj, out.as_mut_ptr())?;
+            Ok(out)
+        }
     }
 
     /// Sign a message using the specified padding method
@@ -588,6 +645,26 @@ impl Pubkey {
         Ok(Pubkey { obj })
     }
 
+    #[cfg(botan_ffi_20250506)]
+    /// Load a ML-KEM public key from the raw byte encoding
+    ///
+    /// The exact type can be determined by the length and does not need to be specified
+    pub fn load_ml_kem(key: &[u8]) -> Result<Pubkey> {
+        let params = make_cstr(match key.len() {
+            800 => "ML-KEM-512",
+            1184 => "ML-KEM-768",
+            1568 => "ML-KEM-1024",
+            _ => return Err(Error::bad_parameter("Invalid ML-KEM key length")),
+        })?;
+        let obj = botan_init!(
+            botan_pubkey_load_ml_kem,
+            key.as_ptr(),
+            key.len(),
+            params.as_ptr()
+        )?;
+        Ok(Pubkey { obj })
+    }
+
     /// Return estimated bit strength of this key
     pub fn estimated_strength(&self) -> Result<usize> {
         botan_usize!(botan_pubkey_estimated_strength, self.obj)
@@ -618,16 +695,16 @@ impl Pubkey {
 
     /// DER encode this public key
     pub fn der_encode(&self) -> Result<Vec<u8>> {
-        #[cfg(feature = "botan3")]
+        #[cfg(botan_ffi_20230403)]
         {
             call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
                 botan_pubkey_view_der(self.obj, ctx, cb)
             })
         }
 
-        #[cfg(not(feature = "botan3"))]
+        #[cfg(not(botan_ffi_20230403))]
         {
-            let der_len = 4096; // fixme
+            let der_len = 4096;
             call_botan_ffi_returning_vec_u8(der_len, &|out_buf, out_len| unsafe {
                 botan_pubkey_export(self.obj, out_buf, out_len, 0u32)
             })
@@ -636,23 +713,23 @@ impl Pubkey {
 
     /// PEM encode this public key
     pub fn pem_encode(&self) -> Result<String> {
-        #[cfg(feature = "botan3")]
+        #[cfg(botan_ffi_20230403)]
         {
             call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
                 botan_pubkey_view_pem(self.obj, ctx, cb)
             })
         }
 
-        #[cfg(not(feature = "botan3"))]
+        #[cfg(not(botan_ffi_20230403))]
         {
-            let pem_len = 4096; // fixme
+            let pem_len = 4096;
             call_botan_ffi_returning_string(pem_len, &|out_buf, out_len| unsafe {
                 botan_pubkey_export(self.obj, out_buf, out_len, 1u32)
             })
         }
     }
 
-    #[cfg(feature = "botan3")]
+    #[cfg(botan_ffi_20230403)]
     /// Return the encoded elliptic curve point associated with this key
     ///
     /// Only valid for EC based keys
@@ -679,20 +756,42 @@ impl Pubkey {
         Ok(r)
     }
 
+    #[cfg(botan_ffi_20250506)]
+    /// Return the raw byte encoding of this key
+    pub fn raw_bytes(&self) -> Result<Vec<u8>> {
+        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
+            botan_pubkey_view_raw(self.obj, ctx, cb)
+        })
+    }
+
     /// Return the 32-byte Ed25519 public key
     pub fn get_ed25519_key(&self) -> Result<Vec<u8>> {
-        let mut out = vec![0; 32];
+        #[cfg(botan_ffi_20250506)]
+        {
+            self.raw_bytes()
+        }
 
-        botan_call!(botan_pubkey_ed25519_get_pubkey, self.obj, out.as_mut_ptr())?;
-
-        Ok(out)
+        #[cfg(not(botan_ffi_20250506))]
+        {
+            let mut out = vec![0; 32];
+            botan_call!(botan_pubkey_ed25519_get_pubkey, self.obj, out.as_mut_ptr())?;
+            Ok(out)
+        }
     }
 
     /// Get the X25519 public key
     pub fn get_x25519_key(&self) -> Result<Vec<u8>> {
-        let mut out = vec![0; 32];
-        botan_call!(botan_pubkey_x25519_get_pubkey, self.obj, out.as_mut_ptr())?;
-        Ok(out)
+        #[cfg(botan_ffi_20250506)]
+        {
+            self.raw_bytes()
+        }
+
+        #[cfg(not(botan_ffi_20250506))]
+        {
+            let mut out = vec![0; 32];
+            botan_call!(botan_pubkey_x25519_get_pubkey, self.obj, out.as_mut_ptr())?;
+            Ok(out)
+        }
     }
 
     /// Encrypt a message using the specified padding method

@@ -11,7 +11,7 @@ extern "C" {
 
     pub fn botan_mac_set_key(mac: botan_mac_t, key: *const u8, key_len: usize) -> c_int;
 
-    #[cfg(feature = "botan3")]
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_mac_set_nonce(mac: botan_mac_t, nonce: *const u8, nonce_len: usize) -> c_int;
 
     pub fn botan_mac_name(mac: botan_mac_t, name: *mut c_char, name_len: *mut usize) -> c_int;

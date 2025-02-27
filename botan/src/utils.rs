@@ -52,7 +52,7 @@ pub(crate) fn call_botan_ffi_returning_vec_u8(
     Ok(output)
 }
 
-#[cfg(feature = "botan3")]
+#[cfg(botan_ffi_20230403)]
 pub(crate) mod view {
     use super::*;
 
@@ -133,7 +133,7 @@ pub(crate) mod view {
     }
 }
 
-#[cfg(feature = "botan3")]
+#[cfg(botan_ffi_20230403)]
 pub(crate) use crate::view::*;
 
 fn cstr_slice_to_str(raw_cstr: &[u8]) -> Result<String> {
@@ -141,7 +141,7 @@ fn cstr_slice_to_str(raw_cstr: &[u8]) -> Result<String> {
     Ok(cstr.to_str().map_err(Error::conversion_error)?.to_owned())
 }
 
-#[cfg(feature = "botan3")]
+#[cfg(botan_ffi_20230403)]
 unsafe fn cstr_to_str(raw_cstr: *const c_char) -> Result<String> {
     let cstr = CStr::from_ptr(raw_cstr);
     Ok(cstr.to_str().map_err(Error::conversion_error)?.to_owned())
@@ -179,7 +179,7 @@ impl Error {
     pub(crate) fn from_rc(rc: c_int) -> Self {
         let err_type = ErrorType::from(rc);
 
-        #[cfg(feature = "botan3")]
+        #[cfg(botan_ffi_20230403)]
         let message = {
             let cptr = unsafe { botan_sys::botan_error_last_exception_message() };
             match unsafe { cstr_to_str(cptr) } {
@@ -189,7 +189,7 @@ impl Error {
             }
         };
 
-        #[cfg(not(feature = "botan3"))]
+        #[cfg(not(botan_ffi_20230403))]
         let message = None;
 
         Self { err_type, message }

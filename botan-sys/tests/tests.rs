@@ -74,20 +74,6 @@ fn test_version() {
 
         assert!(botan_ffi_supports_api(api_version) == 0);
         assert!(botan_ffi_supports_api(api_version + 1) != 0);
-
-        #[cfg(feature = "botan3")]
-        {
-            assert_eq!(botan_version_major(), 3);
-        }
-
-        #[cfg(not(feature = "botan3"))]
-        {
-            if botan_version_major() == 2 {
-                assert!(botan_version_minor() > 8);
-            } else {
-                assert_eq!(botan_version_major(), 3);
-            }
-        }
     }
 }
 

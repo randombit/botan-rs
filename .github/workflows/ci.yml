@@ -23,6 +23,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
+      - run: sudo apt-get -qq install libbotan-2-dev
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
@@ -84,11 +85,9 @@ jobs:
       matrix:
         include:
           - toolchain: stable
-            features: botan3
           - toolchain: stable
             features: vendored
           - toolchain: nightly
-            features: botan3
 
     steps:
       - run: brew install ccache botan

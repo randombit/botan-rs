@@ -126,14 +126,14 @@ extern "C" {
 
     pub fn botan_x509_cert_validation_status(code: c_int) -> *const c_char;
 
-    #[cfg(feature = "botan3")]
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_x509_cert_view_public_key_bits(
         cert: botan_x509_cert_t,
         view_ctx: botan_view_ctx,
         view_fn: botan_view_bin_fn,
     ) -> c_int;
 
-    #[cfg(feature = "botan3")]
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_x509_cert_view_as_string(
         cert: botan_x509_cert_t,
         view_ctx: botan_view_ctx,
