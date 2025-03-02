@@ -11,6 +11,8 @@ const KNOWN_FFI_VERSIONS: [(u32, u32); 7] = [
     (2, 20191214), // 2.13
 ];
 
+const LATEST_KNOWN_FFI: u32 = 20250506;
+
 #[cfg(feature = "vendored")]
 fn emit_dylibs() -> Vec<&'static str> {
     // Windows doesn't need to dynamically link the C++ runtime
@@ -45,9 +47,9 @@ fn sanity_check_ffi(major_version: u32, minor_version: u32, ffi_version: u32) ->
         panic!("Major version unexpectedly high");
     }
 
-    if major_version >= 3 && ffi_version > 20250506 {
+    if major_version >= 3 && ffi_version > LATEST_KNOWN_FFI {
         // Some future version; assume FFI is additive
-        return 20250506;
+        return LATEST_KNOWN_FFI;
     }
 
     for (mv, fv) in &KNOWN_FFI_VERSIONS {
@@ -84,6 +86,15 @@ impl DetectedVersionInfo {
             "botan".to_string()
         } else {
             format!("botan-{}", self.major_version)
+        }
+    }
+
+    #[allow(dead_code)]
+    fn latest_for_docs_rs() -> Self {
+        Self {
+            major_version: 3,
+            minor_version: 8,
+            ffi_version: LATEST_KNOWN_FFI,
         }
     }
 
@@ -231,7 +242,11 @@ fn main() {
     }
     #[cfg(not(feature = "vendored"))]
     {
-        let version = DetectedVersionInfo::from_header(&find_botan_include_dir());
+        let version = if std::env::var("DOCS_RS").is_ok() {
+            DetectedVersionInfo::latest_for_docs_rs()
+        } else {
+            DetectedVersionInfo::from_header(&find_botan_include_dir())
+        };
 
         if cfg!(feature = "static") {
             println!(
