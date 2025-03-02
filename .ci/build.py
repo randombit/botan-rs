@@ -23,9 +23,6 @@ def compute_features(features, for_who):
     if 'vendored' in features:
         feat.append('vendored')
 
-    if 'git' in features or 'botan3' in features:
-        feat.append('botan3')
-
     if for_who == 'lib' and 'no-std' not in features:
         feat.append('std')
 
@@ -64,7 +61,7 @@ def main(args = None):
         if "SCCACHE_MAXSIZE" not in os.environ:
             os.environ["SCCACHE_MAXSIZE"] = "2G"
 
-    KNOWN_FEATURES = ['vendored', 'git', 'no-std', 'botan3']
+    KNOWN_FEATURES = ['vendored', 'git', 'no-std']
 
     features = [] if len(args) == 1 else args[1].split(',')
 
@@ -89,7 +86,7 @@ def main(args = None):
         os.environ["DYLD_LIBRARY_PATH"] = "/usr/local/lib"
 
     homebrew_dir = "/opt/homebrew/lib"
-    if 'botan3' in features and os.access(homebrew_dir, os.R_OK):
+    if os.access(homebrew_dir, os.R_OK):
         os.environ["RUSTFLAGS"] = "-D warnings -L/opt/homebrew/lib"
         os.environ["RUSTDOCFLAGS"] = "-D warnings -L/opt/homebrew/lib"
         os.environ["DYLD_LIBRARY_PATH"] = homebrew_dir

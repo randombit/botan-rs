@@ -5,7 +5,7 @@ use std::process::Command;
 const BUILD_ERROR_MSG: &str = "Unable to build botan.";
 const SRC_DIR_ERROR_MSG: &str = "Unable to find the source directory.";
 const SRC_DIR: &str = "botan";
-const INCLUDE_DIR: &str = "build/include/botan";
+const INCLUDE_DIR: &str = "build/include/public";
 
 macro_rules! pathbuf_to_string {
     ($s: ident) => {
@@ -115,14 +115,16 @@ fn make(build_dir: &str) {
     }
 }
 
-pub fn build() -> (String, String) {
+pub fn build() -> (String, std::path::PathBuf) {
     let src_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(SRC_DIR);
     let build_dir = env::var_os("OUT_DIR").map_or(src_dir.to_owned(), PathBuf::from);
     let build_dir = build_dir.join("botan");
     let include_dir = build_dir.join(INCLUDE_DIR);
     let build_dir = pathbuf_to_string!(build_dir);
+    let orig_dir = env::current_dir().expect(SRC_DIR_ERROR_MSG);
     env::set_current_dir(&src_dir).expect(SRC_DIR_ERROR_MSG);
     configure(&build_dir);
     make(&build_dir);
-    (build_dir, pathbuf_to_string!(include_dir))
+    env::set_current_dir(&orig_dir).expect("Unable to restore cwd");
+    (build_dir, include_dir)
 }

@@ -1,9 +1,9 @@
 [package]
 name = "botan-sys"
-version = "0.11.1"
+version = "0.12.0"
 authors = ["Jack Lloyd <jack@randombit.net>"]
-links = "botan-3"
-build = "build.rs"
+links = "botan"
+build = "build/main.rs"
 description = "FFI wrapper for Botan cryptography library"
 license = "MIT"
 homepage = "https://botan.randombit.net/"
@@ -16,11 +16,11 @@ rust-version = "1.64"
 
 [features]
 default = []
-vendored = ["botan-src", "botan3"]
-botan3 = []
+vendored = ["botan-src"]
 static = []
 pkg-config = ["dep:pkg-config"]
 
 [build-dependencies]
-botan-src = { version = "0.30701.1", optional = true, path = "../botan-src" }
+botan-src = { version = "0.30701.2", optional = true, path = "../botan-src" }
 pkg-config = { version = "0.3.30", optional = true }
+cc = "1"

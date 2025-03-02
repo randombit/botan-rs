@@ -51,13 +51,13 @@ impl Cipher {
 
         let (min_keylen, max_keylen, mod_keylen) = botan_usize3!(botan_cipher_get_keyspec, obj)?;
 
-        #[cfg(feature = "botan3")]
+        #[cfg(botan_ffi_20230403)]
         let ideal_update_granularity = Some(botan_usize!(
             botan_cipher_get_ideal_update_granularity,
             obj
         )?);
 
-        #[cfg(not(feature = "botan3"))]
+        #[cfg(not(botan_ffi_20230403))]
         let ideal_update_granularity = None;
 
         Ok(Cipher {

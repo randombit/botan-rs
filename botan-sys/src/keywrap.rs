@@ -1,7 +1,4 @@
-use crate::ffi_types::c_int;
-
-#[cfg(feature = "botan3")]
-use crate::ffi_types::c_char;
+use crate::ffi_types::{c_char, c_int};
 
 extern "C" {
 
@@ -23,7 +20,7 @@ extern "C" {
         unwrapped_key_len: *mut usize,
     ) -> c_int;
 
-    #[cfg(feature = "botan3")]
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_nist_kw_enc(
         cipher_algo: *const c_char,
         padding: c_int,
@@ -35,7 +32,7 @@ extern "C" {
         wrapped_key_len: *mut usize,
     ) -> c_int;
 
-    #[cfg(feature = "botan3")]
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_nist_kw_dec(
         cipher_algo: *const c_char,
         padding: c_int,

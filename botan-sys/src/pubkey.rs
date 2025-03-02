@@ -32,12 +32,6 @@ extern "C" {
         rng: botan_rng_t,
         params: *const c_char,
     ) -> c_int;
-    pub fn botan_privkey_create_mceliece(
-        key: *mut botan_privkey_t,
-        rng: botan_rng_t,
-        n: usize,
-        t: usize,
-    ) -> c_int;
     pub fn botan_privkey_create_dh(
         key: *mut botan_privkey_t,
         rng: botan_rng_t,
@@ -211,6 +205,18 @@ extern "C" {
     pub fn botan_privkey_x25519_get_privkey(key: botan_privkey_t, output: *mut u8) -> c_int;
     pub fn botan_pubkey_x25519_get_pubkey(key: botan_pubkey_t, pubkey: *mut u8) -> c_int;
 
+    #[cfg(botan_ffi_20240408)]
+    pub fn botan_privkey_load_x448(key: *mut botan_privkey_t, privkey: *const u8) -> c_int;
+
+    #[cfg(botan_ffi_20240408)]
+    pub fn botan_pubkey_load_x448(key: *mut botan_pubkey_t, pubkey: *const u8) -> c_int;
+
+    #[cfg(botan_ffi_20240408)]
+    pub fn botan_privkey_load_ed448(key: *mut botan_privkey_t, privkey: *const u8) -> c_int;
+
+    #[cfg(botan_ffi_20240408)]
+    pub fn botan_pubkey_load_ed448(key: *mut botan_pubkey_t, pubkey: *const u8) -> c_int;
+
     pub fn botan_privkey_load_ecdsa(
         key: *mut botan_privkey_t,
         scalar: botan_mp_t,
@@ -262,40 +268,57 @@ extern "C" {
         hash_algo: *const c_char,
         key: botan_pubkey_t,
     ) -> c_int;
-}
 
-#[cfg(feature = "botan3")]
-extern "C" {
+    #[cfg(botan_ffi_20230403)]
+    pub fn botan_pubkey_view_raw(
+        key: botan_pubkey_t,
+        view_ctx: botan_view_ctx,
+        view_fn: botan_view_bin_fn,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_pubkey_view_der(
         key: botan_pubkey_t,
         view_ctx: botan_view_ctx,
         view_fn: botan_view_bin_fn,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_pubkey_view_pem(
         key: botan_pubkey_t,
         view_ctx: botan_view_ctx,
         view_fn: botan_view_str_fn,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
+    pub fn botan_privkey_view_raw(
+        key: botan_privkey_t,
+        view_ctx: botan_view_ctx,
+        view_fn: botan_view_bin_fn,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_privkey_view_der(
         key: botan_privkey_t,
         view_ctx: botan_view_ctx,
         view_fn: botan_view_bin_fn,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_privkey_view_pem(
         key: botan_privkey_t,
         view_ctx: botan_view_ctx,
         view_fn: botan_view_str_fn,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_pubkey_view_ec_public_point(
         key: botan_pubkey_t,
         view_ctx: botan_view_ctx,
         view_fn: botan_view_bin_fn,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_privkey_view_encrypted_der(
         key: botan_privkey_t,
         rng: botan_rng_t,
@@ -307,6 +330,7 @@ extern "C" {
         view_fn: botan_view_bin_fn,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_privkey_view_encrypted_pem(
         key: botan_privkey_t,
         rng: botan_rng_t,
@@ -316,5 +340,94 @@ extern "C" {
         pbkdf_iterations: usize,
         view_ctx: botan_view_ctx,
         view_fn: botan_view_str_fn,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_privkey_stateful_operation(key: botan_privkey_t, stateful: *mut c_int) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_privkey_remaining_operations(
+        key: botan_privkey_t,
+        remaining_ops: *mut u64,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_pubkey_load_frodokem(
+        key: *mut botan_pubkey_t,
+        bytes: *const u8,
+        len: usize,
+        mode: *const c_char,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_privkey_load_frodokem(
+        key: *mut botan_privkey_t,
+        bytes: *const u8,
+        len: usize,
+        mode: *const c_char,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_pubkey_load_classic_mceliece(
+        key: *mut botan_pubkey_t,
+        bytes: *const u8,
+        len: usize,
+        mode: *const c_char,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_privkey_load_classic_mceliece(
+        key: *mut botan_privkey_t,
+        bytes: *const u8,
+        len: usize,
+        mode: *const c_char,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_pubkey_load_ml_kem(
+        key: *mut botan_pubkey_t,
+        bytes: *const u8,
+        len: usize,
+        mode: *const c_char,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_privkey_load_ml_kem(
+        key: *mut botan_privkey_t,
+        bytes: *const u8,
+        len: usize,
+        mode: *const c_char,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_pubkey_load_slh_dsa(
+        key: *mut botan_pubkey_t,
+        bytes: *const u8,
+        len: usize,
+        mode: *const c_char,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_privkey_load_slh_dsa(
+        key: *mut botan_privkey_t,
+        bytes: *const u8,
+        len: usize,
+        mode: *const c_char,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_pubkey_load_ml_dsa(
+        key: *mut botan_pubkey_t,
+        bytes: *const u8,
+        len: usize,
+        mode: *const c_char,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_privkey_load_ml_dsa(
+        key: *mut botan_privkey_t,
+        bytes: *const u8,
+        len: usize,
+        mode: *const c_char,
     ) -> c_int;
 }
