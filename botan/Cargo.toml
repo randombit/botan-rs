@@ -14,7 +14,7 @@ edition = "2021"
 rust-version = "1.64"
 
 [dependencies]
-botan-sys = { version = "0.12", path = "../botan-sys" }
+botan-sys = { version = "1.20250506", path = "../botan-sys" }
 
 [dev-dependencies]
 wycheproof = { version = "0.6", default-features = false, features = ["aead", "cipher", "dsa", "ecdh", "ecdsa", "eddsa", "hkdf", "keywrap", "mac", "primality", "rsa_enc", "rsa_sig", "xdh"] }
