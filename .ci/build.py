@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-import subprocess
-import sys
-import os
 import multiprocessing
 import optparse
+import os
+import shutil
+import subprocess
+import sys
 
 def run_command(cmdline, cwd = None):
     print("Running '%s'" % (' '.join(cmdline)))
@@ -104,9 +105,20 @@ def main(args = None):
         nproc = multiprocessing.cpu_count()
         botan_src = 'botan-git'
         run_command(['git', 'clone', '--depth', '1', 'https://github.com/randombit/botan.git', botan_src])
+
+        import tomllib
+        excludes = tomllib.loads(open(os.path.join('botan-src', 'Cargo.toml')).read())['package']['exclude']
+        for exclude in excludes:
+            path = exclude.replace('botan/', botan_src + '/')
+            if os.path.isdir(path):
+                shutil.rmtree(path)
+            elif os.path.isfile(path):
+                os.remove(path)
+
         run_command(['./configure.py',
                      '--compiler-cache=%s' % (options.compiler_cache),
                      '--without-documentation',
+                     '--no-install-python-module',
                      '--build-targets=shared',
                      '--disable-modules=%s' % (disabled_modules)], botan_src)
         run_command(['make', '-j', str(nproc)], botan_src)
