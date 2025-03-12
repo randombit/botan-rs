@@ -13,6 +13,7 @@ rust-version = "1.64"
 
 exclude = ["botan/doc",
            "botan/src/bogo_shim",
+           "botan/src/build-data/policy/fips140.txt", # TODO remove this for 3.8.0
            "botan/src/cli",
            "botan/src/ct_selftest",
            "botan/src/examples",
