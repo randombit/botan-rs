@@ -13,7 +13,14 @@ unsafe impl Send for RandomNumberGenerator {}
 botan_impl_drop!(RandomNumberGenerator, botan_rng_destroy);
 
 impl RandomNumberGenerator {
-    fn new_of_type(typ: &str) -> Result<RandomNumberGenerator> {
+    /// Create a new RNG object with a specific type, e.g. "esdm-full"
+    ///
+    /// # Examples
+    /// ```
+    /// // This is just for demonstration, use RandomNumberGenerator::new_userspace() instead.
+    /// let specific_rng = botan::RandomNumberGenerator::new_of_type("user").unwrap();
+    /// ```
+    pub fn new_of_type(typ: &str) -> Result<RandomNumberGenerator> {
         let typ = make_cstr(typ)?;
         let obj = botan_init!(botan_rng_init, typ.as_ptr())?;
         Ok(RandomNumberGenerator { obj })
