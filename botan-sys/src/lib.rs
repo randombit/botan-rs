@@ -4,6 +4,7 @@
 
 mod block;
 mod cipher;
+mod ec_group;
 mod errors;
 mod fpe;
 mod hash;
@@ -11,6 +12,7 @@ mod kdf;
 mod keywrap;
 mod mac;
 mod mp;
+mod oid;
 mod otp;
 mod passhash;
 mod pk_ops;
@@ -38,6 +40,7 @@ pub mod ffi_types {
 
 pub use block::*;
 pub use cipher::*;
+pub use ec_group::*;
 pub use errors::*;
 pub use fpe::*;
 pub use hash::*;
@@ -45,6 +48,7 @@ pub use kdf::*;
 pub use keywrap::*;
 pub use mac::*;
 pub use mp::*;
+pub use oid::*;
 pub use otp::*;
 pub use passhash::*;
 pub use pk_ops::*;
