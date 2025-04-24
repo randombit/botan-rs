@@ -112,7 +112,7 @@ fn wycheproof_nist_kw_tests() -> Result<(), botan::Error> {
 
                 (Algorithm::SeedKeyWrap, 128) => ("SEED", false),
 
-                (bc, kl) => panic!("Unhandled block cipher {:?}/{}", bc, kl),
+                (bc, kl) => panic!("Unhandled block cipher {bc:?}/{kl}"),
             };
 
             for test in &test_group.tests {
@@ -423,7 +423,7 @@ fn wycheproof_mac_tests() -> Result<(), botan::Error> {
 
     wycheproof_mac_test(TestName::AesCmac, |ks: usize| {
         if ks == 128 || ks == 192 || ks == 256 {
-            Some(format!("CMAC(AES-{})", ks))
+            Some(format!("CMAC(AES-{ks})"))
         } else {
             None
         }
@@ -431,7 +431,7 @@ fn wycheproof_mac_tests() -> Result<(), botan::Error> {
 
     wycheproof_mac_test(TestName::AriaCmac, |ks: usize| {
         if ks == 128 || ks == 192 || ks == 256 {
-            Some(format!("CMAC(ARIA-{})", ks))
+            Some(format!("CMAC(ARIA-{ks})"))
         } else {
             None
         }
@@ -439,7 +439,7 @@ fn wycheproof_mac_tests() -> Result<(), botan::Error> {
 
     wycheproof_mac_test(TestName::CamelliaCmac, |ks: usize| {
         if ks == 128 || ks == 192 || ks == 256 {
-            Some(format!("CMAC(Camellia-{})", ks))
+            Some(format!("CMAC(Camellia-{ks})"))
         } else {
             None
         }
@@ -594,17 +594,11 @@ fn wycheproof_rsa_oaep_decrypt_tests() -> Result<(), botan::Error> {
             return None;
         }
 
-        let label_hash = match hash_id_to_str(group.hash) {
-            Some(h) => h,
-            None => return None,
-        };
+        let label_hash = hash_id_to_str(group.hash)?;
 
-        let mgf_hash = match hash_id_to_str(group.mgf_hash) {
-            Some(h) => h,
-            None => return None,
-        };
+        let mgf_hash = hash_id_to_str(group.mgf_hash)?;
 
-        Some(format!("OAEP({},MGF1({}))", label_hash, mgf_hash))
+        Some(format!("OAEP({label_hash},MGF1({mgf_hash}))"))
     }
 
     let is_botan2 = botan::Version::current()?.major == 2;
@@ -662,7 +656,7 @@ fn wycheproof_rsa_pkcs1_verify_tests() -> Result<(), botan::Error> {
 
             let key = botan::Pubkey::load_der(&test_group.der)?;
 
-            let mut verifier = botan::Verifier::new(&key, &format!("EMSA_PKCS1({})", hash))?;
+            let mut verifier = botan::Verifier::new(&key, &format!("EMSA_PKCS1({hash})"))?;
 
             for test in &test_group.tests {
                 verifier.update(&test.msg)?;
@@ -701,10 +695,7 @@ fn wycheproof_rsa_pss_verify_tests() -> Result<(), botan::Error> {
             (_, _, _) => return None,
         }
 
-        let hash = match hash_id_to_str(group.hash) {
-            Some(hash) => hash,
-            None => return None,
-        };
+        let hash = hash_id_to_str(group.hash)?;
 
         Some(format!("EMSA4({},MGF1,{})", hash, group.salt_size))
     }
@@ -754,7 +745,7 @@ fn wycheproof_dsa_verify_tests() -> Result<(), botan::Error> {
     use wycheproof::dsa::*;
 
     for test_name in TestName::all() {
-        let is_ieee = format!("{:?}", test_name).contains("P1363");
+        let is_ieee = format!("{test_name:?}").contains("P1363");
         let test_set = TestSet::load(test_name).expect("Loading tests failed");
 
         for test_group in &test_set.test_groups {
@@ -769,11 +760,11 @@ fn wycheproof_dsa_verify_tests() -> Result<(), botan::Error> {
                 // Has to be inside the loop to work around the bug addressed in
                 // https://github.com/randombit/botan/pull/3333
                 let mut verifier = if is_ieee {
-                    botan::Verifier::new(&key, &format!("EMSA1({})", hash))?
+                    botan::Verifier::new(&key, &format!("EMSA1({hash})"))?
                 } else {
                     botan::Verifier::new_with_der_formatted_signatures(
                         &key,
-                        &format!("EMSA1({})", hash),
+                        &format!("EMSA1({hash})"),
                     )?
                 };
 
@@ -838,8 +829,8 @@ fn wycheproof_ecdsa_verify_tests() -> Result<(), botan::Error> {
             continue;
         }
 
-        let is_ieee = format!("{:?}", test_name).contains("P1363")
-            || format!("{:?}", test_name).contains("Webcrypto");
+        let is_ieee = format!("{test_name:?}").contains("P1363")
+            || format!("{test_name:?}").contains("Webcrypto");
 
         let test_set = TestSet::load(test_name).expect("Loading tests failed");
 
@@ -866,7 +857,7 @@ fn wycheproof_ecdsa_verify_tests() -> Result<(), botan::Error> {
 
             let key = botan::Pubkey::load_der(&test_group.der)?;
 
-            let mut verifier_ieee = botan::Verifier::new(&key, &format!("EMSA1({})", hash))?;
+            let mut verifier_ieee = botan::Verifier::new(&key, &format!("EMSA1({hash})"))?;
 
             for test in &test_group.tests {
                 let accept = if is_ieee {
@@ -877,7 +868,7 @@ fn wycheproof_ecdsa_verify_tests() -> Result<(), botan::Error> {
                     // https://github.com/randombit/botan/pull/3333
                     let mut verifier_der = botan::Verifier::new_with_der_formatted_signatures(
                         &key,
-                        &format!("EMSA1({})", hash),
+                        &format!("EMSA1({hash})"),
                     )?;
 
                     verifier_der.update(&test.msg)?;
@@ -986,7 +977,7 @@ fn wycheproof_ecdh_tests() -> Result<(), botan::Error> {
                 if test.result == TestResult::Valid || test.result == TestResult::Acceptable {
                     match shared_secret {
                         Ok(shared_secret) => assert_eq!(shared_secret, test.shared_secret.as_ref()),
-                        Err(e) => panic!("Unable to compute shared secret ({:?})", e),
+                        Err(e) => panic!("Unable to compute shared secret ({e:?})"),
                     }
                 } else {
                     assert!(shared_secret.is_err());
@@ -1041,7 +1032,7 @@ fn wycheproof_xdh_tests() -> Result<(), botan::Error> {
                 if should_accept {
                     match shared_secret {
                         Ok(shared_secret) => assert_eq!(shared_secret, test.shared_secret.as_ref()),
-                        Err(e) => panic!("Unable to compute shared secret ({:?})", e),
+                        Err(e) => panic!("Unable to compute shared secret ({e:?})"),
                     }
                 } else {
                     assert!(shared_secret.is_err());

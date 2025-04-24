@@ -59,14 +59,13 @@ fn sanity_check_ffi(major_version: u32, minor_version: u32, ffi_version: u32) ->
     }
 
     panic!(
-        "Unexpected version settings major={} minor={} ffi={}",
-        major_version, minor_version, ffi_version
+        "Unexpected version settings major={major_version} minor={minor_version} ffi={ffi_version}"
     );
 }
 
 #[allow(dead_code)]
 fn env_var(key: &str) -> Option<String> {
-    println!("cargo:rerun-if-env-changed={}", key);
+    println!("cargo:rerun-if-env-changed={key}");
     std::env::var(key).ok()
 }
 
@@ -139,7 +138,7 @@ impl DetectedVersionInfo {
                         if let Ok(code) = parts[1].parse::<u32>() {
                             map.insert(parts[0].to_owned(), code);
                         } else {
-                            panic!("Unexpected line '{}'", line);
+                            panic!("Unexpected line '{line}'");
                         }
                     }
                 }
@@ -147,7 +146,7 @@ impl DetectedVersionInfo {
                 DetectedVersionInfo::from_map(map)
             }
             Err(e) => {
-                panic!("Failed to expand header {:?}", e);
+                panic!("Failed to expand header {e:?}");
             }
         }
     }
@@ -198,7 +197,7 @@ fn find_botan_include_dir() -> std::path::PathBuf {
         }
 
         for major_version in [3, 2] {
-            let dir = PathBuf::from(format!("botan-{}", major_version));
+            let dir = PathBuf::from(format!("botan-{major_version}"));
             for basedir in possible_header_locations() {
                 let inc_dir = basedir.join(dir.clone());
                 if inc_dir.exists() {
@@ -213,7 +212,7 @@ fn find_botan_include_dir() -> std::path::PathBuf {
 
 fn main() {
     for (_, v) in &KNOWN_FFI_VERSIONS {
-        println!("cargo:rustc-check-cfg=cfg(botan_ffi_{})", v);
+        println!("cargo:rustc-check-cfg=cfg(botan_ffi_{v})");
     }
 
     // TODO refactor this to avoid duplication between the two branches
@@ -260,7 +259,7 @@ fn main() {
         println!("cargo:ffi_version={}", version.ffi_version);
         for (_, ffi) in &KNOWN_FFI_VERSIONS {
             if *ffi <= version.ffi_version {
-                println!("cargo:rustc-cfg=botan_ffi_{}", ffi);
+                println!("cargo:rustc-cfg=botan_ffi_{ffi}");
             }
         }
     }

@@ -18,7 +18,7 @@ fn test_version() -> Result<(), botan::Error> {
     assert!(version.at_least(2, 4));
     assert!(version.at_least(1, 100));
 
-    println!("{:?}", version);
+    println!("{version:?}");
 
     if cfg!(botan_ffi_20250506) {
         assert!(version.at_least(3, 8));
@@ -1177,9 +1177,10 @@ fn test_zfec() -> Result<(), botan::Error> {
     assert_eq!(output_shares[1], b"ijklmnop");
     assert_eq!(output_shares[2], b"qrstuvwX");
 
-    let mut shares_for_decoding = Vec::new();
-    shares_for_decoding.push((2, output_shares[2].as_ref()));
-    shares_for_decoding.push((0, output_shares[0].as_ref()));
+    let shares_for_decoding = [
+        (2, output_shares[2].as_ref()),
+        (0, output_shares[0].as_ref()),
+    ];
     let share_size = output_shares[0].len();
 
     let recovered = botan::zfec_decode(k, n, &shares_for_decoding, share_size)?;
@@ -1220,7 +1221,7 @@ fn test_ml_kem() -> Result<(), botan::Error> {
     let mut rng = botan::RandomNumberGenerator::new()?;
 
     for kl in [512, 768, 1024] {
-        let params = format!("ML-KEM-{}", kl);
+        let params = format!("ML-KEM-{kl}");
         let sk = botan::Privkey::create("ML-KEM", &params, &mut rng)?;
         let pk = sk.pubkey()?;
 

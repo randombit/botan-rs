@@ -7,8 +7,7 @@ use botan_sys::*;
 #[test]
 fn test_hex() {
     let bin = vec![0x42, 0x23, 0x45, 0x8F];
-    let mut out = Vec::new();
-    out.resize(bin.len() * 2, 0);
+    let mut out = vec![0; bin.len() * 2];
 
     unsafe {
         assert_eq!(

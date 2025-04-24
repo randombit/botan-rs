@@ -435,10 +435,7 @@ impl Privkey {
             } else {
                 Err(Error::with_message(
                     ErrorType::InternalError,
-                    format!(
-                        "Unexpected return {} from botan_privkey_stateful_operation",
-                        stateful
-                    ),
+                    format!("Unexpected return {stateful} from botan_privkey_stateful_operation"),
                 ))
             }
         } else {
