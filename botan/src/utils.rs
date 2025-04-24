@@ -59,7 +59,7 @@ pub(crate) mod view {
     type FfiViewBinaryFn = extern "C" fn(*mut c_void, *const u8, usize) -> c_int;
 
     extern "C" fn botan_ffi_view_u8_fn(ctx: *mut c_void, buf: *const u8, len: usize) -> c_int {
-        if ctx == core::ptr::null_mut() || buf == core::ptr::null_mut() {
+        if ctx.is_null() || buf.is_null() {
             return BOTAN_FFI_ERROR_NULL_POINTER;
         }
 
@@ -68,7 +68,7 @@ pub(crate) mod view {
         unsafe {
             let data = core::slice::from_raw_parts(buf, len);
             (*vec).clear();
-            (*vec).extend_from_slice(&data);
+            (*vec).extend_from_slice(data);
         }
 
         0
@@ -92,7 +92,7 @@ pub(crate) mod view {
     type FfiViewStrFn = extern "C" fn(*mut c_void, *const c_char, usize) -> c_int;
 
     extern "C" fn botan_ffi_view_str_fn(ctx: *mut c_void, buf: *const c_char, len: usize) -> c_int {
-        if ctx == core::ptr::null_mut() || buf == core::ptr::null_mut() {
+        if ctx.is_null() || buf.is_null() {
             return BOTAN_FFI_ERROR_NULL_POINTER;
         }
 
@@ -105,7 +105,7 @@ pub(crate) mod view {
         let data = unsafe { core::slice::from_raw_parts(buf as *const u8, len - 1) };
 
         let mut vec = Vec::new();
-        vec.extend_from_slice(&data);
+        vec.extend_from_slice(data);
         match String::from_utf8(vec) {
             Ok(decoded) => {
                 unsafe {
@@ -184,7 +184,7 @@ impl Error {
             let cptr = unsafe { botan_sys::botan_error_last_exception_message() };
             match unsafe { cstr_to_str(cptr) } {
                 Err(_) => None,
-                Ok(s) if s.len() > 0 => Some(s),
+                Ok(s) if !s.is_empty() => Some(s),
                 Ok(_) => None,
             }
         };

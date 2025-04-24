@@ -7,7 +7,7 @@ fn main() {
     ];
 
     for ffi in &known_ffi_versions {
-        println!("cargo:rustc-check-cfg=cfg(botan_ffi_{})", ffi);
+        println!("cargo:rustc-check-cfg=cfg(botan_ffi_{ffi})");
     }
 
     if let Ok(version) = env::var("DEP_BOTAN_FFI_VERSION") {
@@ -15,7 +15,7 @@ fn main() {
 
         for ffi in known_ffi_versions {
             if version >= ffi {
-                println!("cargo:rustc-cfg=botan_ffi_{}", ffi);
+                println!("cargo:rustc-cfg=botan_ffi_{ffi}");
             }
         }
     } else {
