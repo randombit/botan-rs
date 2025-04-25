@@ -1245,3 +1245,36 @@ fn test_ml_kem() -> Result<(), botan::Error> {
 
     Ok(())
 }
+
+#[cfg(botan_ffi_20250506)]
+#[test]
+fn test_asn1_oid() -> Result<(), botan::Error> {
+    let oid = botan::OID::from_str("1.2.840.10045.3.1.7")?;
+
+    assert_eq!(oid.as_string()?, "1.2.840.10045.3.1.7");
+    assert_eq!(oid.as_name()?, "secp256r1");
+
+    assert_eq!(oid, botan::OID::from_str("secp256r1")?);
+
+    assert_ne!(oid, botan::OID::from_str("1.2.840.113549.1.1.1")?);
+
+    assert!(oid > botan::OID::from_str("1.2.840.10045.3.1.6")?);
+    assert!(oid < botan::OID::from_str("1.2.840.10045.3.1.8")?);
+
+    assert!(oid > botan::OID::from_str("1.2.840.10045.3.1")?);
+    assert!(oid < botan::OID::from_str("1.2.840.10045.3.2")?);
+
+    assert!(oid > botan::OID::from_str("1.2.840.10045.3")?);
+    assert!(oid < botan::OID::from_str("1.2.840.10045.4")?);
+
+    assert!(oid > botan::OID::from_str("1.2.840.10045")?);
+    assert!(oid < botan::OID::from_str("1.2.840.10046")?);
+
+    assert!(oid > botan::OID::from_str("1.2.840")?);
+    assert!(oid < botan::OID::from_str("1.2.841")?);
+
+    assert!(oid > botan::OID::from_str("1.2")?);
+    assert!(oid < botan::OID::from_str("1.3")?);
+
+    Ok(())
+}
