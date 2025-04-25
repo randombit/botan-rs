@@ -247,6 +247,10 @@ fn main() {
             DetectedVersionInfo::from_header(&find_botan_include_dir())
         };
 
+        if let Some(dir) = env_var("BOTAN_LIB_DIR") {
+            println!("cargo:rustc-link-search=native={dir}");
+        }
+
         if cfg!(feature = "static") {
             println!(
                 "cargo:rustc-link-lib=static={}",

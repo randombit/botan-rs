@@ -1,3 +1,15 @@
+## 0.12.0 Not Yet Released
+
+- Minor version bump due to removing a feature
+- The `botan3` feature has been removed from the crate. Now `botan-sys` detects
+  the version of Botan it is being built against, and exports appropriate `cfg`
+  variables.
+- Add ML-KEM support (requires Botan 3.8 or higher)
+- Add support for X448 and Ed448 (requires Botan 3.4 or higher)
+- Add `RandomNumberGenerator::new_of_type`
+- The `botan-sys` crate has been renumbered as `1.YYYYMMDD` where YYYYMMDD is
+  the latest supported Botan FFI version.
+
 ## 0.11.1 2025-02-24
 
 - Add getters for X.509 certificate notBefore and notAfter fields
@@ -11,6 +23,7 @@
 
 ## 0.11.0 2024-08-28
 
+- Minor version bump due to MSRV increase and feature renames
 - Bump MSRV to 1.64.0 for both std and no-std builds
 - The `no-std` feature has been replaced by a `std` feature;
   use `default-features = false` to request a `no_std` enabled build.
