@@ -147,6 +147,20 @@ unsafe fn cstr_to_str(raw_cstr: *const c_char) -> Result<String> {
     Ok(cstr.to_str().map_err(Error::conversion_error)?.to_owned())
 }
 
+#[cfg(botan_ffi_20250506)]
+pub(crate) fn interp_as_bool(result: c_int, fn_name: &'static str) -> Result<bool> {
+    if result == 0 {
+        Ok(false)
+    } else if result == 1 {
+        Ok(true)
+    } else {
+        Err(Error::with_message(
+            ErrorType::InternalError,
+            format!("Unexpected result from {}", fn_name),
+        ))
+    }
+}
+
 pub(crate) fn call_botan_ffi_returning_string(
     initial_size: usize,
     cb: &dyn Fn(*mut u8, *mut usize) -> c_int,

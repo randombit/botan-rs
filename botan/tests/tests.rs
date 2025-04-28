@@ -1245,3 +1245,95 @@ fn test_ml_kem() -> Result<(), botan::Error> {
 
     Ok(())
 }
+
+#[cfg(botan_ffi_20250506)]
+#[test]
+fn test_asn1_oid() -> Result<(), botan::Error> {
+    let oid = botan::OID::from_str("1.2.840.10045.3.1.7")?;
+
+    assert_eq!(oid.as_string()?, "1.2.840.10045.3.1.7");
+    assert_eq!(oid.as_name()?, "secp256r1");
+
+    assert_eq!(oid, botan::OID::from_str("secp256r1")?);
+
+    assert_ne!(oid, botan::OID::from_str("1.2.840.113549.1.1.1")?);
+
+    assert!(oid > botan::OID::from_str("1.2.840.10045.3.1.6")?);
+    assert!(oid < botan::OID::from_str("1.2.840.10045.3.1.8")?);
+
+    assert!(oid > botan::OID::from_str("1.2.840.10045.3.1")?);
+    assert!(oid < botan::OID::from_str("1.2.840.10045.3.2")?);
+
+    assert!(oid > botan::OID::from_str("1.2.840.10045.3")?);
+    assert!(oid < botan::OID::from_str("1.2.840.10045.4")?);
+
+    assert!(oid > botan::OID::from_str("1.2.840.10045")?);
+    assert!(oid < botan::OID::from_str("1.2.840.10046")?);
+
+    assert!(oid > botan::OID::from_str("1.2.840")?);
+    assert!(oid < botan::OID::from_str("1.2.841")?);
+
+    assert!(oid > botan::OID::from_str("1.2")?);
+    assert!(oid < botan::OID::from_str("1.3")?);
+    Ok(())
+}
+
+#[cfg(botan_ffi_20250506)]
+#[test]
+fn test_ec_group() -> Result<(), botan::Error> {
+    let supports_app_groups = botan::EcGroup::supports_application_specific_groups()?;
+
+    let supports_secp256r1 = botan::EcGroup::supports_named_group("secp256r1")?;
+
+    if supports_app_groups {
+        assert!(supports_secp256r1);
+    }
+
+    assert_eq!(
+        botan::EcGroup::supports_named_group("nosuchgroup256r1")?,
+        false
+    );
+
+    if supports_secp256r1 {
+        let secp256r1 = botan::EcGroup::from_name("secp256r1")?;
+
+        let from_pem = botan::EcGroup::from_pem(&secp256r1.pem()?)?;
+        let from_der = botan::EcGroup::from_der(&secp256r1.der()?)?;
+        let from_oid = botan::EcGroup::from_oid(&secp256r1.oid()?)?;
+
+        assert_eq!(secp256r1, from_pem);
+        assert_eq!(secp256r1, from_der);
+        assert_eq!(secp256r1, from_oid);
+
+        assert_eq!(
+            format!("{:x}", secp256r1.p()?),
+            "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
+        );
+
+        assert_eq!(secp256r1.oid()?.as_string()?, "1.2.840.10045.3.1.7");
+    }
+
+    if supports_app_groups {
+        let secp256r1 = botan::EcGroup::from_name("secp256r1")?;
+
+        let curve_oid = botan::OID::from_str("1.3.6.1.4.1.25258.4.666")?;
+        let mycustomp256 = botan::EcGroup::from_params(
+            &curve_oid,
+            &secp256r1.p()?,
+            &secp256r1.a()?,
+            &secp256r1.b()?,
+            &secp256r1.g_x()?,
+            &secp256r1.g_y()?,
+            &secp256r1.order()?,
+        )?;
+
+        let from_oid = botan::EcGroup::from_oid(&curve_oid)?;
+
+        assert_eq!(mycustomp256, from_oid);
+
+        // Equality is for just the params and ignores the OIDs
+        assert_eq!(mycustomp256, secp256r1);
+    }
+
+    Ok(())
+}

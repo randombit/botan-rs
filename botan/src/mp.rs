@@ -38,6 +38,12 @@ impl MPI {
         self.obj
     }
 
+    /// Ownership transfers to this MPI struct
+    #[allow(dead_code)]
+    pub(crate) fn from_handle(obj: botan_mp_t) -> Result<Self> {
+        Ok(MPI { obj })
+    }
+
     /// Crate a new (zero-valued) MPI
     pub fn new() -> Result<MPI> {
         let obj = botan_init!(botan_mp_init)?;

@@ -427,19 +427,10 @@ impl Privkey {
     pub fn is_stateful(&self) -> Result<bool> {
         let mut stateful = 0;
         let rc = unsafe { botan_privkey_stateful_operation(self.obj, &mut stateful) };
-        if rc == 0 {
-            if stateful == 0 {
-                Ok(false)
-            } else if stateful == 1 {
-                Ok(true)
-            } else {
-                Err(Error::with_message(
-                    ErrorType::InternalError,
-                    format!("Unexpected return {stateful} from botan_privkey_stateful_operation"),
-                ))
-            }
-        } else {
+        if rc != 0 {
             Err(Error::from_rc(rc))
+        } else {
+            interp_as_bool(stateful, "botan_privkey_stateful_operation")
         }
     }
 

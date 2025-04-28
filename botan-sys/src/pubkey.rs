@@ -3,6 +3,9 @@ use crate::ffi_types::*;
 use crate::mp::botan_mp_t;
 use crate::rng::botan_rng_t;
 
+#[cfg(botan_ffi_20250506)]
+use crate::{botan_asn1_oid_t, botan_ec_group_t};
+
 pub enum botan_pubkey_struct {}
 pub type botan_pubkey_t = *mut botan_pubkey_struct;
 
@@ -341,6 +344,20 @@ extern "C" {
         view_ctx: botan_view_ctx,
         view_fn: botan_view_str_fn,
     ) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_ec_privkey_create(
+        key: *mut botan_privkey_t,
+        algo: *const c_char,
+        group: botan_ec_group_t,
+        rng: botan_rng_t,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_pubkey_oid(oid: *mut botan_asn1_oid_t, key: botan_pubkey_t) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_privkey_oid(oid: *mut botan_asn1_oid_t, key: botan_privkey_t) -> c_int;
 
     #[cfg(botan_ffi_20250506)]
     pub fn botan_privkey_stateful_operation(key: botan_privkey_t, stateful: *mut c_int) -> c_int;

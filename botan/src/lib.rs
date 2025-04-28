@@ -96,9 +96,11 @@ macro_rules! botan_bool_in_rc {
     }};
 }
 
+mod asn1;
 mod bcrypt;
 mod block;
 mod cipher;
+mod ec_group;
 mod fpe;
 mod hash;
 mod kdf;
@@ -118,22 +120,24 @@ mod x509_cert;
 mod x509_crl;
 mod zfec;
 
-pub use crate::mp::*;
-pub use crate::rng::*;
-pub use crate::utils::*;
+pub use asn1::*;
 pub use bcrypt::*;
 pub use block::*;
 pub use cipher::*;
+pub use ec_group::*;
 pub use fpe::*;
 pub use hash::*;
 pub use kdf::*;
 pub use keywrap::*;
 pub use mac::*;
 pub use memutils::*;
+pub use mp::*;
 pub use otp::*;
 pub use pbkdf::*;
 pub use pk_ops::*;
 pub use pubkey::*;
+pub use rng::*;
+pub use utils::*;
 pub use version::*;
 pub use x509_cert::*;
 pub use x509_crl::*;
