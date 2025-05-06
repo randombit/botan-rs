@@ -87,10 +87,6 @@ def main(args = None):
         os.environ["DYLD_LIBRARY_PATH"] = "/usr/local/lib"
 
     homebrew_dir = "/opt/homebrew/lib"
-    if os.access(homebrew_dir, os.R_OK):
-        os.environ["RUSTFLAGS"] = "-D warnings -L/opt/homebrew/lib"
-        os.environ["RUSTDOCFLAGS"] = "-D warnings -L/opt/homebrew/lib"
-        os.environ["DYLD_LIBRARY_PATH"] = homebrew_dir
 
     run_command([options.compiler_cache, '--show-stats'])
 
@@ -100,8 +96,7 @@ def main(args = None):
 
     if 'vendored' in features:
         run_command(['git', 'submodule', 'update', '--init', '--depth', '3'])
-
-    if 'git' in features:
+    elif 'git' in features:
         nproc = multiprocessing.cpu_count()
         botan_src = 'botan-git'
         run_command(['git', 'clone', '--depth', '1', 'https://github.com/randombit/botan.git', botan_src])
@@ -123,6 +118,12 @@ def main(args = None):
                      '--disable-modules=%s' % (disabled_modules)], botan_src)
         run_command(['make', '-j', str(nproc)], botan_src)
         run_command(['sudo', 'make', 'install'], botan_src)
+    elif os.access(homebrew_dir, os.R_OK):
+        # only install homebrew botan if not vendored/git
+        run_command(['brew', 'install', 'botan'])
+        os.environ["RUSTFLAGS"] = "-D warnings -L/opt/homebrew/lib"
+        os.environ["RUSTDOCFLAGS"] = "-D warnings -L/opt/homebrew/lib"
+        os.environ["DYLD_LIBRARY_PATH"] = homebrew_dir
 
     run_command(['rustc', '--version'])
 
