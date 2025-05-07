@@ -21,6 +21,6 @@ static = []
 pkg-config = ["dep:pkg-config"]
 
 [build-dependencies]
-botan-src = { version = "0.30701.2", optional = true, path = "../botan-src" }
+botan-src = { version = "0.30800.1", optional = true, path = "../botan-src" }
 pkg-config = { version = "0.3.30", optional = true }
 cc = "1"
