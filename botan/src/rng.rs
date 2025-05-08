@@ -70,6 +70,16 @@ impl RandomNumberGenerator {
         RandomNumberGenerator::new_of_type("esdm-pr")
     }
 
+    /// Create a new reference to the Jitter RNG
+    ///
+    /// # Examples
+    /// ```
+    /// let jitter_rng = botan::RandomNumberGenerator::new_jitter().unwrap();
+    /// ```
+    pub fn new_jitter() -> Result<RandomNumberGenerator> {
+        RandomNumberGenerator::new_of_type("jitter")
+    }
+
     /// Create a new reference to an RNG of some arbitrary type
     ///
     /// # Examples
