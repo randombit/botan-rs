@@ -52,8 +52,11 @@ impl RandomNumberGenerator {
 
     /// Create a new reference to the ESDM PRNG (fully seeded)
     ///
+    /// Availability of this RNG depends on botan being compiled
+    /// with ESDM support.
+    ///
     /// # Examples
-    /// ```
+    /// ```ignore
     /// let esdm_rng = botan::RandomNumberGenerator::new_esdm().unwrap();
     /// ```
     pub fn new_esdm() -> Result<RandomNumberGenerator> {
@@ -62,8 +65,11 @@ impl RandomNumberGenerator {
 
     /// Create a new reference to the ESDM PRNG (with prediction resistance)
     ///
+    /// Availability of this RNG depends on botan being compiled
+    /// with ESDM support.
+    ///
     /// # Examples
-    /// ```
+    /// ```ignore
     /// let esdm_rng = botan::RandomNumberGenerator::new_esdm_pr().unwrap();
     /// ```
     pub fn new_esdm_pr() -> Result<RandomNumberGenerator> {
@@ -72,8 +78,11 @@ impl RandomNumberGenerator {
 
     /// Create a new reference to the Jitter RNG
     ///
+    /// Availability of this RNG depends on botan being compiled
+    /// with Jitter RNG support.
+    ///
     /// # Examples
-    /// ```
+    /// ```ignore
     /// let jitter_rng = botan::RandomNumberGenerator::new_jitter().unwrap();
     /// ```
     pub fn new_jitter() -> Result<RandomNumberGenerator> {
