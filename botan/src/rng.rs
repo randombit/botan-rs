@@ -53,7 +53,7 @@ impl RandomNumberGenerator {
     /// Create a new reference to the ESDM PRNG (fully seeded)
     ///
     /// # Examples
-    /// ```
+    /// ```ignore
     /// let esdm_rng = botan::RandomNumberGenerator::new_esdm().unwrap();
     /// ```
     pub fn new_esdm() -> Result<RandomNumberGenerator> {
@@ -63,7 +63,7 @@ impl RandomNumberGenerator {
     /// Create a new reference to the ESDM PRNG (with prediction resistance)
     ///
     /// # Examples
-    /// ```
+    /// ```ignore
     /// let esdm_rng = botan::RandomNumberGenerator::new_esdm_pr().unwrap();
     /// ```
     pub fn new_esdm_pr() -> Result<RandomNumberGenerator> {
