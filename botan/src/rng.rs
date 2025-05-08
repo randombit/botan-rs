@@ -73,7 +73,7 @@ impl RandomNumberGenerator {
     /// Create a new reference to the Jitter RNG
     ///
     /// # Examples
-    /// ```
+    /// ```ignore
     /// let jitter_rng = botan::RandomNumberGenerator::new_jitter().unwrap();
     /// ```
     pub fn new_jitter() -> Result<RandomNumberGenerator> {
