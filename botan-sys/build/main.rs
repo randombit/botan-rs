@@ -169,6 +169,8 @@ fn find_botan_include_dir() -> std::path::PathBuf {
                 return config.include_paths[0].clone();
             }
         }
+
+        panic!("Unable to find the headers corresponding with any supported version of Botan");
     }
 
     #[cfg(not(feature = "pkg-config"))]
@@ -206,7 +208,7 @@ fn find_botan_include_dir() -> std::path::PathBuf {
             }
         }
 
-        panic!("Unable to find the headers cooresponding with any supported version of Botan");
+        panic!("Unable to find the headers corresponding with any supported version of Botan");
     }
 }
 
