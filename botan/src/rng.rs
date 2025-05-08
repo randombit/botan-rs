@@ -54,7 +54,7 @@ impl RandomNumberGenerator {
     ///
     /// Availability of this RNG depends on botan being compiled
     /// with ESDM support.
-    /// 
+    ///
     /// # Examples
     /// ```ignore
     /// let esdm_rng = botan::RandomNumberGenerator::new_esdm().unwrap();
@@ -67,7 +67,7 @@ impl RandomNumberGenerator {
     ///
     /// Availability of this RNG depends on botan being compiled
     /// with ESDM support.
-    /// 
+    ///
     /// # Examples
     /// ```ignore
     /// let esdm_rng = botan::RandomNumberGenerator::new_esdm_pr().unwrap();
@@ -80,7 +80,7 @@ impl RandomNumberGenerator {
     ///
     /// Availability of this RNG depends on botan being compiled
     /// with Jitter RNG support.
-    /// 
+    ///
     /// # Examples
     /// ```ignore
     /// let jitter_rng = botan::RandomNumberGenerator::new_jitter().unwrap();

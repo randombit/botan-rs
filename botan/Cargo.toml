@@ -26,3 +26,7 @@ std = []
 vendored = ["botan-sys/vendored"]
 static = ["botan-sys/static"]
 pkg-config = ["botan-sys/pkg-config"]
+
+[lints.clippy]
+# introduced because of from_str
+should_implement_trait = "allow"
