@@ -159,16 +159,14 @@ fn find_botan_include_dir() -> std::path::PathBuf {
         for major in [3, 2] {
             let lib_name = format!("botan-{}", major);
 
-            let statik = if cfg!(feature = "static") {
-                true
-            } else {
-                false
-            };
+            let statik = cfg!(feature = "static");
 
             if let Ok(config) = pkg_config::Config::new().statik(statik).probe(&lib_name) {
                 return config.include_paths[0].clone();
             }
         }
+
+        panic!("Unable to find the headers corresponding with any supported version of Botan");
     }
 
     #[cfg(not(feature = "pkg-config"))]
@@ -206,7 +204,7 @@ fn find_botan_include_dir() -> std::path::PathBuf {
             }
         }
 
-        panic!("Unable to find the headers cooresponding with any supported version of Botan");
+        panic!("Unable to find the headers corresponding with any supported version of Botan");
     }
 }
 
