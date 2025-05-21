@@ -50,6 +50,45 @@ impl RandomNumberGenerator {
         RandomNumberGenerator::new_of_type("system")
     }
 
+    /// Create a new reference to the ESDM PRNG (fully seeded)
+    ///
+    /// Availability of this RNG depends on botan being compiled
+    /// with ESDM support.
+    ///
+    /// # Examples
+    /// ```ignore
+    /// let esdm_rng = botan::RandomNumberGenerator::new_esdm().unwrap();
+    /// ```
+    pub fn new_esdm() -> Result<RandomNumberGenerator> {
+        RandomNumberGenerator::new_of_type("esdm-full")
+    }
+
+    /// Create a new reference to the ESDM PRNG (with prediction resistance)
+    ///
+    /// Availability of this RNG depends on botan being compiled
+    /// with ESDM support.
+    ///
+    /// # Examples
+    /// ```ignore
+    /// let esdm_rng = botan::RandomNumberGenerator::new_esdm_pr().unwrap();
+    /// ```
+    pub fn new_esdm_pr() -> Result<RandomNumberGenerator> {
+        RandomNumberGenerator::new_of_type("esdm-pr")
+    }
+
+    /// Create a new reference to the Jitter RNG
+    ///
+    /// Availability of this RNG depends on botan being compiled
+    /// with Jitter RNG support.
+    ///
+    /// # Examples
+    /// ```ignore
+    /// let jitter_rng = botan::RandomNumberGenerator::new_jitter().unwrap();
+    /// ```
+    pub fn new_jitter() -> Result<RandomNumberGenerator> {
+        RandomNumberGenerator::new_of_type("jitter")
+    }
+
     /// Create a new reference to an RNG of some arbitrary type
     ///
     /// # Examples
