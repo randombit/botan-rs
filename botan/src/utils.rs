@@ -169,6 +169,39 @@ pub(crate) fn call_botan_ffi_returning_string(
     cstr_slice_to_str(&v)
 }
 
+macro_rules! ffi_version_from_cfg {
+    (botan_ffi_20230403) => {
+        20230403
+    };
+    (botan_ffi_20240408) => {
+        20240408
+    };
+    (botan_ffi_20250506) => {
+        20250506
+    };
+}
+
+pub(crate) use ffi_version_from_cfg;
+
+macro_rules! ffi_version_guard {
+    ($fn_name:expr, $cfg_val:ident, $if_impl:block) => {{
+        #[cfg($cfg_val)]
+        {
+            $if_impl
+        }
+
+        #[cfg(not($cfg_val))]
+        {
+            Err(Error::not_implemented(
+                $fn_name,
+                ffi_version_from_cfg!($cfg_val),
+            ))
+        }
+    }};
+}
+
+pub(crate) use ffi_version_guard;
+
 /// The library error type
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Error {
@@ -218,6 +251,17 @@ impl Error {
 
     pub(crate) fn bad_parameter(message: &'static str) -> Self {
         Self::with_message(ErrorType::BadParameter, message.to_owned())
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn not_implemented(fn_name: &'static str, ffi_version: u32) -> Self {
+        Self::with_message(
+            ErrorType::NotImplemented,
+            format!(
+                "Function {} not available - requires Botan FFI {}",
+                fn_name, ffi_version
+            ),
+        )
     }
 
     #[cfg(feature = "std")]
