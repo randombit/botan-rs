@@ -115,8 +115,9 @@ impl Privkey {
         Ok(Privkey { obj })
     }
 
-    #[cfg(botan_ffi_20240408)]
     /// Load an X448 private key
+    ///
+    /// This requires `botan_ffi_20240408`, otherwise a not implemented error is returned
     ///
     /// # Examples
     ///
@@ -125,8 +126,10 @@ impl Privkey {
     /// let key = botan::Privkey::load_x448(&v);
     /// ```
     pub fn load_x448(key: &[u8]) -> Result<Privkey> {
-        let obj = botan_init!(botan_privkey_load_x448, key.as_ptr())?;
-        Ok(Privkey { obj })
+        crate::ffi_version_guard!("load_x448", botan_ffi_20240408, [key], {
+            let obj = botan_init!(botan_privkey_load_x448, key.as_ptr())?;
+            Ok(Privkey { obj })
+        })
     }
 
     /// Load a PKCS#1 encoded RSA private key
@@ -422,16 +425,19 @@ impl Privkey {
         }
     }
 
-    #[cfg(botan_ffi_20250506)]
     /// Check if the key in question is stateful (eg XMMS, LMS)
+    ///
+    /// This requires `botan_ffi_20250506`, otherwise a not implemented error is returned
     pub fn is_stateful(&self) -> Result<bool> {
-        let mut stateful = 0;
-        let rc = unsafe { botan_privkey_stateful_operation(self.obj, &mut stateful) };
-        if rc != 0 {
-            Err(Error::from_rc(rc))
-        } else {
-            interp_as_bool(stateful, "botan_privkey_stateful_operation")
-        }
+        crate::ffi_version_guard!("is_stateful", botan_ffi_20250506, [], {
+            let mut stateful = 0;
+            let rc = unsafe { botan_privkey_stateful_operation(self.obj, &mut stateful) };
+            if rc != 0 {
+                Err(Error::from_rc(rc))
+            } else {
+                interp_as_bool(stateful, "botan_privkey_stateful_operation")
+            }
+        })
     }
 
     /// Return the key agrement key, only valid for DH/ECDH
@@ -467,14 +473,17 @@ impl Privkey {
         Ok(r)
     }
 
-    #[cfg(botan_ffi_20250506)]
     /// Get the raw bytes associated with this key
     ///
     /// This is not defined for certain schemes which do not have an obvious
     /// encoding (eg RSA), so will return an error for some keys
+    ///
+    /// This requires `botan_ffi_20250506`, otherwise a not implemented error is returned
     pub fn raw_bytes(&self) -> Result<Vec<u8>> {
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_privkey_view_raw(self.obj, ctx, cb)
+        crate::ffi_version_guard!("raw_bytes", botan_ffi_20250506, [], {
+            call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
+                botan_privkey_view_raw(self.obj, ctx, cb)
+            })
         })
     }
 
@@ -633,24 +642,28 @@ impl Pubkey {
         Ok(Pubkey { obj })
     }
 
-    #[cfg(botan_ffi_20250506)]
     /// Load a ML-KEM public key from the raw byte encoding
     ///
     /// The exact type can be determined by the length and does not need to be specified
+    ///
+    /// This requires `botan_ffi_20250506`, otherwise a not implemented error is returned
     pub fn load_ml_kem(key: &[u8]) -> Result<Pubkey> {
-        let params = make_cstr(match key.len() {
-            800 => "ML-KEM-512",
-            1184 => "ML-KEM-768",
-            1568 => "ML-KEM-1024",
-            _ => return Err(Error::bad_parameter("Invalid ML-KEM key length")),
-        })?;
-        let obj = botan_init!(
-            botan_pubkey_load_ml_kem,
-            key.as_ptr(),
-            key.len(),
-            params.as_ptr()
-        )?;
-        Ok(Pubkey { obj })
+        crate::ffi_version_guard!("load_ml_kem", botan_ffi_20250506, [key], {
+            let params = make_cstr(match key.len() {
+                800 => "ML-KEM-512",
+                1184 => "ML-KEM-768",
+                1568 => "ML-KEM-1024",
+                _ => return Err(Error::bad_parameter("Invalid ML-KEM key length")),
+            })?;
+
+            let obj = botan_init!(
+                botan_pubkey_load_ml_kem,
+                key.as_ptr(),
+                key.len(),
+                params.as_ptr()
+            )?;
+            Ok(Pubkey { obj })
+        })
     }
 
     /// Return estimated bit strength of this key
@@ -717,13 +730,16 @@ impl Pubkey {
         }
     }
 
-    #[cfg(botan_ffi_20230403)]
     /// Return the encoded elliptic curve point associated with this key
     ///
     /// Only valid for EC based keys
+    ///
+    /// This requires `botan_ffi_20230403`, otherwise a not implemented error is returned
     pub fn ec_public_point(&self) -> Result<Vec<u8>> {
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_pubkey_view_ec_public_point(self.obj, ctx, cb)
+        crate::ffi_version_guard!("ec_public_point", botan_ffi_20230403, [], {
+            call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
+                botan_pubkey_view_ec_public_point(self.obj, ctx, cb)
+            })
         })
     }
 
@@ -744,11 +760,14 @@ impl Pubkey {
         Ok(r)
     }
 
-    #[cfg(botan_ffi_20250506)]
     /// Return the raw byte encoding of this key
+    ///
+    /// This requires `botan_ffi_20250506`, otherwise a not implemented error is returned
     pub fn raw_bytes(&self) -> Result<Vec<u8>> {
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_pubkey_view_raw(self.obj, ctx, cb)
+        crate::ffi_version_guard!("raw_bytes", botan_ffi_20250506, [], {
+            call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
+                botan_pubkey_view_raw(self.obj, ctx, cb)
+            })
         })
     }
 
