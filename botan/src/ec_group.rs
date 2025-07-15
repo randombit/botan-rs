@@ -21,6 +21,10 @@ botan_impl_drop!(EcGroup, botan_ec_group_destroy);
 
 #[cfg(botan_ffi_20250506)]
 impl EcGroup {
+    pub(crate) fn handle(&self) -> botan_ec_group_t {
+        self.obj
+    }
+
     /// Does this build configuration support application specific groups
     pub fn supports_application_specific_groups() -> Result<bool> {
         let mut result = 0;

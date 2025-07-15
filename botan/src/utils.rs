@@ -25,6 +25,10 @@ pub(crate) fn make_cstr(input: &str) -> Result<CString> {
     Ok(cstr)
 }
 
+pub(crate) fn make_optional_cstr(input: Option<&str>) -> Result<Option<CString>> {
+    input.map(|s| make_cstr(s)).transpose()
+}
+
 pub(crate) fn call_botan_ffi_returning_vec_u8(
     initial_size: usize,
     cb: &dyn Fn(*mut u8, *mut usize) -> c_int,

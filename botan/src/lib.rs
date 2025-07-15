@@ -118,6 +118,7 @@ mod utils;
 mod version;
 mod x509_cert;
 mod x509_crl;
+mod x509_ext;
 mod zfec;
 
 pub use asn1::*;
@@ -141,6 +142,7 @@ pub use utils::*;
 pub use version::*;
 pub use x509_cert::*;
 pub use x509_crl::*;
+pub use x509_ext::*;
 pub use zfec::*;
 
 #[cfg(botan_ffi_20230403)]
