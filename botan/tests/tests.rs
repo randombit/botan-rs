@@ -903,7 +903,6 @@ fn test_rfc3394_aes_key_wrap() -> Result<(), botan::Error> {
     Ok(())
 }
 
-#[cfg(botan_ffi_20230403)]
 #[test]
 fn test_aes_key_wrap() -> Result<(), botan::Error> {
     let kek =
@@ -911,7 +910,13 @@ fn test_aes_key_wrap() -> Result<(), botan::Error> {
     let key =
         botan::hex_decode("00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F")?;
 
-    let wrapped = botan::nist_kw_enc("AES-256", false, &kek, &key)?;
+    let wrapped = match botan::nist_kw_enc("AES-256", false, &kek, &key) {
+        Ok(s) => s,
+        Err(e) => {
+            assert_eq!(e.error_type(), botan::ErrorType::NotImplemented);
+            return Ok(());
+        }
+    };
 
     assert_eq!(
         botan::hex_encode(&wrapped)?,
@@ -1163,14 +1168,19 @@ fn test_dsa() -> Result<(), botan::Error> {
     Ok(())
 }
 
-#[cfg(botan_ffi_20230403)]
 #[test]
 fn test_zfec() -> Result<(), botan::Error> {
     let k = 2;
     let n = 3;
     let input_bytes = b"abcdefghijklmnop";
 
-    let output_shares = botan::zfec_encode(k, n, input_bytes)?;
+    let output_shares = match botan::zfec_encode(k, n, input_bytes) {
+        Ok(s) => s,
+        Err(e) => {
+            assert_eq!(e.error_type(), botan::ErrorType::NotImplemented);
+            return Ok(());
+        }
+    };
 
     assert_eq!(output_shares.len(), n);
     assert_eq!(output_shares[0], b"abcdefgh");
@@ -1215,7 +1225,7 @@ fn test_kyber() -> Result<(), botan::Error> {
     Ok(())
 }
 
-#[cfg(botan_ffi_20250506)]
+#[cfg(botan_ffi_20230403)]
 #[test]
 fn test_ml_kem() -> Result<(), botan::Error> {
     let mut rng = botan::RandomNumberGenerator::new()?;

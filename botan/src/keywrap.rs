@@ -1,55 +1,71 @@
 use crate::utils::*;
 use botan_sys::*;
 
-#[cfg(botan_ffi_20230403)]
 /// Wrap a key using NIST key wrap algorithm
+///
+/// This requires `botan_ffi_20230403`, otherwise a not implemented error is returned
 pub fn nist_kw_enc(cipher_algo: &str, padding: bool, kek: &[u8], key: &[u8]) -> Result<Vec<u8>> {
-    let mut output = vec![0; key.len() + if padding { 32 } else { 8 }];
-    let mut output_len = output.len();
+    crate::ffi_version_guard!(
+        "nist_kw_enc",
+        botan_ffi_20230403,
+        [cipher_algo, padding, kek, key],
+        {
+            let mut output = vec![0; key.len() + if padding { 32 } else { 8 }];
+            let mut output_len = output.len();
 
-    botan_call!(
-        botan_nist_kw_enc,
-        make_cstr(cipher_algo)?.as_ptr(),
-        c_int::from(padding),
-        key.as_ptr(),
-        key.len(),
-        kek.as_ptr(),
-        kek.len(),
-        output.as_mut_ptr(),
-        &mut output_len
-    )?;
+            botan_call!(
+                botan_nist_kw_enc,
+                make_cstr(cipher_algo)?.as_ptr(),
+                c_int::from(padding),
+                key.as_ptr(),
+                key.len(),
+                kek.as_ptr(),
+                kek.len(),
+                output.as_mut_ptr(),
+                &mut output_len
+            )?;
 
-    output.resize(output_len, 0);
+            output.resize(output_len, 0);
 
-    Ok(output)
+            Ok(output)
+        }
+    )
 }
 
 /// Unwrap a key using NIST key wrap algorithm
-#[cfg(botan_ffi_20230403)]
+///
+/// This requires `botan_ffi_20230403`, otherwise a not implemented error is returned
 pub fn nist_kw_dec(
     cipher_algo: &str,
     padding: bool,
     kek: &[u8],
     wrapped: &[u8],
 ) -> Result<Vec<u8>> {
-    let mut output = vec![0; wrapped.len()];
-    let mut output_len = output.len();
+    crate::ffi_version_guard!(
+        "nist_kw_dec",
+        botan_ffi_20230403,
+        [cipher_algo, padding, kek, wrapped],
+        {
+            let mut output = vec![0; wrapped.len()];
+            let mut output_len = output.len();
 
-    botan_call!(
-        botan_nist_kw_dec,
-        make_cstr(cipher_algo)?.as_ptr(),
-        c_int::from(padding),
-        wrapped.as_ptr(),
-        wrapped.len(),
-        kek.as_ptr(),
-        kek.len(),
-        output.as_mut_ptr(),
-        &mut output_len
-    )?;
+            botan_call!(
+                botan_nist_kw_dec,
+                make_cstr(cipher_algo)?.as_ptr(),
+                c_int::from(padding),
+                wrapped.as_ptr(),
+                wrapped.len(),
+                kek.as_ptr(),
+                kek.len(),
+                output.as_mut_ptr(),
+                &mut output_len
+            )?;
 
-    output.resize(output_len, 0);
+            output.resize(output_len, 0);
 
-    Ok(output)
+            Ok(output)
+        }
+    )
 }
 
 /// Wrap a key using RFC 3394's AES key wrap algorithm.
