@@ -64,9 +64,41 @@ jobs:
         with:
             path: |
               ~/.cache/ccache
-            key: linux-${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
+            key: linux-x86_64-${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
             restore-keys: |
-               linux-${{ matrix.toolchain }}-${{ matrix.features }}
+               linux-x86_64-${{ matrix.toolchain }}-${{ matrix.features }}
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          target: ${{ matrix.target }}
+          toolchain: ${{ matrix.toolchain }}
+      - run: ./.ci/build.py ${{ matrix.features }}
+
+  ci_arm:
+    runs-on: ubuntu-24.04-arm
+
+    env:
+        RUST_BACKTRACE: 1
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        include:
+          - toolchain: stable
+          - toolchain: stable
+            features: git
+          - toolchain: nightly
+
+    steps:
+      - run: sudo apt-get -qq install ccache libbotan-2-dev
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+            path: |
+              ~/.cache/ccache
+            key: linux-aarch64-${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
+            restore-keys: |
+               linux-aarch64-${{ matrix.toolchain }}-${{ matrix.features }}
       - uses: dtolnay/rust-toolchain@master
         with:
           target: ${{ matrix.target }}
@@ -74,7 +106,7 @@ jobs:
       - run: ./.ci/build.py ${{ matrix.features }}
 
   ci_mac:
-    runs-on: macos-latest
+    runs-on: macos-15
 
     env:
         RUST_BACKTRACE: 1
@@ -105,7 +137,7 @@ jobs:
       - run: ./.ci/build.py ${{ matrix.features }}
 
   ci_windows:
-    runs-on: windows-2022
+    runs-on: windows-2025
 
     env:
         RUST_BACKTRACE: 1
