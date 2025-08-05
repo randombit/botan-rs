@@ -1,4 +1,4 @@
-## 0.12.0 Not Yet Released
+## 0.12.0 2025-08-05
 
 - Minor version bump due to removing a feature
 - The `botan3` feature has been removed from the crate. Now `botan-sys` detects
@@ -7,6 +7,7 @@
 - Add ML-KEM support (requires Botan 3.8 or higher)
 - Add support for X448 and Ed448 (requires Botan 3.4 or higher)
 - Add `RandomNumberGenerator::new_of_type`
+- Update `botan-src` to Botan 3.9.0
 - The `botan-sys` crate has been renumbered as `1.YYYYMMDD` where YYYYMMDD is
   the latest supported Botan FFI version.
 
