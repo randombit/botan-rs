@@ -17,12 +17,10 @@ exclude = ["botan/doc",
            "botan/src/ct_selftest",
            "botan/src/examples",
            "botan/src/fuzzer",
-           #"botan/src/lib/compat/sodium", # enable this again in 3.8
            "botan/src/lib/filters",
            "botan/src/lib/prov/pkcs11",
            "botan/src/lib/prov/tpm",
            "botan/src/lib/prov/tpm2",
-           #"botan/src/lib/tls", # enable this again in 3.8
            "botan/src/python",
            "botan/src/tests"]
 
