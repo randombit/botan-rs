@@ -21,6 +21,7 @@ mod rng;
 mod utils;
 mod version;
 mod x509;
+mod x509_rpki;
 mod zfec;
 
 pub mod ffi_types {
@@ -57,4 +58,5 @@ pub use rng::*;
 pub use utils::*;
 pub use version::*;
 pub use x509::*;
+pub use x509_rpki::*;
 pub use zfec::*;

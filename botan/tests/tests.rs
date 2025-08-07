@@ -1347,3 +1347,244 @@ fn test_ec_group() -> Result<(), botan::Error> {
 
     Ok(())
 }
+
+#[cfg(botan_ffi_20250805)]
+#[test]
+fn test_cert_creation() -> Result<(), botan::Error> {
+    let hash_fn = "SHA-256";
+    let padding_method = "EMSA1(SHA-256)";
+    let group = "secp256r1";
+    let opts = "Test CA/US/Botan Project/Testing";
+
+    let mut rng = botan::RandomNumberGenerator::new()?;
+    let ca_key = botan::Privkey::create("ECDSA", group, &mut rng)?;
+    let mut ca_builder = botan::CertificateBuilder::new(opts, None)?;
+    ca_builder.mark_as_ca_key(1)?;
+    ca_builder.add_constraints(&[botan::CertUsage::DigitalSignature])?;
+    let ca_cert = botan::Certificate::create_self_signed(
+        &ca_key,
+        &ca_builder,
+        hash_fn,
+        padding_method,
+        &mut rng,
+    )?;
+
+    let constraints = ca_cert.key_constraints()?;
+    assert_eq!(constraints.len(), 3);
+    for item in [
+        botan::CertUsage::DigitalSignature,
+        botan::CertUsage::CertificateSign,
+        botan::CertUsage::CrlSign,
+    ] {
+        assert!(constraints.contains(&item));
+    }
+
+    assert!(ca_cert.is_ca()?.0);
+    assert!(ca_cert.is_self_signed()?);
+
+    let cert_key = botan::Privkey::create("ECDSA", group, &mut rng)?;
+    let mut req_builder = botan::CertificateBuilder::new(opts, None)?;
+    req_builder.add_uri("https://botan.randombit.net")?;
+    for item in [
+        "imaginary.botan.randombit.net",
+        "botan.randombit.net",
+        "randombit.net",
+    ] {
+        req_builder.add_dns(item)?;
+    }
+
+    let req = req_builder.create_req(&cert_key, hash_fn, &mut rng)?;
+
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("Getting the system time must work")
+        .as_secs();
+    let cert = req.sign(
+        &ca_cert,
+        &ca_key,
+        &mut rng,
+        now,
+        now + 60,
+        hash_fn,
+        padding_method,
+    )?;
+    assert!(!cert.is_self_signed()?);
+    assert_eq!(cert.key_constraints()?, [botan::CertUsage::NoRestrictions]);
+
+    assert!(cert
+        .ext_as_blocks()
+        .is_err_and(|e| e.error_type() == botan::ErrorType::NoValueAvailable));
+    assert!(cert
+        .ext_ip_addr_blocks()
+        .is_err_and(|e| e.error_type() == botan::ErrorType::NoValueAvailable));
+
+    let result = cert.verify(&[], &[&ca_cert], None, None, None)?;
+    assert!(result.success());
+    assert_eq!(result.to_string(), "Verified");
+
+    Ok(())
+}
+
+#[cfg(botan_ffi_20250805)]
+#[test]
+fn test_x509_rpki() -> Result<(), botan::Error> {
+    use std::net::{Ipv4Addr, Ipv6Addr};
+
+    let hash_fn = "SHA-256";
+    let padding_method = "EMSA1(SHA-256)";
+    let group = "secp256r1";
+    let opts = "Test CA/US/Botan Project/Testing";
+
+    let mut rng = botan::RandomNumberGenerator::new()?;
+    let ca_key = botan::Privkey::create("ECDSA", group, &mut rng)?;
+    let mut ca_builder = botan::CertificateBuilder::new(opts, None)?;
+    ca_builder.mark_as_ca_key(1)?;
+    ca_builder.add_constraints(&[botan::CertUsage::DigitalSignature])?;
+
+    let mut ca_ip_addr_blocks = botan::IpAddrBlocks::new()?;
+    ca_ip_addr_blocks.add_addr(std::net::IpAddr::V4(Ipv4Addr::new(192, 168, 2, 1)), None)?;
+    ca_ip_addr_blocks.add_range(
+        std::net::IpAddr::V4(Ipv4Addr::new(10, 0, 0, 1)),
+        std::net::IpAddr::V4(Ipv4Addr::new(10, 0, 255, 255)),
+        None,
+    )?;
+    ca_ip_addr_blocks.restrict(false, Some(42))?;
+
+    ca_ip_addr_blocks.add_addr(
+        std::net::IpAddr::V6(Ipv6Addr::new(
+            0xab01, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x000, 0x001,
+        )),
+        None,
+    )?;
+    ca_ip_addr_blocks.restrict(true, Some(234))?;
+
+    let mut ca_as_blocks = botan::ASBlocks::new()?;
+    ca_as_blocks.add_asnum(30)?;
+    ca_as_blocks.add_asnum_range(3000, 4999)?;
+    ca_as_blocks.restrict_rdi()?;
+
+    ca_builder.add_ext_ip_addr_blocks(&ca_ip_addr_blocks)?;
+    ca_builder.add_ext_as_blocks(&ca_as_blocks)?;
+
+    assert!(ca_builder
+        .add_ext_ip_addr_blocks(&ca_ip_addr_blocks)
+        .is_err_and(|e| e.error_type() == botan::ErrorType::InvalidObjectState));
+    assert!(ca_builder
+        .add_ext_as_blocks(&ca_as_blocks)
+        .is_err_and(|e| e.error_type() == botan::ErrorType::InvalidObjectState));
+
+    let ca_cert = botan::Certificate::create_self_signed(
+        &ca_key,
+        &ca_builder,
+        hash_fn,
+        padding_method,
+        &mut rng,
+    )?;
+
+    let mut ca_ip_addr_blocks = ca_cert.ext_ip_addr_blocks()?;
+    let blocks: (
+        Vec<(Option<u8>, Option<Vec<(Ipv4Addr, Ipv4Addr)>>)>,
+        Vec<(Option<u8>, Option<Vec<(Ipv6Addr, Ipv6Addr)>>)>,
+    ) = ca_ip_addr_blocks.addresses()?;
+    assert_eq!(
+        blocks.0,
+        vec![
+            (
+                None,
+                Some(vec![
+                    (Ipv4Addr::new(10, 0, 0, 1), Ipv4Addr::new(10, 0, 255, 255)),
+                    (Ipv4Addr::new(192, 168, 2, 1), Ipv4Addr::new(192, 168, 2, 1))
+                ])
+            ),
+            (Some(42), Some(vec![]))
+        ]
+    );
+    assert_eq!(
+        blocks.1,
+        vec![
+            (
+                None,
+                Some(vec![(
+                    Ipv6Addr::new(0xab01, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x000, 0x001),
+                    Ipv6Addr::new(0xab01, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x000, 0x001)
+                )])
+            ),
+            (Some(234), Some(vec![]))
+        ]
+    );
+
+    assert!(ca_ip_addr_blocks
+        .add_addr(std::net::IpAddr::V4(Ipv4Addr::new(123, 0, 0, 1)), None)
+        .is_err_and(|e| e.error_type() == botan::ErrorType::InvalidObjectState));
+
+    let mut ca_as_blocks = ca_cert.ext_as_blocks()?;
+    assert_eq!(ca_as_blocks.asnum()?, Some(vec![(30, 30), (3000, 4999)]));
+    assert_eq!(ca_as_blocks.rdi()?, Some(vec![]));
+
+    assert!(ca_as_blocks
+        .add_asnum(999)
+        .is_err_and(|e| e.error_type() == botan::ErrorType::InvalidObjectState));
+
+    let cert_key = botan::Privkey::create("ECDSA", group, &mut rng)?;
+    let mut req_builder = botan::CertificateBuilder::new(opts, None)?;
+
+    let mut req_ip_addr_blocks = botan::IpAddrBlocks::new()?;
+    req_ip_addr_blocks.add_addr(std::net::IpAddr::V4(Ipv4Addr::new(192, 168, 2, 1)), None)?;
+    req_ip_addr_blocks.add_range(
+        std::net::IpAddr::V4(Ipv4Addr::new(10, 0, 5, 5)),
+        std::net::IpAddr::V4(Ipv4Addr::new(10, 0, 7, 7)),
+        None,
+    )?;
+    req_ip_addr_blocks.restrict(false, Some(42))?;
+    req_ip_addr_blocks.inherit(true, None)?;
+    req_ip_addr_blocks.inherit(true, Some(234))?;
+
+    let mut req_as_blocks = botan::ASBlocks::new()?;
+    req_as_blocks.add_asnum_range(3100, 4000)?;
+    req_as_blocks.inherit_rdi()?;
+
+    req_builder.add_ext_ip_addr_blocks(&req_ip_addr_blocks)?;
+    req_builder.add_ext_as_blocks(&req_as_blocks)?;
+    let req = req_builder.create_req(&cert_key, hash_fn, &mut rng)?;
+
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("Getting the system time must work")
+        .as_secs();
+    let cert = req.sign(
+        &ca_cert,
+        &ca_key,
+        &mut rng,
+        now,
+        now + 60,
+        hash_fn,
+        padding_method,
+    )?;
+
+    let req_ip_addr_blocks = cert.ext_ip_addr_blocks()?;
+    let blocks = req_ip_addr_blocks.addresses()?;
+    assert_eq!(
+        blocks.0,
+        vec![
+            (
+                None,
+                Some(vec![
+                    (Ipv4Addr::new(10, 0, 5, 5), Ipv4Addr::new(10, 0, 7, 7)),
+                    (Ipv4Addr::new(192, 168, 2, 1), Ipv4Addr::new(192, 168, 2, 1))
+                ])
+            ),
+            (Some(42), Some(vec![]))
+        ]
+    );
+    assert_eq!(blocks.1, vec![(None, None), (Some(234), None)]);
+
+    let req_as_blocks = cert.ext_as_blocks()?;
+    assert_eq!(req_as_blocks.asnum()?, Some(vec![(3100, 4000)]));
+    assert_eq!(req_as_blocks.rdi()?, None);
+
+    let result = cert.verify(&[], &[&ca_cert], None, None, None)?;
+    assert!(result.success());
+    assert_eq!(result.to_string(), "Verified");
+
+    Ok(())
+}
