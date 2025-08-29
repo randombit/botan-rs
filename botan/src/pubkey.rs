@@ -1,4 +1,6 @@
 use crate::utils::*;
+#[cfg(botan_ffi_20250506)]
+use crate::EcGroup;
 use botan_sys::*;
 
 use crate::mp::MPI;
@@ -63,6 +65,23 @@ impl Privkey {
         rng: &mut RandomNumberGenerator,
     ) -> Result<Self> {
         let obj = botan_init!(botan_privkey_create_dsa, rng.handle(), p_bits, q_bits)?;
+
+        Ok(Self { obj })
+    }
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn create_ec(
+        algo: &str,
+        ec_group: &EcGroup,
+        rng: &mut RandomNumberGenerator,
+    ) -> Result<Self> {
+        let algo = make_cstr(algo)?;
+        let obj = botan_init!(
+            botan_ec_privkey_create,
+            algo.as_ptr(),
+            ec_group.handle(),
+            rng.handle()
+        )?;
 
         Ok(Self { obj })
     }
