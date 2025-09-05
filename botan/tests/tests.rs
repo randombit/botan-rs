@@ -408,6 +408,23 @@ fn test_rng() -> Result<(), botan::Error> {
     let read2 = rng.read(10)?;
 
     assert!(read1 != read2);
+
+    #[cfg(feature = "rand")]
+    {
+        use rand::TryRngCore;
+
+        let read1 = rng.try_next_u32()?;
+        let read2 = rng.try_next_u32()?;
+        assert!(read1 != read2);
+
+        let read1 = rng.try_next_u64()?;
+        let read2 = rng.try_next_u64()?;
+        assert!(read1 != read2);
+
+        let mut bytes = vec![0; 64];
+        rng.try_fill_bytes(&mut bytes)?;
+    }
+
     Ok(())
 }
 

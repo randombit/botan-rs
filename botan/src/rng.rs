@@ -164,3 +164,28 @@ impl RandomNumberGenerator {
         botan_call!(botan_rng_add_entropy, self.obj, seed.as_ptr(), seed.len())
     }
 }
+
+#[cfg(feature = "rand")]
+impl rand::TryRngCore for RandomNumberGenerator {
+    type Error = Error;
+
+    fn try_next_u32(&mut self) -> Result<u32> {
+        let mut bytes: [u8; 4] = [0; 4];
+        self.fill(&mut bytes)?;
+        Ok(u32::from_be_bytes(bytes))
+    }
+
+    fn try_next_u64(&mut self) -> Result<u64> {
+        let mut bytes: [u8; 8] = [0; 8];
+        self.fill(&mut bytes)?;
+        Ok(u64::from_be_bytes(bytes))
+    }
+
+    fn try_fill_bytes(&mut self, dst: &mut [u8]) -> Result<()> {
+        self.fill(dst)?;
+        Ok(())
+    }
+}
+
+#[cfg(feature = "rand")]
+impl rand::TryCryptoRng for RandomNumberGenerator {}
