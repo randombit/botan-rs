@@ -15,17 +15,19 @@ rust-version = "1.64"
 
 [dependencies]
 botan-sys = { version = "1.20250506", path = "../botan-sys" }
+rand = { version = "0.9.2", default-features = false, optional = true }
 
 [dev-dependencies]
 wycheproof = { version = "0.6", default-features = false, features = ["aead", "cipher", "dsa", "ecdh", "ecdsa", "eddsa", "hkdf", "keywrap", "mac", "primality", "rsa_enc", "rsa_sig", "xdh"] }
 hex = "0.4"
 
 [features]
-default = ["std"]
+default = ["std", "rand"]
 std = []
 vendored = ["botan-sys/vendored"]
 static = ["botan-sys/static"]
 pkg-config = ["botan-sys/pkg-config"]
+rand = ["dep:rand"]
 
 [lints.clippy]
 # introduced because of from_str
