@@ -815,9 +815,15 @@ fn test_pubkey_sign_der() -> Result<(), botan::Error> {
 
     let hash = "EMSA1(SHA-256)";
 
+    let mut signer = botan::Signer::new(&ecdsa_key, hash)?;
+    signer.update(&msg)?;
+    let signature = signer.finish(&mut rng)?;
+    assert!(signature.len() <= signer.signature_length());
+
     let mut signer = botan::Signer::new_with_der_formatted_signatures(&ecdsa_key, hash)?;
     signer.update(&msg)?;
     let signature = signer.finish(&mut rng)?;
+    assert!(signature.len() <= signer.signature_length());
 
     let pub_key = ecdsa_key.pubkey()?;
 

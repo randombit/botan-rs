@@ -53,6 +53,11 @@ impl Signer {
         Ok(Signer { obj, sig_len })
     }
 
+    /// Return an upper bound on the length of the output signature
+    pub fn signature_length(&self) -> usize {
+        self.sig_len
+    }
+
     /// Add more bytes of the message that will be signed
     pub fn update(&mut self, data: &[u8]) -> Result<()> {
         botan_call!(botan_pk_op_sign_update, self.obj, data.as_ptr(), data.len())
