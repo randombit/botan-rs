@@ -246,9 +246,21 @@ impl Cipher {
         botan_call!(botan_cipher_start, self.obj, nonce.as_ptr(), nonce.len())
     }
 
+    /// calculate output length for a message of given size
+    fn output_length(&self, len: usize, end: bool) -> Result<usize> {
+        let mut out_len = 0;
+        botan_call!(botan_cipher_output_length, self.obj, len, &mut out_len)?;
+        let out_len = match (self.direction, end) {
+            (CipherDirection::Encrypt, true) | (CipherDirection::Decrypt, true) => out_len,
+            (CipherDirection::Encrypt, false) => out_len.saturating_sub(self.tag_length()),
+            (CipherDirection::Decrypt, false) => out_len + self.tag_length(),
+        };
+        Ok(out_len)
+    }
+
     /// incremental update
     fn _update(&mut self, msg: &[u8], end: bool) -> Result<Vec<u8>> {
-        let mut output = vec![0; msg.len() + if end { self.tag_length() } else { 0 }];
+        let mut output = vec![0; self.output_length(msg.len(), end)?];
         let output_written = self._update_into(msg, end, &mut output)?;
         output.resize(output_written, 0);
         Ok(output)
@@ -258,11 +270,7 @@ impl Cipher {
     ///
     /// Returns the number of bytes written to `output`.
     fn _update_into(&mut self, msg: &[u8], end: bool, output: &mut [u8]) -> Result<usize> {
-        let expected_len = match (self.direction, end) {
-            (CipherDirection::Encrypt, false) | (CipherDirection::Decrypt, false) => msg.len(),
-            (CipherDirection::Encrypt, true) => msg.len() + self.tag_length(),
-            (CipherDirection::Decrypt, true) => msg.len().saturating_sub(self.tag_length()),
-        };
+        let expected_len = self.output_length(msg.len(), end)?;
 
         if output.len() < expected_len {
             return Err(Error::with_message(
