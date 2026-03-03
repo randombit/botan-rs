@@ -71,7 +71,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           toolchain: ${{ matrix.toolchain }}
-      - run: ./.ci/build.py ${{ matrix.features }}
+      - run: ./.ci/build.py ${{ matrix.toolchain }} ${{ matrix.features }}
 
   ci_arm:
     runs-on: ubuntu-24.04-arm
@@ -103,7 +103,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           toolchain: ${{ matrix.toolchain }}
-      - run: ./.ci/build.py ${{ matrix.features }}
+      - run: ./.ci/build.py ${{ matrix.toolchain }} ${{ matrix.features }}
 
   ci_mac:
     runs-on: macos-15
@@ -134,7 +134,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.toolchain }}
-      - run: ./.ci/build.py ${{ matrix.features }}
+      - run: ./.ci/build.py ${{ matrix.toolchain }} ${{ matrix.features }}
 
   ci_windows:
     runs-on: windows-2025
@@ -167,4 +167,4 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.toolchain }}
-      - run: python3 ./.ci/build.py ${{ matrix.features }} --compiler-cache=sccache
+      - run: python3 ./.ci/build.py ${{ matrix.toolchain }} ${{ matrix.features }} --compiler-cache=sccache
