@@ -45,17 +45,17 @@ jobs:
         include:
           - toolchain: stable
           - toolchain: stable
-            features: no-std
+            features: no-std+git
           - toolchain: stable
             features: git
           - toolchain: stable
             features: vendored
           - toolchain: 1.64.0 # MSRV no-std
-            features: no-std
+            features: no-std+git
           - toolchain: 1.64.0 # MSRV
           - toolchain: nightly
           - toolchain: nightly
-            features: no-std
+            features: no-std+git
 
     steps:
       - run: sudo apt-get -qq install ccache libbotan-2-dev

@@ -9,6 +9,8 @@ use crate::rng::RandomNumberGenerator;
 /// A public key object
 pub struct Pubkey {
     obj: botan_pubkey_t,
+    #[cfg(not(botan_ffi_20260303))]
+    op_lock: std::sync::Mutex<()>,
 }
 
 unsafe impl Sync for Pubkey {}
@@ -20,6 +22,8 @@ botan_impl_drop!(Pubkey, botan_pubkey_destroy);
 /// A private key object
 pub struct Privkey {
     obj: botan_privkey_t,
+    #[cfg(not(botan_ffi_20260303))]
+    op_lock: std::sync::Mutex<()>,
 }
 
 unsafe impl Sync for Privkey {}
@@ -28,6 +32,14 @@ unsafe impl Send for Privkey {}
 botan_impl_drop!(Privkey, botan_privkey_destroy);
 
 impl Privkey {
+    fn from_obj(obj: botan_privkey_t) -> Self {
+        Self {
+            obj,
+            #[cfg(not(botan_ffi_20260303))]
+            op_lock: std::sync::Mutex::new(()),
+        }
+    }
+
     pub(crate) fn handle(&self) -> botan_privkey_t {
         self.obj
     }
@@ -42,7 +54,7 @@ impl Privkey {
             rng.handle()
         )?;
 
-        Ok(Privkey { obj })
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Create a new ElGamal private key with a random group
@@ -53,7 +65,7 @@ impl Privkey {
     ) -> Result<Self> {
         let obj = botan_init!(botan_privkey_create_elgamal, rng.handle(), p_bits, q_bits)?;
 
-        Ok(Self { obj })
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Create a new DSA private key with a random group
@@ -64,7 +76,7 @@ impl Privkey {
     ) -> Result<Self> {
         let obj = botan_init!(botan_privkey_create_dsa, rng.handle(), p_bits, q_bits)?;
 
-        Ok(Self { obj })
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Load an RSA private key (p,q,e)
@@ -80,7 +92,7 @@ impl Privkey {
     /// ```
     pub fn load_rsa(p: &MPI, q: &MPI, e: &MPI) -> Result<Privkey> {
         let obj = botan_init!(botan_privkey_load_rsa, p.handle(), q.handle(), e.handle())?;
-        Ok(Privkey { obj })
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Load an Ed25519 private key
@@ -96,7 +108,7 @@ impl Privkey {
             return Err(Error::bad_parameter("Invalid input length"));
         }
         let obj = botan_init!(botan_privkey_load_ed25519, key.as_ptr())?;
-        Ok(Privkey { obj })
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Load an X25519 private key
@@ -112,7 +124,7 @@ impl Privkey {
             return Err(Error::bad_parameter("Invalid input length"));
         }
         let obj = botan_init!(botan_privkey_load_x25519, key.as_ptr())?;
-        Ok(Privkey { obj })
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Load an X448 private key
@@ -128,20 +140,20 @@ impl Privkey {
     pub fn load_x448(key: &[u8]) -> Result<Privkey> {
         crate::ffi_version_guard!("load_x448", botan_ffi_20240408, [key], {
             let obj = botan_init!(botan_privkey_load_x448, key.as_ptr())?;
-            Ok(Privkey { obj })
+            Ok(Privkey::from_obj(obj))
         })
     }
 
     /// Load a PKCS#1 encoded RSA private key
     pub fn load_rsa_pkcs1(pkcs1: &[u8]) -> Result<Privkey> {
         let obj = botan_init!(botan_privkey_load_rsa_pkcs1, pkcs1.as_ptr(), pkcs1.len())?;
-        Ok(Privkey { obj })
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Load an DH private key (p,g,x)
     pub fn load_dh(p: &MPI, g: &MPI, x: &MPI) -> Result<Privkey> {
         let obj = botan_init!(botan_privkey_load_dh, p.handle(), g.handle(), x.handle())?;
-        Ok(Privkey { obj })
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Load an DSA private key (p,q,g,x)
@@ -153,7 +165,7 @@ impl Privkey {
             g.handle(),
             x.handle()
         )?;
-        Ok(Privkey { obj })
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Load an ElGamal private key (p,g,x)
@@ -164,21 +176,21 @@ impl Privkey {
             g.handle(),
             x.handle()
         )?;
-        Ok(Privkey { obj })
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Load an ECDSA private key with specified curve and secret scalar
     pub fn load_ecdsa(s: &MPI, curve_name: &str) -> Result<Privkey> {
         let curve_name = make_cstr(curve_name)?;
         let obj = botan_init!(botan_privkey_load_ecdsa, s.handle(), curve_name.as_ptr())?;
-        Ok(Privkey { obj })
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Load an ECDH private key with specified curve and secret scalar
     pub fn load_ecdh(s: &MPI, curve_name: &str) -> Result<Privkey> {
         let curve_name = make_cstr(curve_name)?;
         let obj = botan_init!(botan_privkey_load_ecdh, s.handle(), curve_name.as_ptr())?;
-        Ok(Privkey { obj })
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Load DER bytes as an unencrypted PKCS#8 private key
@@ -190,7 +202,7 @@ impl Privkey {
             der.len(),
             ptr::null()
         )?;
-        Ok(Privkey { obj })
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Load PEM string as an unencrypted PKCS#8 private key
@@ -204,7 +216,7 @@ impl Privkey {
             ptr::null()
         )?;
 
-        Ok(Privkey { obj })
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Load DER bytes as an encrypted PKCS#8 private key
@@ -217,7 +229,7 @@ impl Privkey {
             der.len(),
             passphrase.as_ptr()
         )?;
-        Ok(Privkey { obj })
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Load PEM string as an encrypted PKCS#8 private key
@@ -232,7 +244,7 @@ impl Privkey {
             passphrase.as_ptr()
         )?;
 
-        Ok(Privkey { obj })
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Check if the key seems to be valid
@@ -252,7 +264,7 @@ impl Privkey {
     /// Return the public key associated with this private key
     pub fn pubkey(&self) -> Result<Pubkey> {
         let obj = botan_init!(botan_privkey_export_pubkey, self.obj)?;
-        Ok(Pubkey { obj })
+        Ok(Pubkey::from_handle(obj))
     }
 
     /// Return the name of the algorithm
@@ -522,6 +534,8 @@ impl Privkey {
         padding: &str,
         rng: &mut RandomNumberGenerator,
     ) -> Result<Vec<u8>> {
+        #[cfg(not(botan_ffi_20260303))]
+        let _lock = self.op_lock.lock().expect("lock poisoned");
         let mut signer = Signer::new(self, padding)?;
         signer.update(message)?;
         signer.finish(rng)
@@ -529,6 +543,8 @@ impl Privkey {
 
     /// Decrypt a message that was encrypted using the specified padding method
     pub fn decrypt(&self, ctext: &[u8], padding: &str) -> Result<Vec<u8>> {
+        #[cfg(not(botan_ffi_20260303))]
+        let _lock = self.op_lock.lock().expect("lock poisoned");
         let mut decryptor = Decryptor::new(self, padding)?;
         decryptor.decrypt(ctext)
     }
@@ -541,6 +557,8 @@ impl Privkey {
         salt: &[u8],
         kdf: &str,
     ) -> Result<Vec<u8>> {
+        #[cfg(not(botan_ffi_20260303))]
+        let _lock = self.op_lock.lock().expect("lock poisoned");
         let mut op = KeyAgreement::new(self, kdf)?;
         op.agree(output_len, other_key, salt)
     }
@@ -548,7 +566,11 @@ impl Privkey {
 
 impl Pubkey {
     pub(crate) fn from_handle(obj: botan_pubkey_t) -> Pubkey {
-        Pubkey { obj }
+        Pubkey {
+            obj,
+            #[cfg(not(botan_ffi_20260303))]
+            op_lock: std::sync::Mutex::new(()),
+        }
     }
 
     pub(crate) fn handle(&self) -> botan_pubkey_t {
@@ -558,7 +580,7 @@ impl Pubkey {
     /// Load a DER encoded public key
     pub fn load_der(der: &[u8]) -> Result<Pubkey> {
         let obj = botan_init!(botan_pubkey_load, der.as_ptr(), der.len())?;
-        Ok(Pubkey { obj })
+        Ok(Pubkey::from_handle(obj))
     }
 
     /// Load a PEM encoded public key
@@ -568,13 +590,13 @@ impl Pubkey {
             make_cstr(pem)?.as_ptr() as *const u8,
             pem.len()
         )?;
-        Ok(Pubkey { obj })
+        Ok(Pubkey::from_handle(obj))
     }
 
     /// Load an RSA public key (n,e)
     pub fn load_rsa(n: &MPI, e: &MPI) -> Result<Pubkey> {
         let obj = botan_init!(botan_pubkey_load_rsa, n.handle(), e.handle())?;
-        Ok(Pubkey { obj })
+        Ok(Pubkey::from_handle(obj))
     }
 
     /// Load a PKCS#1 encoded RSA public key
@@ -587,7 +609,7 @@ impl Pubkey {
     /// Load an DH public key (p,g,y)
     pub fn load_dh(p: &MPI, g: &MPI, y: &MPI) -> Result<Pubkey> {
         let obj = botan_init!(botan_pubkey_load_dh, p.handle(), g.handle(), y.handle())?;
-        Ok(Pubkey { obj })
+        Ok(Pubkey::from_handle(obj))
     }
 
     /// Load an DSA public key (p,q,g,y)
@@ -599,7 +621,7 @@ impl Pubkey {
             g.handle(),
             y.handle()
         )?;
-        Ok(Pubkey { obj })
+        Ok(Pubkey::from_handle(obj))
     }
 
     /// Load an ElGamal public key (p,g,y)
@@ -610,7 +632,7 @@ impl Pubkey {
             g.handle(),
             y.handle()
         )?;
-        Ok(Pubkey { obj })
+        Ok(Pubkey::from_handle(obj))
     }
 
     /// Load an ECDSA public key (x,y) for the specified curve
@@ -622,7 +644,7 @@ impl Pubkey {
             pub_y.handle(),
             curve_name.as_ptr()
         )?;
-        Ok(Pubkey { obj })
+        Ok(Pubkey::from_handle(obj))
     }
 
     /// Load an ECDH public key (x,y) for the specified curve
@@ -634,19 +656,19 @@ impl Pubkey {
             pub_y.handle(),
             curve_name.as_ptr()
         )?;
-        Ok(Pubkey { obj })
+        Ok(Pubkey::from_handle(obj))
     }
 
     /// Load an Ed25519 public key
     pub fn load_ed25519(key: &[u8]) -> Result<Pubkey> {
         let obj = botan_init!(botan_pubkey_load_ed25519, key.as_ptr())?;
-        Ok(Pubkey { obj })
+        Ok(Pubkey::from_handle(obj))
     }
 
     /// Load an X25519 key
     pub fn load_x25519(key: &[u8]) -> Result<Pubkey> {
         let obj = botan_init!(botan_pubkey_load_x25519, key.as_ptr())?;
-        Ok(Pubkey { obj })
+        Ok(Pubkey::from_handle(obj))
     }
 
     /// Load a ML-KEM public key from the raw byte encoding
@@ -669,7 +691,7 @@ impl Pubkey {
                 key.len(),
                 params.as_ptr()
             )?;
-            Ok(Pubkey { obj })
+            Ok(Pubkey::from_handle(obj))
         })
     }
 
@@ -815,12 +837,16 @@ impl Pubkey {
         padding: &str,
         rng: &mut RandomNumberGenerator,
     ) -> Result<Vec<u8>> {
+        #[cfg(not(botan_ffi_20260303))]
+        let _lock = self.op_lock.lock().expect("lock poisoned");
         let mut op = Encryptor::new(self, padding)?;
         op.encrypt(message, rng)
     }
 
     /// Verify a message that was signed using the specified padding method
     pub fn verify(&self, message: &[u8], signature: &[u8], padding: &str) -> Result<bool> {
+        #[cfg(not(botan_ffi_20260303))]
+        let _lock = self.op_lock.lock().expect("lock poisoned");
         let mut op = Verifier::new(self, padding)?;
         op.update(message)?;
         op.finish(signature)

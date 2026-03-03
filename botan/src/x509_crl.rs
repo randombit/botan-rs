@@ -55,10 +55,10 @@ impl CRL {
             next_update,
             hash_fn
                 .as_ref()
-                .map_or(std::ptr::null(), |hash_fn| hash_fn.as_ptr()),
+                .map_or(ptr::null(), |hash_fn| hash_fn.as_ptr()),
             padding
                 .as_ref()
-                .map_or(std::ptr::null(), |padding| padding.as_ptr())
+                .map_or(ptr::null(), |padding| padding.as_ptr())
         )?;
 
         Ok(Self { obj })
@@ -98,10 +98,10 @@ impl CRL {
             new_entries_h.len(),
             hash_fn
                 .as_ref()
-                .map_or(std::ptr::null(), |hash_fn| hash_fn.as_ptr()),
+                .map_or(ptr::null(), |hash_fn| hash_fn.as_ptr()),
             padding
                 .as_ref()
-                .map_or(std::ptr::null(), |padding| padding.as_ptr())
+                .map_or(ptr::null(), |padding| padding.as_ptr())
         )?;
 
         Ok(Self { obj })
