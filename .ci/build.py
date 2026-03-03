@@ -47,7 +47,7 @@ def main(args = None):
 
     (options, args) = parser.parse_args(args)
 
-    if len(args) > 2:
+    if len(args) not in [2, 3]:
         print("ERROR: Unexpected extra arguments")
         return 1
 
@@ -62,9 +62,16 @@ def main(args = None):
         if "SCCACHE_MAXSIZE" not in os.environ:
             os.environ["SCCACHE_MAXSIZE"] = "2G"
 
+    KNOWN_TOOLCHAINS = ['stable', 'nightly', '1.64.0']
     KNOWN_FEATURES = ['vendored', 'git', 'no-std']
 
-    features = [] if len(args) == 1 else args[1].split(',')
+    toolchain = args[1]
+
+    if toolchain not in KNOWN_TOOLCHAINS:
+        print("ERROR: Unknown toolchain %s" % (toolchain))
+        return 1
+
+    features = [] if len(args) < 3 else args[2].split(',')
 
     for feat in features:
         if feat not in KNOWN_FEATURES:
@@ -136,7 +143,10 @@ def main(args = None):
     run_command(['cargo', 'test'] + sys_features, 'botan-sys')
 
     run_command(['cargo', 'build'] + lib_features, 'botan')
-    run_command(['cargo', 'test'] + lib_features, 'botan')
+
+    # Can't build tests with 1.64 due to serde_json having MSRV of 1.71.0 now
+    if toolchain != '1.64.0':
+        run_command(['cargo', 'test'] + lib_features, 'botan')
 
     run_command([options.compiler_cache, '--show-stats'])
 
