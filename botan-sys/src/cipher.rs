@@ -60,6 +60,13 @@ extern "C" {
         outlen: *mut usize,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20240408)]
+    pub fn botan_cipher_requires_entire_message(cipher: botan_cipher_t) -> c_int;
+
+    #[cfg(botan_ffi_20230403)]
+    pub fn botan_cipher_is_authenticated(cipher: botan_cipher_t) -> c_int;
+
+    pub fn botan_cipher_reset(cipher: botan_cipher_t) -> c_int;
     pub fn botan_cipher_clear(cipher: botan_cipher_t) -> c_int;
     pub fn botan_cipher_destroy(cipher: botan_cipher_t) -> c_int;
 

@@ -18,9 +18,12 @@ mod passhash;
 mod pk_ops;
 mod pubkey;
 mod rng;
+mod srp6;
+mod tpm2;
 mod utils;
 mod version;
 mod x509;
+mod xof;
 mod zfec;
 
 pub mod ffi_types {
@@ -54,7 +57,10 @@ pub use passhash::*;
 pub use pk_ops::*;
 pub use pubkey::*;
 pub use rng::*;
+pub use srp6::*;
+pub use tpm2::*;
 pub use utils::*;
 pub use version::*;
 pub use x509::*;
+pub use xof::*;
 pub use zfec::*;
