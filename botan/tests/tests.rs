@@ -292,6 +292,25 @@ fn test_incremental_cipher() -> Result<(), botan::Error> {
 }
 
 #[test]
+fn test_cipher_padding() -> Result<(), botan::Error> {
+    let mut cipher = botan::Cipher::new("AES-128/CBC/PKCS7", botan::CipherDirection::Encrypt)?;
+    let key = [0; 16];
+    let nonce = [0; 16];
+    let msg = [0; 8];
+
+    cipher.set_key(&key)?;
+    cipher.start(&nonce)?;
+    let ct = cipher.finish(&msg)?;
+
+    let mut cipher = botan::Cipher::new("AES-128/CBC/PKCS7", botan::CipherDirection::Decrypt)?;
+    cipher.set_key(&key)?;
+    cipher.start(&nonce)?;
+    assert_eq!(cipher.finish(&ct)?, msg);
+
+    Ok(())
+}
+
+#[test]
 fn test_chacha() -> Result<(), botan::Error> {
     let mut cipher = botan::Cipher::new("ChaCha20", botan::CipherDirection::Encrypt)?;
 
