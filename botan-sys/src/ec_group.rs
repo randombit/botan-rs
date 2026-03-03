@@ -64,4 +64,7 @@ extern "C" {
     pub fn botan_ec_group_get_order(order: *mut botan_mp_t, group: botan_ec_group_t) -> c_int;
 
     pub fn botan_ec_group_equal(group1: botan_ec_group_t, group2: botan_ec_group_t) -> c_int;
+
+    #[cfg(botan_ffi_20260303)]
+    pub fn botan_ec_group_unregister(oid: botan_asn1_oid_t) -> c_int;
 }

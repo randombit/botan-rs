@@ -159,6 +159,13 @@ extern "C" {
         bits: *const u8,
         len: usize,
     ) -> c_int;
+    pub fn botan_privkey_rsa_get_privkey(
+        rsa_key: botan_privkey_t,
+        out: *mut u8,
+        out_len: *mut usize,
+        flags: u32,
+    ) -> c_int;
+
     pub fn botan_pubkey_rsa_get_e(e: botan_mp_t, rsa_key: botan_pubkey_t) -> c_int;
     pub fn botan_pubkey_rsa_get_n(n: botan_mp_t, rsa_key: botan_pubkey_t) -> c_int;
     pub fn botan_privkey_load_dsa(
@@ -209,6 +216,12 @@ extern "C" {
     pub fn botan_privkey_ed25519_get_privkey(key: botan_privkey_t, output: *mut u8) -> c_int;
     pub fn botan_pubkey_ed25519_get_pubkey(key: botan_pubkey_t, pubkey: *mut u8) -> c_int;
 
+    #[cfg(botan_ffi_20240408)]
+    pub fn botan_privkey_ed448_get_privkey(key: botan_privkey_t, output: *mut u8) -> c_int;
+
+    #[cfg(botan_ffi_20240408)]
+    pub fn botan_pubkey_ed448_get_pubkey(key: botan_pubkey_t, pubkey: *mut u8) -> c_int;
+
     pub fn botan_privkey_load_x25519(key: *mut botan_privkey_t, privkey: *const u8) -> c_int;
     pub fn botan_pubkey_load_x25519(key: *mut botan_pubkey_t, pubkey: *const u8) -> c_int;
     pub fn botan_privkey_x25519_get_privkey(key: botan_privkey_t, output: *mut u8) -> c_int;
@@ -219,6 +232,12 @@ extern "C" {
 
     #[cfg(botan_ffi_20240408)]
     pub fn botan_pubkey_load_x448(key: *mut botan_pubkey_t, pubkey: *const u8) -> c_int;
+
+    #[cfg(botan_ffi_20240408)]
+    pub fn botan_privkey_x448_get_privkey(key: botan_privkey_t, output: *mut u8) -> c_int;
+
+    #[cfg(botan_ffi_20240408)]
+    pub fn botan_pubkey_x448_get_pubkey(key: botan_pubkey_t, pubkey: *mut u8) -> c_int;
 
     #[cfg(botan_ffi_20240408)]
     pub fn botan_privkey_load_ed448(key: *mut botan_privkey_t, privkey: *const u8) -> c_int;
@@ -276,6 +295,47 @@ extern "C" {
         ident: *const c_char,
         hash_algo: *const c_char,
         key: botan_pubkey_t,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_pubkey_load_ecdsa_sec1(
+        key: *mut botan_pubkey_t,
+        sec1: *const u8,
+        sec1_len: usize,
+        curve_name: *const c_char,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_pubkey_load_ecdh_sec1(
+        key: *mut botan_pubkey_t,
+        sec1: *const u8,
+        sec1_len: usize,
+        curve_name: *const c_char,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20250506)]
+    pub fn botan_pubkey_load_sm2_sec1(
+        key: *mut botan_pubkey_t,
+        sec1: *const u8,
+        sec1_len: usize,
+        curve_name: *const c_char,
+    ) -> c_int;
+
+    // botan_privkey_create_mceliece intentionally omitted
+
+    #[cfg(botan_ffi_20230403)]
+    pub fn botan_pubkey_ecc_key_used_explicit_encoding(key: botan_pubkey_t) -> c_int;
+
+    pub fn botan_privkey_load_kyber(
+        key: *mut botan_privkey_t,
+        privkey: *const u8,
+        key_len: usize,
+    ) -> c_int;
+
+    pub fn botan_pubkey_load_kyber(
+        key: *mut botan_pubkey_t,
+        pubkey: *const u8,
+        key_len: usize,
     ) -> c_int;
 
     #[cfg(botan_ffi_20230403)]
@@ -347,6 +407,30 @@ extern "C" {
         cipher_algo: *const c_char,
         pbkdf_algo: *const c_char,
         pbkdf_iterations: usize,
+        view_ctx: botan_view_ctx,
+        view_fn: botan_view_str_fn,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20230403)]
+    pub fn botan_privkey_view_encrypted_der_timed(
+        key: botan_privkey_t,
+        rng: botan_rng_t,
+        passphrase: *const c_char,
+        cipher_algo: *const c_char,
+        pbkdf_algo: *const c_char,
+        pbkdf_runtime_msec: usize,
+        view_ctx: botan_view_ctx,
+        view_fn: botan_view_bin_fn,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20230403)]
+    pub fn botan_privkey_view_encrypted_pem_timed(
+        key: botan_privkey_t,
+        rng: botan_rng_t,
+        passphrase: *const c_char,
+        cipher_algo: *const c_char,
+        pbkdf_algo: *const c_char,
+        pbkdf_runtime_msec: usize,
         view_ctx: botan_view_ctx,
         view_fn: botan_view_str_fn,
     ) -> c_int;
