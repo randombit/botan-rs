@@ -51,3 +51,5 @@ and adjusts itself accordingly. These feature sets can be checked using
 * 20230403: Botan 3.0
 * 20240408: Botan 3.4
 * 20250506: Botan 3.8
+* 20250829: Botan 3.10
+* 20260303: Botan 3.11

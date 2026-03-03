@@ -118,6 +118,8 @@ def main(args = None):
                      '--disable-modules=%s' % (disabled_modules)], botan_src)
         run_command(['make', '-j', str(nproc)], botan_src)
         run_command(['sudo', 'make', 'install'], botan_src)
+        os.environ["RUSTFLAGS"] = "-D warnings -L/usr/local/lib"
+        os.environ["RUSTDOCFLAGS"] = "-D warnings -L/usr/local/lib"
     elif os.access(homebrew_dir, os.R_OK):
         # only install homebrew botan if not vendored/git
         run_command(['brew', 'install', 'botan'])

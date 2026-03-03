@@ -577,6 +577,13 @@ impl Pubkey {
         Ok(Pubkey { obj })
     }
 
+    /// Load a PKCS#1 encoded RSA public key
+    #[cfg(botan_ffi_20260303)]
+    pub fn load_rsa_pkcs1(pkcs1: &[u8]) -> Result<Pubkey> {
+        let obj = botan_init!(botan_pubkey_load_rsa_pkcs1, pkcs1.as_ptr(), pkcs1.len())?;
+        Ok(Pubkey { obj })
+    }
+
     /// Load an DH public key (p,g,y)
     pub fn load_dh(p: &MPI, g: &MPI, y: &MPI) -> Result<Pubkey> {
         let obj = botan_init!(botan_pubkey_load_dh, p.handle(), g.handle(), y.handle())?;
