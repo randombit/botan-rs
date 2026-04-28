@@ -4,6 +4,9 @@ use botan_sys::*;
 #[cfg(botan_ffi_20250506)]
 use crate::OID;
 
+#[cfg(botan_ffi_20260506)]
+use crate::EcPoint;
+
 #[cfg(botan_ffi_20250506)]
 #[derive(Debug)]
 /// An elliptic curve group
@@ -21,6 +24,15 @@ botan_impl_drop!(EcGroup, botan_ec_group_destroy);
 
 #[cfg(botan_ffi_20250506)]
 impl EcGroup {
+    pub(crate) fn handle(&self) -> botan_ec_group_t {
+        self.obj
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn from_handle(obj: botan_ec_group_t) -> Self {
+        Self { obj }
+    }
+
     /// Does this build configuration support application specific groups
     pub fn supports_application_specific_groups() -> Result<bool> {
         let mut result = 0;
@@ -111,39 +123,51 @@ impl EcGroup {
         })
     }
 
-    /// Return the groups parameter p
+    /// Return the group's parameter p
     pub fn p(&self) -> Result<MPI> {
         MPI::from_handle(botan_init!(botan_ec_group_get_p, self.obj)?)
     }
 
-    /// Return the groups parameter a
+    /// Return the group's parameter a
     pub fn a(&self) -> Result<MPI> {
         MPI::from_handle(botan_init!(botan_ec_group_get_a, self.obj)?)
     }
 
-    /// Return the groups parameter b
+    /// Return the group's parameter b
     pub fn b(&self) -> Result<MPI> {
         MPI::from_handle(botan_init!(botan_ec_group_get_b, self.obj)?)
     }
 
-    /// Return the groups order
+    /// Return the group's order
     pub fn order(&self) -> Result<MPI> {
         MPI::from_handle(botan_init!(botan_ec_group_get_order, self.obj)?)
     }
 
-    /// Return the groups generator x coordinate
+    /// Return the group's generator x coordinate
     pub fn g_x(&self) -> Result<MPI> {
         MPI::from_handle(botan_init!(botan_ec_group_get_g_x, self.obj)?)
     }
 
-    /// Return the groups generator y coordinate
+    /// Return the group's generator y coordinate
     pub fn g_y(&self) -> Result<MPI> {
         MPI::from_handle(botan_init!(botan_ec_group_get_g_y, self.obj)?)
     }
 
-    /// Return the groups object identifier
+    /// Return the group's object identifier
     pub fn oid(&self) -> Result<OID> {
         OID::from_handle(botan_init!(botan_ec_group_get_curve_oid, self.obj)?)
+    }
+
+    #[cfg(botan_ffi_20260506)]
+    /// Return the group's identity element
+    pub fn identity(&self) -> Result<EcPoint> {
+        EcPoint::identity(self)
+    }
+
+    #[cfg(botan_ffi_20260506)]
+    /// Return the group's generator element
+    pub fn generator(&self) -> Result<EcPoint> {
+        EcPoint::generator(self)
     }
 
     /// Check two groups for equality
