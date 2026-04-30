@@ -1585,6 +1585,9 @@ fn test_ec_group() -> Result<(), botan::Error> {
 
         // Equality is for just the params and ignores the OIDs
         assert_eq!(mycustomp256, secp256r1);
+
+        assert!(botan::EcGroup::unregister(&curve_oid)?);
+        assert!(!botan::EcGroup::unregister(&curve_oid)?);
     }
 
     Ok(())
