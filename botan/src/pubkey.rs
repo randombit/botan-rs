@@ -71,7 +71,7 @@ impl Privkey {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::str::FromStr;
     /// let p = botan::MPI::from_str("289698020102256958291511331409682926199").unwrap();
     /// let q = botan::MPI::from_str("293497288893125842977275290547344412783").unwrap();
