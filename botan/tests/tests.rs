@@ -590,6 +590,71 @@ AzMCIEJSRDmXjX8TMTbSfoTLmhaYJnCL+AfHLZLdHlSLDIzh
     Ok(())
 }
 
+#[cfg(botan_ffi_20260303)]
+#[test]
+fn test_cert_getters() -> Result<(), botan::Error> {
+    // openssl req -x509 -newkey ed25519 \
+    // -keyout /dev/null -days 3650 -nodes \
+    // -subj "/C=US/ST=Some state/O=Botan Project/OU=Testing/CN=Test certificate" \
+    // -addext "subjectAltName=DNS:botan.randombit.net,URI:https://botan.randombit.net,IP:127.0.0.1,email:testing@randombit.net" \
+    // -addext "basicConstraints=critical,CA:TRUE,pathlen:3" \
+    // -addext "authorityInfoAccess=OCSP;URI:https://ocsp.botan.randombit.net"
+
+    let cert_pem = r"-----BEGIN CERTIFICATE-----
+MIICgDCCAjKgAwIBAgIUNjiedT1Hl76k7Fy3LZP9pvn/TPswBQYDK2VwMGcxCzAJ
+BgNVBAYTAlVTMRMwEQYDVQQIDApTb21lIHN0YXRlMRYwFAYDVQQKDA1Cb3RhbiBQ
+cm9qZWN0MRAwDgYDVQQLDAdUZXN0aW5nMRkwFwYDVQQDDBBUZXN0IGNlcnRpZmlj
+YXRlMB4XDTI2MDMyNjEyMzQyNVoXDTM2MDMyMzEyMzQyNVowZzELMAkGA1UEBhMC
+VVMxEzARBgNVBAgMClNvbWUgc3RhdGUxFjAUBgNVBAoMDUJvdGFuIFByb2plY3Qx
+EDAOBgNVBAsMB1Rlc3RpbmcxGTAXBgNVBAMMEFRlc3QgY2VydGlmaWNhdGUwKjAF
+BgMrZXADIQDrO/Y+zn3jLywZjW0mdmtLDLwGjJVCoBM22wbp9WrMLqOB7zCB7DAd
+BgNVHQ4EFgQUZCMU7YjjngDNElfFCQifo4YJVjQwHwYDVR0jBBgwFoAUZCMU7Yjj
+ngDNElfFCQifo4YJVjQwWAYDVR0RBFEwT4ITYm90YW4ucmFuZG9tYml0Lm5ldIYb
+aHR0cHM6Ly9ib3Rhbi5yYW5kb21iaXQubmV0hwR/AAABgRV0ZXN0aW5nQHJhbmRv
+bWJpdC5uZXQwEgYDVR0TAQH/BAgwBgEB/wIBAzA8BggrBgEFBQcBAQQwMC4wLAYI
+KwYBBQUHMAGGIGh0dHBzOi8vb2NzcC5ib3Rhbi5yYW5kb21iaXQubmV0MAUGAytl
+cANBAFhRmPvQ0gPxfUI2NYSj5/hRn59rgYqkOpXHWnV/RTGAMccUSVwOITNUa/Y7
+Dy94ca65ondQ2JGAxBuxZX2HZAE=
+-----END CERTIFICATE-----";
+
+    let cert = botan::Certificate::load(cert_pem.as_bytes())?;
+
+    assert!(cert.is_ca()?);
+    assert_eq!(cert.path_limit()?, 3);
+
+    let ocsp = cert.ocsp_responders()?;
+    assert_eq!(ocsp.len(), 1);
+    assert_eq!(ocsp[0], "https://ocsp.botan.randombit.net");
+
+    let expected_both = [
+        ("X520.Country", vec!["US"]),
+        ("X520.State", vec!["Some state"]),
+        ("X520.Organization", vec!["Botan Project"]),
+        ("X520.OrganizationalUnit", vec!["Testing"]),
+        ("X520.CommonName", vec!["Test certificate"]),
+    ];
+
+    let expected_subject = [
+        ("Email", vec!["testing@randombit.net"]),
+        ("RFC822", vec!["testing@randombit.net"]),
+        ("DNS", vec!["botan.randombit.net"]),
+        ("URI", vec!["https://botan.randombit.net"]),
+        ("IP", vec!["127.0.0.1"]),
+    ];
+
+    for (k, v) in expected_both.iter().chain(&expected_subject) {
+        assert_eq!(&cert.subject_dn(k)?, v);
+        assert_eq!(cert.subject_dn(k)?.len(), 1);
+    }
+
+    for (k, v) in &expected_both {
+        assert_eq!(&cert.issuer_dn(k)?, v);
+        assert_eq!(cert.issuer_dn(k)?.len(), 1);
+    }
+
+    Ok(())
+}
+
 #[test]
 fn test_bcrypt() -> Result<(), botan::Error> {
     let pass = "password";

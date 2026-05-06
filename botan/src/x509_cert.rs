@@ -237,6 +237,103 @@ impl Certificate {
         Ok(Pubkey::from_handle(key))
     }
 
+    #[cfg(botan_ffi_20260303)]
+    /// Return the listed addresses of OCSP Responders
+    pub fn ocsp_responders(&self) -> Result<Vec<String>> {
+        let mut count = 0;
+        botan_call!(
+            botan_x509_cert_view_string_values_count,
+            self.obj,
+            X509ValueType::BOTAN_X509_OCSP_RESPONDER_URLS as i32,
+            &mut count
+        )?;
+        let mut urls = Vec::new();
+        for i in 0..count {
+            let item = call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
+                botan_x509_cert_view_string_values(
+                    self.obj,
+                    X509ValueType::BOTAN_X509_OCSP_RESPONDER_URLS as i32,
+                    i,
+                    ctx,
+                    cb,
+                )
+            })?;
+            urls.push(item);
+        }
+        Ok(urls)
+    }
+
+    #[cfg(botan_ffi_20260303)]
+    /// Get a value for a specific subject distinguished name parameter.
+    ///
+    /// See `subject_dn()` for valid values.
+    pub fn issuer_dn(&self, key: &str) -> Result<Vec<String>> {
+        let mut count = 0;
+        let key = make_cstr(key)?;
+        botan_call!(
+            botan_x509_cert_get_issuer_dn_count,
+            self.obj,
+            key.as_ptr(),
+            &mut count
+        )?;
+        let mut entries = Vec::new();
+        for i in 0..count {
+            let item = call_botan_ffi_returning_string(0, &|out_buf, out_len| unsafe {
+                botan_x509_cert_get_issuer_dn(self.obj, key.as_ptr(), i, out_buf, out_len)
+            })?;
+            entries.push(item);
+        }
+        Ok(entries)
+    }
+
+    #[cfg(botan_ffi_20260303)]
+    /// Get a value for a specific subject distinguished name parameter.
+    ///
+    /// Valid values:
+    /// - "X520.Country", "X520.State", "X520.Organization", "X520.OrganizationalUnit", "X520.CommonName"
+    /// - "Email" / "RFC822"
+    /// - "DNS"
+    /// - "URI"
+    /// - "IP"
+    ///
+    /// ... and more. See `Botan::X509_Certificate.subject_info()`.
+    pub fn subject_dn(&self, key: &str) -> Result<Vec<String>> {
+        let mut count = 0;
+        let key = make_cstr(key)?;
+        botan_call!(
+            botan_x509_cert_get_subject_dn_count,
+            self.obj,
+            key.as_ptr(),
+            &mut count
+        )?;
+        let mut entries = Vec::new();
+        for i in 0..count {
+            let item = call_botan_ffi_returning_string(0, &|out_buf, out_len| unsafe {
+                botan_x509_cert_get_subject_dn(self.obj, key.as_ptr(), i, out_buf, out_len)
+            })?;
+            entries.push(item);
+        }
+        Ok(entries)
+    }
+
+    #[cfg(botan_ffi_20260303)]
+    /// Check if the certificate is marked as a certificate authority
+    pub fn is_ca(&self) -> Result<bool> {
+        botan_bool_in_rc!(botan_x509_cert_is_ca, self.obj)
+    }
+
+    #[cfg(botan_ffi_20260303)]
+    /// Get the CA path limit for this certificate, if it has one
+    pub fn path_limit(&self) -> Result<usize> {
+        let mut path_limit = 0;
+        botan_call!(
+            botan_x509_cert_get_path_length_constraint,
+            self.obj,
+            &mut path_limit
+        )?;
+        Ok(path_limit)
+    }
+
     /// Return a free-form string representation of this certificate
     pub fn to_string(&self) -> Result<String> {
         #[cfg(not(botan_ffi_20230403))]
@@ -253,6 +350,34 @@ impl Certificate {
                 botan_x509_cert_view_as_string(self.obj, ctx, cb)
             })
         }
+    }
+
+    #[cfg(botan_ffi_20260303)]
+    /// Get the PEM encoding of this certificate
+    pub fn pem_encode(&self) -> Result<String> {
+        call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
+            botan_x509_cert_view_string_values(
+                self.obj,
+                X509ValueType::BOTAN_X509_PEM_ENCODING as i32,
+                0,
+                ctx,
+                cb,
+            )
+        })
+    }
+
+    #[cfg(botan_ffi_20260303)]
+    /// Get the DER encoding of this certificate
+    pub fn der_encode(&self) -> Result<Vec<u8>> {
+        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
+            botan_x509_cert_view_binary_values(
+                self.obj,
+                X509ValueType::BOTAN_X509_DER_ENCODING as i32,
+                0,
+                ctx,
+                cb,
+            )
+        })
     }
 
     /// Test if the certificate is allowed for a particular usage
