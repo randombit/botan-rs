@@ -17,7 +17,7 @@ pub struct ESYS_CONTEXT {
 }
 
 #[cfg(botan_ffi_20250506)]
-extern "C" {
+unsafe extern "C" {
     pub fn botan_tpm2_supports_crypto_backend() -> c_int;
 
     pub fn botan_tpm2_ctx_init(
@@ -47,7 +47,7 @@ extern "C" {
     ) -> c_int;
 
     pub fn botan_tpm2_crypto_backend_state_destroy(cbs: botan_tpm2_crypto_backend_state_t)
-        -> c_int;
+    -> c_int;
 
     pub fn botan_tpm2_rng_init(
         rng_out: *mut botan_rng_t,

@@ -515,7 +515,7 @@ fn wycheproof_mac_with_nonce_tests() -> Result<(), botan::Error> {
 
 #[test]
 fn wycheproof_primality_tests() -> Result<(), botan::Error> {
-    use wycheproof::{primality::*, TestResult};
+    use wycheproof::{TestResult, primality::*};
 
     let mut rng = botan::RandomNumberGenerator::new_system()?;
 

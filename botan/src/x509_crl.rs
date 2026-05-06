@@ -1,6 +1,6 @@
-use crate::{utils::*, Pubkey};
 #[cfg(botan_ffi_20260303)]
-use crate::{Certificate, Privkey, RandomNumberGenerator, MPI};
+use crate::{Certificate, MPI, Privkey, RandomNumberGenerator};
+use crate::{Pubkey, utils::*};
 use botan_sys::*;
 
 #[derive(Debug)]

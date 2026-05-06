@@ -3,7 +3,7 @@ use crate::ffi_types::{c_char, c_int};
 pub enum botan_block_cipher_struct {}
 pub type botan_block_cipher_t = *mut botan_block_cipher_struct;
 
-extern "C" {
+unsafe extern "C" {
 
     pub fn botan_block_cipher_init(
         bc: *mut botan_block_cipher_t,

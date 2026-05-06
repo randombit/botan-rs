@@ -1,3 +1,23 @@
+## 0.13.0 Not Yet Released
+
+- Minor version bump due to MSRV increase
+- Bump MSRV to 1.85.0
+- Bump Rust Edition to 2024
+- Add support for new FFI interfaces in Botan 3.10, 3.11, 3.12
+- The `botan-src` crate now ships the upstream Botan release tarball
+  (`.tar.xz`) inside the published crate and extracts it at build time
+  rather than building from a git submodule.
+- Add locking to Privkey to work around bugs in versions of Botan prior to 3.11.0.
+  This requires `std` support; thus `no_std` builds now require at least Botan 3.11.0
+- Update `botan-src` to Botan 3.12.0
+- Implement `rand::TryRngCore` for `RandomNumberGenerator`
+- Add `Signer::signature_length`
+- Add `Pubkey::load_rsa_pkcs1` for loading RSA public keys in PKCS#1 form
+- Add various interfaces for CRL generation and handling
+- Add additional X.509 certificate getters: `ocsp_responders`,
+  `issuer_dn`, `subject_dn`, `is_ca`, `path_limit`, `pem_encode`, `der_encode`
+- Fix some tests that hit behavior changes in Botan 3.12
+
 ## 0.12.0 2025-08-05
 
 - Minor version bump due to removing a feature

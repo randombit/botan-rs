@@ -1,11 +1,18 @@
 use std::env;
-use std::path::PathBuf;
+use std::fs;
+use std::io;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 const BUILD_ERROR_MSG: &str = "Unable to build botan.";
 const SRC_DIR_ERROR_MSG: &str = "Unable to find the source directory.";
-const SRC_DIR: &str = "botan";
 const INCLUDE_DIR: &str = "build/include/public";
+
+// Pinned upstream release. Single source of truth lives in release.toml;
+// build.rs parses that file and re-exports it via `cargo:rustc-env`.
+pub const BOTAN_VERSION: &str = env!("BOTAN_VERSION");
+pub const BOTAN_TARBALL_SHA256: &str = env!("BOTAN_TARBALL_SHA256");
+pub const BOTAN_TARBALL_URL: &str = env!("BOTAN_TARBALL_URL");
 
 macro_rules! pathbuf_to_string {
     ($s: ident) => {
@@ -115,10 +122,111 @@ fn make(build_dir: &str) {
     }
 }
 
+fn bundled_tarball_path() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("vendor")
+        .join(format!("Botan-{BOTAN_VERSION}.tar.xz"))
+}
+
+fn verify_sha256(path: &Path) {
+    use sha2::{Digest, Sha256};
+    let bytes = fs::read(path).expect("read tarball");
+    let actual = format!("{:x}", Sha256::digest(&bytes));
+    if actual != BOTAN_TARBALL_SHA256 {
+        panic!(
+            "Botan tarball at {} has unexpected sha256 (expected {}, got {})",
+            path.display(),
+            BOTAN_TARBALL_SHA256,
+            actual,
+        );
+    }
+}
+
+fn extract_tarball(tarball: &Path, dest: &Path) {
+    let file = fs::File::open(tarball).expect("open tarball");
+    let mut reader = io::BufReader::new(file);
+    let mut decompressed = Vec::new();
+    lzma_rs::xz_decompress(&mut reader, &mut decompressed).expect("xz decompress");
+    let mut archive = tar::Archive::new(io::Cursor::new(decompressed));
+    archive.unpack(dest).expect("untar");
+}
+
+// After unpacking, find the single top-level directory the tarball
+// produced. Bundled Botan releases use `Botan-X.Y.Z`, but a developer's
+// custom tarball (BOTAN_SRC_TARBALL) might use anything.
+fn find_extracted_root(extract_root: &Path) -> PathBuf {
+    let mut dirs = fs::read_dir(extract_root)
+        .expect("read extract root")
+        .filter_map(Result::ok)
+        .map(|e| e.path())
+        .filter(|p| p.is_dir());
+    let first = dirs
+        .next()
+        .expect("tarball produced no top-level directory");
+    if dirs.next().is_some() {
+        panic!("tarball must contain exactly one top-level directory");
+    }
+    first
+}
+
+/// Returns the directory containing Botan sources to build against.
+///
+/// Resolution order, highest priority first:
+/// - `BOTAN_SRC_DIR` — use this directory as the source tree directly
+///   (no extraction, no checksum). Useful for testing a local git
+///   checkout or fork.
+/// - `BOTAN_SRC_TARBALL` — extract this `.tar.xz` instead of the bundled
+///   one. No checksum: the caller is responsible for what they hand us.
+/// - otherwise: extract the bundled `vendor/Botan-X.Y.Z.tar.xz`,
+///   verifying it matches the pinned SHA-256.
+fn ensure_source(out_dir: &Path) -> PathBuf {
+    println!("cargo:rerun-if-env-changed=BOTAN_SRC_DIR");
+    println!("cargo:rerun-if-env-changed=BOTAN_SRC_TARBALL");
+
+    if let Some(custom_dir) = env::var_os("BOTAN_SRC_DIR") {
+        let path = PathBuf::from(custom_dir);
+        if !path.join("configure.py").is_file() {
+            panic!(
+                "BOTAN_SRC_DIR={} does not contain configure.py",
+                path.display()
+            );
+        }
+        return path;
+    }
+
+    let custom_tarball = env::var_os("BOTAN_SRC_TARBALL").map(PathBuf::from);
+    let tarball = custom_tarball.clone().unwrap_or_else(bundled_tarball_path);
+    let stamp_marker = match &custom_tarball {
+        Some(p) => format!("custom:{}", p.display()),
+        None => format!("bundled:{BOTAN_TARBALL_SHA256}"),
+    };
+
+    let extract_root = out_dir.join("botan-src");
+    let stamp = extract_root.join(".extracted");
+    let already_extracted = fs::read_to_string(&stamp)
+        .map(|s| s.trim() == stamp_marker)
+        .unwrap_or(false);
+    if !already_extracted {
+        if !tarball.exists() {
+            panic!("Botan source tarball missing at {}", tarball.display());
+        }
+        if custom_tarball.is_none() {
+            verify_sha256(&tarball);
+        }
+        let _ = fs::remove_dir_all(&extract_root);
+        fs::create_dir_all(&extract_root).expect("mkdir extract root");
+        extract_tarball(&tarball, &extract_root);
+        fs::write(&stamp, &stamp_marker).expect("write stamp");
+    }
+    find_extracted_root(&extract_root)
+}
+
 pub fn build() -> (String, std::path::PathBuf) {
-    let src_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(SRC_DIR);
-    let build_dir = env::var_os("OUT_DIR").map_or(src_dir.to_owned(), PathBuf::from);
-    let build_dir = build_dir.join("botan");
+    let out_dir = env::var_os("OUT_DIR")
+        .map(PathBuf::from)
+        .expect("OUT_DIR is set when invoked from a build script");
+    let src_dir = ensure_source(&out_dir);
+    let build_dir = out_dir.join("botan-build");
     let include_dir = build_dir.join(INCLUDE_DIR);
     let build_dir = pathbuf_to_string!(build_dir);
     let orig_dir = env::current_dir().expect(SRC_DIR_ERROR_MSG);

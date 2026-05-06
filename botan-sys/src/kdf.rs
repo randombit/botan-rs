@@ -1,6 +1,6 @@
 use crate::ffi_types::{c_char, c_int};
 
-extern "C" {
+unsafe extern "C" {
 
     pub fn botan_pbkdf(
         pbkdf_algo: *const c_char,

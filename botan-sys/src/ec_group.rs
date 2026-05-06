@@ -23,7 +23,7 @@ pub enum botan_ec_point_struct {}
 pub type botan_ec_point_t = *mut botan_ec_point_struct;
 
 #[cfg(botan_ffi_20250506)]
-extern "C" {
+unsafe extern "C" {
     pub fn botan_ec_group_destroy(bc: botan_ec_group_t) -> c_int;
 
     pub fn botan_ec_group_supports_application_specific_group(res: *mut c_int) -> c_int;
@@ -83,7 +83,7 @@ extern "C" {
 }
 
 #[cfg(botan_ffi_20260506)]
-extern "C" {
+unsafe extern "C" {
     pub fn botan_ec_scalar_destroy(ec_scalar: botan_ec_scalar_t) -> c_int;
 
     pub fn botan_ec_scalar_random(

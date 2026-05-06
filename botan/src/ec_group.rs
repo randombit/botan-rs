@@ -1,4 +1,4 @@
-use crate::{utils::*, MPI};
+use crate::{MPI, utils::*};
 use botan_sys::*;
 
 #[cfg(botan_ffi_20250506)]

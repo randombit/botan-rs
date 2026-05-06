@@ -9,7 +9,7 @@ use crate::rng::botan_rng_t;
 pub enum botan_mp_struct {}
 pub type botan_mp_t = *mut botan_mp_struct;
 
-extern "C" {
+unsafe extern "C" {
 
     pub fn botan_mp_init(mp: *mut botan_mp_t) -> c_int;
     pub fn botan_mp_destroy(mp: botan_mp_t) -> c_int;
@@ -26,7 +26,7 @@ extern "C" {
     pub fn botan_mp_set_from_str(dest: botan_mp_t, str: *const c_char) -> c_int;
 
     pub fn botan_mp_set_from_radix_str(dest: botan_mp_t, str: *const c_char, radix: usize)
-        -> c_int;
+    -> c_int;
     pub fn botan_mp_num_bits(n: botan_mp_t, bits: *mut usize) -> c_int;
     pub fn botan_mp_num_bytes(n: botan_mp_t, bytes: *mut usize) -> c_int;
     pub fn botan_mp_to_bin(mp: botan_mp_t, vec: *mut u8) -> c_int;
@@ -82,7 +82,7 @@ extern "C" {
 
     #[cfg(botan_ffi_20250506)]
     pub fn botan_mp_view_hex(mp: botan_mp_t, ctx: botan_view_ctx, view: botan_view_str_fn)
-        -> c_int;
+    -> c_int;
 
     #[cfg(botan_ffi_20250506)]
     pub fn botan_mp_view_str(
@@ -94,6 +94,6 @@ extern "C" {
 
     #[cfg(botan_ffi_20250506)]
     pub fn botan_mp_view_bin(mp: botan_mp_t, ctx: botan_view_ctx, view: botan_view_bin_fn)
-        -> c_int;
+    -> c_int;
 
 }

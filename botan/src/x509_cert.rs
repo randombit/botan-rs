@@ -1,4 +1,4 @@
-use crate::{utils::*, CRL};
+use crate::{CRL, utils::*};
 use botan_sys::*;
 
 use crate::pubkey::Pubkey;

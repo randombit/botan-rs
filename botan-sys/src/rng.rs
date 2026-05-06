@@ -3,7 +3,7 @@ use crate::ffi_types::{c_char, c_int, c_void};
 pub enum botan_rng_struct {}
 pub type botan_rng_t = *mut botan_rng_struct;
 
-extern "C" {
+unsafe extern "C" {
 
     pub fn botan_rng_init(rng: *mut botan_rng_t, rng_type: *const c_char) -> c_int;
 

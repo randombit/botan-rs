@@ -6,7 +6,7 @@ pub type botan_hotp_t = *mut botan_hotp_struct;
 pub enum botan_totp_struct {}
 pub type botan_totp_t = *mut botan_totp_struct;
 
-extern "C" {
+unsafe extern "C" {
 
     pub fn botan_hotp_init(
         hotp: *mut botan_hotp_t,
@@ -19,7 +19,7 @@ extern "C" {
     pub fn botan_hotp_destroy(hotp: botan_hotp_t) -> c_int;
 
     pub fn botan_hotp_generate(hotp: botan_hotp_t, hotp_code: *mut u32, hotp_counter: u64)
-        -> c_int;
+    -> c_int;
 
     pub fn botan_hotp_check(
         hotp: botan_hotp_t,

@@ -4,7 +4,7 @@ pub enum botan_xof_struct {}
 pub type botan_xof_t = *mut botan_xof_struct;
 
 #[cfg(botan_ffi_20260303)]
-extern "C" {
+unsafe extern "C" {
     pub fn botan_xof_init(xof: *mut botan_xof_t, xof_name: *const c_char, flags: u32) -> c_int;
 
     pub fn botan_xof_copy_state(dest: *mut botan_xof_t, source: botan_xof_t) -> c_int;
