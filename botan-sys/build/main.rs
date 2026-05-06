@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-const KNOWN_FFI_VERSIONS: [(u32, u32); 9] = [
+const KNOWN_FFI_VERSIONS: [(u32, u32); 10] = [
+    (3, 20260506), // 3.12
     (3, 20260303), // 3.11
     (3, 20250829), // 3.10
     (3, 20250506), // 3.8
@@ -13,7 +14,7 @@ const KNOWN_FFI_VERSIONS: [(u32, u32); 9] = [
     (2, 20191214), // 2.13
 ];
 
-const LATEST_KNOWN_FFI: u32 = 20260303;
+const LATEST_KNOWN_FFI: u32 = 20260506;
 
 #[cfg(feature = "vendored")]
 fn emit_dylibs() -> Vec<&'static str> {
@@ -94,7 +95,7 @@ impl DetectedVersionInfo {
     fn latest_for_docs_rs() -> Self {
         Self {
             major_version: 3,
-            minor_version: 11,
+            minor_version: 12,
             ffi_version: LATEST_KNOWN_FFI,
         }
     }
