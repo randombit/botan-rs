@@ -72,7 +72,7 @@ pub fn hex_decode(x: &str) -> Result<Vec<u8>> {
 /// assert_eq!(botan::base64_encode(&[0x5A, 0x16, 0xAD, 0x4E, 0x17, 0x87, 0x79, 0xC9]).unwrap(), "WhatTheHeck=");
 /// ```
 pub fn base64_encode(x: &[u8]) -> Result<String> {
-    let b64_len = 1 + ((x.len() + 2) / 3) * 4;
+    let b64_len = 1 + x.len().div_ceil(3) * 4;
 
     call_botan_ffi_returning_string(b64_len, &|out_buf, out_len| unsafe {
         botan_base64_encode(x.as_ptr(), x.len(), out_buf as *mut c_char, out_len)

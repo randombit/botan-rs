@@ -29,7 +29,7 @@ pub const BOTAN_FFI_ERROR_ROUGHTIME_ERROR: BOTAN_FFI_ERROR = -77;
 pub const BOTAN_FFI_ERROR_TPM_ERROR: BOTAN_FFI_ERROR = -78;
 pub const BOTAN_FFI_ERROR_UNKNOWN_ERROR: BOTAN_FFI_ERROR = -100;
 
-extern "C" {
+unsafe extern "C" {
 
     pub fn botan_error_description(err: BOTAN_FFI_ERROR) -> *const c_char;
 

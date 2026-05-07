@@ -5,7 +5,7 @@ pub enum botan_srp6_server_session_struct {}
 pub type botan_srp6_server_session_t = *mut botan_srp6_server_session_struct;
 
 #[cfg(botan_ffi_20230403)]
-extern "C" {
+unsafe extern "C" {
     pub fn botan_srp6_server_session_init(srp6: *mut botan_srp6_server_session_t) -> c_int;
 
     pub fn botan_srp6_server_session_destroy(srp6: botan_srp6_server_session_t) -> c_int;

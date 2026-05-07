@@ -3,7 +3,7 @@ use crate::ffi_types::{c_char, c_int};
 pub enum botan_hash_struct {}
 pub type botan_hash_t = *mut botan_hash_struct;
 
-extern "C" {
+unsafe extern "C" {
 
     pub fn botan_hash_init(hash: *mut botan_hash_t, hash_name: *const c_char, flags: u32) -> c_int;
 

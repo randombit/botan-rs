@@ -15,7 +15,7 @@ pub type botan_pubkey_t = *mut botan_pubkey_struct;
 pub enum botan_privkey_struct {}
 pub type botan_privkey_t = *mut botan_privkey_struct;
 
-extern "C" {
+unsafe extern "C" {
     pub fn botan_privkey_create(
         key: *mut botan_privkey_t,
         algo_name: *const c_char,
@@ -555,5 +555,5 @@ extern "C" {
 
     #[cfg(botan_ffi_20260506)]
     pub fn botan_ec_pubkey_get_group(key: botan_pubkey_t, ec_group: *mut botan_ec_group_t)
-        -> c_int;
+    -> c_int;
 }

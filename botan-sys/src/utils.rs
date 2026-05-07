@@ -1,6 +1,6 @@
 use crate::ffi_types::{c_char, c_int, c_void};
 
-extern "C" {
+unsafe extern "C" {
 
     pub fn botan_constant_time_compare(x: *const u8, y: *const u8, len: usize) -> c_int;
 

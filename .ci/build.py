@@ -62,13 +62,13 @@ def main(args = None):
         if "SCCACHE_MAXSIZE" not in os.environ:
             os.environ["SCCACHE_MAXSIZE"] = "2G"
 
-    KNOWN_TOOLCHAINS = ['stable', 'nightly', '1.64.0']
+    KNOWN_TOOLCHAINS = ['stable', 'nightly', '1.85.1']
     KNOWN_FEATURES = ['vendored', 'git', 'no-std']
 
     toolchain = args[1]
 
     if toolchain not in KNOWN_TOOLCHAINS:
-        print("ERROR: Unknown toolchain %s" % (toolchain))
+        print("ERROR: Unknown toolchain %s (need to update .ci/build.py?)" % (toolchain))
         return 1
 
     features = [] if len(args) < 3 else args[2].split('+')
@@ -102,20 +102,22 @@ def main(args = None):
         return 1
 
     if 'vendored' in features:
-        run_command(['git', 'submodule', 'update', '--init', '--depth', '3'])
+        run_command([sys.executable, './botan-src/scripts/fetch.py'])
     elif 'git' in features:
         nproc = multiprocessing.cpu_count()
         botan_src = 'botan-git'
         run_command(['git', 'clone', '--depth', '1', 'https://github.com/randombit/botan.git', botan_src])
 
         import tomllib
-        excludes = tomllib.loads(open(os.path.join('botan-src', 'Cargo.toml')).read())['package']['exclude']
-        for exclude in excludes:
-            path = exclude.replace('botan/', botan_src + '/')
-            if os.path.isdir(path):
-                shutil.rmtree(path)
-            elif os.path.isfile(path):
-                os.remove(path)
+        cargo_toml = tomllib.loads(open(os.path.join('botan-src', 'Cargo.toml')).read())['package']
+
+        if 'excludes' in cargo_toml:
+            for exclude in cargo_toml['excludes']:
+                path = exclude.replace('botan/', botan_src + '/')
+                if os.path.isdir(path):
+                    shutil.rmtree(path)
+                elif os.path.isfile(path):
+                    os.remove(path)
 
         run_command(['./configure.py',
                      '--compiler-cache=%s' % (options.compiler_cache),
@@ -133,6 +135,8 @@ def main(args = None):
         os.environ["RUSTFLAGS"] = "-D warnings -L/opt/homebrew/lib"
         os.environ["RUSTDOCFLAGS"] = "-D warnings -L/opt/homebrew/lib"
         os.environ["DYLD_LIBRARY_PATH"] = homebrew_dir
+    elif os.access('/usr/bin/apt-get', os.R_OK):
+        run_command(['sudo', 'apt-get', 'install', 'libbotan-2-dev'])
 
     run_command(['rustc', '--version'])
 
@@ -143,10 +147,7 @@ def main(args = None):
     run_command(['cargo', 'test'] + sys_features, 'botan-sys')
 
     run_command(['cargo', 'build'] + lib_features, 'botan')
-
-    # Can't build tests with 1.64 due to serde_json having MSRV of 1.71.0 now
-    if toolchain != '1.64.0':
-        run_command(['cargo', 'test'] + lib_features, 'botan')
+    run_command(['cargo', 'test'] + lib_features, 'botan')
 
     run_command([options.compiler_cache, '--show-stats'])
 

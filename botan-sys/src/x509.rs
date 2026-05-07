@@ -106,7 +106,7 @@ impl TryFrom<i32> for X509CrlReasonCode {
     }
 }
 
-extern "C" {
+unsafe extern "C" {
     pub fn botan_x509_cert_load(
         cert_obj: *mut botan_x509_cert_t,
         cert: *const u8,

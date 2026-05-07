@@ -148,7 +148,7 @@ fn cstr_slice_to_str(raw_cstr: &[u8]) -> Result<String> {
 
 #[cfg(botan_ffi_20230403)]
 unsafe fn cstr_to_str(raw_cstr: *const c_char) -> Result<String> {
-    let cstr = CStr::from_ptr(raw_cstr);
+    let cstr = unsafe { CStr::from_ptr(raw_cstr) };
     Ok(cstr.to_str().map_err(Error::conversion_error)?.to_owned())
 }
 

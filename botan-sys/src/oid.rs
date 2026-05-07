@@ -8,7 +8,7 @@ pub enum botan_asn1_oid_struct {}
 pub type botan_asn1_oid_t = *mut botan_asn1_oid_struct;
 
 #[cfg(botan_ffi_20250506)]
-extern "C" {
+unsafe extern "C" {
     pub fn botan_oid_destroy(bc: botan_asn1_oid_t) -> c_int;
 
     pub fn botan_oid_from_string(oid: *mut botan_asn1_oid_t, oid_str: *const c_char) -> c_int;

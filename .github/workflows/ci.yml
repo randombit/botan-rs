@@ -31,6 +31,7 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      - run: ./botan-src/scripts/fetch.py
       - run: cargo +nightly clippy -- --deny warnings
   ci:
     runs-on: ubuntu-24.04
@@ -50,15 +51,15 @@ jobs:
             features: git
           - toolchain: stable
             features: vendored
-          - toolchain: 1.64.0 # MSRV no-std
+          - toolchain: 1.85.1 # MSRV no-std
             features: no-std+git
-          - toolchain: 1.64.0 # MSRV
+          - toolchain: 1.85.1 # MSRV
           - toolchain: nightly
           - toolchain: nightly
             features: no-std+git
 
     steps:
-      - run: sudo apt-get -qq install ccache libbotan-2-dev
+      - run: sudo apt-get -qq install ccache
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
         with:
@@ -90,7 +91,7 @@ jobs:
           - toolchain: nightly
 
     steps:
-      - run: sudo apt-get -qq install ccache libbotan-2-dev
+      - run: sudo apt-get -qq install ccache
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
         with:
