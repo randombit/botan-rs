@@ -85,6 +85,27 @@ pub enum X509CrlReasonCode {
     BOTAN_CRL_ENTRY_AA_COMPROMISE = 10,
 }
 
+#[cfg(botan_ffi_20260303)]
+impl TryFrom<i32> for X509CrlReasonCode {
+    type Error = ();
+
+    fn try_from(value: i32) -> core::result::Result<Self, Self::Error> {
+        match value {
+            0 => Ok(X509CrlReasonCode::BOTAN_CRL_ENTRY_UNSPECIFIED),
+            1 => Ok(X509CrlReasonCode::BOTAN_CRL_ENTRY_KEY_COMPROMISE),
+            2 => Ok(X509CrlReasonCode::BOTAN_CRL_ENTRY_CA_COMPROMISE),
+            3 => Ok(X509CrlReasonCode::BOTAN_CRL_ENTRY_AFFILIATION_CHANGED),
+            4 => Ok(X509CrlReasonCode::BOTAN_CRL_ENTRY_SUPERSEDED),
+            5 => Ok(X509CrlReasonCode::BOTAN_CRL_ENTRY_CESSATION_OF_OPERATION),
+            6 => Ok(X509CrlReasonCode::BOTAN_CRL_ENTRY_CERTIFICATE_HOLD),
+            8 => Ok(X509CrlReasonCode::BOTAN_CRL_ENTRY_REMOVE_FROM_CRL),
+            9 => Ok(X509CrlReasonCode::BOTAN_CRL_ENTRY_PRIVILEGE_WITHDRAWN),
+            10 => Ok(X509CrlReasonCode::BOTAN_CRL_ENTRY_AA_COMPROMISE),
+            _ => Err(()),
+        }
+    }
+}
+
 extern "C" {
     pub fn botan_x509_cert_load(
         cert_obj: *mut botan_x509_cert_t,

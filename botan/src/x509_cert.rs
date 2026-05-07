@@ -1,4 +1,4 @@
-use crate::utils::*;
+use crate::{utils::*, CRL};
 use botan_sys::*;
 
 use crate::pubkey::Pubkey;
@@ -398,33 +398,47 @@ impl Certificate {
         hostname: Option<&str>,
         reference_time: Option<u64>,
     ) -> Result<CertValidationStatus> {
+        self.verify_with_crl(
+            intermediates,
+            trusted,
+            trusted_path,
+            hostname,
+            reference_time,
+            &[],
+        )
+    }
+
+    /// Attempt to verify this certificate
+    pub fn verify_with_crl(
+        &self,
+        intermediates: &[&Certificate],
+        trusted: &[&Certificate],
+        trusted_path: Option<&str>,
+        hostname: Option<&str>,
+        reference_time: Option<u64>,
+        crls: &[&CRL],
+    ) -> Result<CertValidationStatus> {
         let required_key_strength = 110;
 
         let trusted_path = make_cstr(trusted_path.unwrap_or(""))?;
         let hostname = make_cstr(hostname.unwrap_or(""))?;
 
-        // TODO: more idiomatic way to do this?
-        let mut trusted_h = Vec::new();
-        for t in trusted {
-            trusted_h.push(t.handle());
-        }
+        let trusted_h = trusted.iter().map(|t| t.handle()).collect::<Vec<_>>();
+        let intermediates_h = intermediates.iter().map(|t| t.handle()).collect::<Vec<_>>();
+        let crls_h = crls.iter().map(|t| t.handle()).collect::<Vec<_>>();
 
-        let mut intermediates_h = Vec::new();
-        for t in intermediates {
-            intermediates_h.push(t.handle());
-        }
-
-        // TODO this information is lost :(
         let mut result = 0;
 
         let rc = unsafe {
-            botan_x509_cert_verify(
+            botan_x509_cert_verify_with_crl(
                 &mut result,
                 self.obj,
                 intermediates_h.as_ptr(),
                 intermediates_h.len(),
                 trusted_h.as_ptr(),
                 trusted_h.len(),
+                crls_h.as_ptr(),
+                crls_h.len(),
                 trusted_path.as_ptr(),
                 required_key_strength,
                 hostname.as_ptr(),
