@@ -71,7 +71,7 @@ def main(args = None):
         print("ERROR: Unknown toolchain %s" % (toolchain))
         return 1
 
-    features = [] if len(args) < 3 else args[2].split(',')
+    features = [] if len(args) < 3 else args[2].split('+')
 
     for feat in features:
         if feat not in KNOWN_FEATURES:

@@ -10,6 +10,9 @@
 #[macro_use]
 extern crate alloc;
 
+#[cfg(all(not(botan_ffi_20260303), not(feature = "std")))]
+compile_error!("Building this crate no_std requires Botan 3.11.0 or higher");
+
 extern crate botan_sys;
 
 macro_rules! botan_call {
@@ -50,7 +53,7 @@ macro_rules! botan_init {
 #[allow(unused)]
 macro_rules! botan_init_at {
     ($fn:path, $($before:expr),* ; $($after:expr),*) => {{
-        let mut obj = std::ptr::null_mut();
+        let mut obj = ptr::null_mut();
         let rc = unsafe {
             $fn($($before,)* &mut obj $(, $after)*)
         };
