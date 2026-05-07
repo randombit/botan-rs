@@ -30,6 +30,23 @@ extern "C" {
 
     pub fn botan_rng_add_entropy(rng: botan_rng_t, data: *const u8, len: usize) -> c_int;
 
+    #[cfg(botan_ffi_20260506)]
+    pub fn botan_rng_init_drbg(
+        rng_out: *mut botan_rng_t,
+        drbg_name: *const c_char,
+        seed: *const u8,
+        seed_len: usize,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20260506)]
+    pub fn botan_rng_generate_with_input(
+        rng: botan_rng_t,
+        out: *mut u8,
+        out_len: usize,
+        addl_input: *const u8,
+        addl_len: usize,
+    ) -> c_int;
+
     pub fn botan_rng_destroy(rng: botan_rng_t) -> c_int;
 
 }

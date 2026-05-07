@@ -6,6 +6,9 @@ use crate::rng::botan_rng_t;
 #[cfg(botan_ffi_20250506)]
 use crate::{botan_asn1_oid_t, botan_ec_group_t};
 
+#[cfg(botan_ffi_20260506)]
+use crate::botan_ec_scalar_t;
+
 pub enum botan_pubkey_struct {}
 pub type botan_pubkey_t = *mut botan_pubkey_struct;
 
@@ -537,4 +540,20 @@ extern "C" {
         len: usize,
         mode: *const c_char,
     ) -> c_int;
+
+    #[cfg(botan_ffi_20260506)]
+    pub fn botan_ec_privkey_get_private_key(
+        key: botan_privkey_t,
+        value: *mut botan_ec_scalar_t,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20260506)]
+    pub fn botan_ec_privkey_get_group(
+        key: botan_privkey_t,
+        ec_group: *mut botan_ec_group_t,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20260506)]
+    pub fn botan_ec_pubkey_get_group(key: botan_pubkey_t, ec_group: *mut botan_ec_group_t)
+        -> c_int;
 }
