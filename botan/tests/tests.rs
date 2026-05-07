@@ -1570,3 +1570,90 @@ fn test_ec_group() -> Result<(), botan::Error> {
 
     Ok(())
 }
+
+#[cfg(botan_ffi_20260506)]
+#[test]
+fn test_ec_points() -> Result<(), botan::Error> {
+    if !botan::EcGroup::supports_named_group("secp256r1")? {
+        return Ok(());
+    }
+
+    let group = botan::EcGroup::from_name("secp256r1")?;
+    let mut rng = botan::RandomNumberGenerator::new()?;
+
+    let forty_two = botan::MPI::new_from_u32(42)?;
+    let scalar_forty_two = botan::EcScalar::from_mpi(&group, &forty_two)?;
+    assert_eq!(forty_two, scalar_forty_two.to_mpi()?);
+
+    let identity = group.identity()?;
+    let generator = group.generator()?;
+    let one = botan::EcScalar::from_mpi(&group, &botan::MPI::new_from_u32(1)?)?;
+    assert_eq!(identity, &identity + &identity);
+
+    // test all the ADDs
+    {
+        let a = group.identity()?;
+        let b = group.identity()?;
+
+        let _ = &a + &b;
+        let _ = &a + b;
+
+        let b = group.identity()?;
+        let _ = a + &b;
+
+        let a = group.identity()?;
+        let b = group.identity()?;
+
+        let _ = a + b;
+    }
+
+    let order_minus_one = group.order()? - 1;
+    let order_minus_one_scalar = botan::EcScalar::from_mpi(&group, &order_minus_one)?;
+    assert_eq!(
+        generator.mul(&order_minus_one_scalar, &mut rng)? + &generator,
+        identity
+    );
+    assert_eq!(generator, generator.mul(&one, &mut rng)?);
+    assert_eq!(identity, identity.mul(&one, &mut rng)?);
+    assert_eq!(
+        generator.negate()?,
+        generator.mul(&order_minus_one_scalar, &mut rng)?
+    );
+
+    let pkey = botan::Privkey::create_ec("ECDSA", &group, &mut rng)?;
+    let private_value = pkey.get_private_value()?;
+    let public_key = pkey.pubkey()?;
+    let public_value = botan::EcPoint::from_bytes(&group, &public_key.ec_public_point()?)?;
+
+    assert_eq!(pkey.get_group()?, group);
+    assert_eq!(public_key.get_group()?, group);
+
+    let result = generator.mul(&private_value, &mut rng)? + &public_value;
+    assert!(!result.is_identity()?);
+
+    let x_bytes = hex::encode(result.to_x_bytes()?);
+    let y_bytes = hex::encode(result.to_y_bytes()?);
+    let xy_bytes = hex::encode(result.to_xy_bytes()?);
+    let uncompressed_bytes = hex::encode(result.to_uncompressed()?);
+    let compressed_bytes = hex::encode(result.to_compressed()?);
+
+    assert_eq!(xy_bytes, format!("{}{}", x_bytes, y_bytes));
+    assert_eq!(uncompressed_bytes, format!("04{}", xy_bytes));
+    assert!(compressed_bytes.starts_with("02") || compressed_bytes.starts_with("03"));
+    assert_eq!(&compressed_bytes[2..], x_bytes);
+
+    let x_mpi = botan::MPI::from_str(&format!("0x{}", x_bytes))?;
+    let y_mpi = botan::MPI::from_str(&format!("0x{}", y_bytes))?;
+
+    assert_eq!(result, botan::EcPoint::from_xy(&group, &x_mpi, &y_mpi)?);
+    assert_eq!(
+        result,
+        botan::EcPoint::from_bytes(&group, &result.to_uncompressed()?)?
+    );
+    assert_eq!(
+        result,
+        botan::EcPoint::from_bytes(&group, &result.to_compressed()?)?
+    );
+
+    Ok(())
+}
