@@ -1,4 +1,4 @@
-## 0.13.0 Not Yet Released
+## 0.13.0 2026-05-07
 
 - Minor version bump due to MSRV increase
 - Bump MSRV to 1.85.0
@@ -13,6 +13,7 @@
 - Implement `rand::TryRngCore` for `RandomNumberGenerator`
 - Add `Signer::signature_length`
 - Add `Pubkey::load_rsa_pkcs1` for loading RSA public keys in PKCS#1 form
+- Add `EcPoint` and `EcScalar` types (requires Botan 3.12)
 - Add various interfaces for CRL generation and handling
 - Add additional X.509 certificate getters: `ocsp_responders`,
   `issuer_dn`, `subject_dn`, `is_ca`, `path_limit`, `pem_encode`, `der_encode`
