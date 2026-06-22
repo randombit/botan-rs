@@ -148,6 +148,23 @@ fn extract_tarball(tarball: &Path, dest: &Path) {
     let mut decompressed = Vec::new();
     lzma_rs::xz_decompress(&mut reader, &mut decompressed).expect("xz decompress");
     let mut archive = tar::Archive::new(io::Cursor::new(decompressed));
+
+    // Windows without Developer Mode (or admin rights) cannot create symlinks.
+    // The Botan tarball contains a handful of symlinks (e.g. .github/codecov.yml)
+    // that are not needed to build the library. Skip them on Windows only.
+    #[cfg(target_os = "windows")]
+    {
+        for entry in archive.entries().expect("read archive entries") {
+            let mut entry = entry.expect("read archive entry");
+            let entry_type = entry.header().entry_type();
+            if entry_type.is_symlink() || entry_type.is_hard_link() {
+                continue;
+            }
+            entry.unpack_in(dest).expect("unpack entry");
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
     archive.unpack(dest).expect("untar");
 }
 
