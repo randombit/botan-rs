@@ -852,6 +852,106 @@ Dy94ca65ondQ2JGAxBuxZX2HZAE=
 }
 
 #[test]
+#[cfg(botan_ffi_20260811)]
+fn test_cert_rfc3779_exts() -> Result<(), botan::Error> {
+    use std::net::{Ipv4Addr, Ipv6Addr};
+
+    let no_ext_pem = b"-----BEGIN CERTIFICATE-----
+MIIBkDCCATegAwIBAgIRANQudMcHu/SmX8470nbNlj0wCgYIKoZIzj0EAwIwEjEQ
+MA4GA1UEAxMHVGVzdCBDQTAeFw0xODA4MTYyMjMyNDFaFw00NjAxMDEyMjMyNDFa
+MBIxEDAOBgNVBAMTB1Rlc3QgQ0EwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASN
++LHr9ZN72sxZqi4zcYDIg4xzN3DOF3epvlpGHLnju5ogp8dJ46YydTi3g/SfBGOp
+j9jrYP5Jgkkmpo0lMh7ho24wbDAhBgNVHQ4EGgQYLg/lfneWJ36rZdGMoVyKD6Zl
+mHkST7ZNMA4GA1UdDwEB/wQEAwIBBjASBgNVHRMBAf8ECDAGAQH/AgEBMCMGA1Ud
+IwQcMBqAGC4P5X53lid+q2XRjKFcig+mZZh5Ek+2TTAKBggqhkjOPQQDAgNHADBE
+AiB30ZIFV1cZbknu5lt1fWrM9tNSgCbj5BN9CI+Q9aq1LQIgD9o/8oGmFgvWLjsx
+b39VOu00+Vy9kpNO1Sgx7wSWoIU=
+-----END CERTIFICATE-----";
+    let no_ext_cert = skip_if_not_implemented!(botan::Certificate::load(no_ext_pem));
+
+    assert!(
+        no_ext_cert
+            .ext_as_blocks_asnum()
+            .is_err_and(|e| e.error_type() == botan::ErrorType::NoValueAvailable)
+    );
+
+    assert!(
+        no_ext_cert
+            .ext_as_blocks_rdi()
+            .is_err_and(|e| e.error_type() == botan::ErrorType::NoValueAvailable)
+    );
+
+    let asnum_pem = b"-----BEGIN CERTIFICATE-----
+MIIBiTCCATCgAwIBAgIRAIxkvUFe24qH+RH0D814mEswCgYIKoZIzj0EAwIwADAe
+Fw0yNDEwMjIxMDQwMTNaFw0yNTEwMjIxMDQwMTNaMAAwWTATBgcqhkjOPQIBBggq
+hkjOPQMBBwNCAAS8OgRLt85kZt8M5MGKcwXyOkUXoylpsp3gKVnQukeEVUPzhYUT
+t/nAC9s6tlqQx06aLo4NMpC/ZiLjfqRoh7/Co4GKMIGHMC8GCCsGAQUFBwEIAQH/
+BCAwHqACBQChGDAWMAgCAgTSAgIWLjAKAgEAAgUA/////zAhBgNVHQ4EGgQYEekx
+OowtPJb0QL2dSh4YuqEhfAEZh6g6MAwGA1UdEwEB/wQCMAAwIwYDVR0jBBwwGoAY
+EekxOowtPJb0QL2dSh4YuqEhfAEZh6g6MAoGCCqGSM49BAMCA0cAMEQCIG5s6rM9
+fpV76Ydij83G5dfNw8xq/PKohCQAsRc5BFP1AiANm2/BiqB6yzNO3t+1PFdjgpFu
+8zYpwnxA4Q4yEvKDxg==
+-----END CERTIFICATE-----
+";
+    let asnum_cert = botan::Certificate::load(asnum_pem)?;
+
+    assert_eq!(asnum_cert.ext_as_blocks_asnum(), Ok(None));
+    assert_eq!(
+        asnum_cert.ext_as_blocks_rdi(),
+        Ok(Some(vec![(0, 4294967295)]))
+    );
+
+    let ip_addr_blocks_pem = b"-----BEGIN CERTIFICATE-----
+MIICqzCCAmKgAwIBAgIRANPort9DlhqMt2QI6bFLA+IwCgYIKoZIzj0EAwIwSTEQ
+MA4GA1UEAxMHVGVzdCBDQTELMAkGA1UEBhMCVVMxFjAUBgNVBAoTDUJvdGFuIFBy
+b2plY3QxEDAOBgNVBAsTB1Rlc3RpbmcwHhcNMjUwNjE0MTkxNjEzWhcNMjYwNjE0
+MTkxNjEzWjBJMRAwDgYDVQQDEwdUZXN0IENBMQswCQYDVQQGEwJVUzEWMBQGA1UE
+ChMNQm90YW4gUHJvamVjdDEQMA4GA1UECxMHVGVzdGluZzBJMBMGByqGSM49AgEG
+CCqGSM49AwEBAzIABN0stcHCSpEww/+tZrO2Uv36ZJmjLel058Rdr5tdShPCNEmy
+MeXB+cGQ1kWVMh+sp6OCATkwggE1MHMGCCsGAQUFBwEHBGcwZTAHBAMAAgEFADAZ
+BAIAAjATAxEA/////////////////////zAHBAMAAQIFADAVBAMAAQEwDjAMAwMD
+wKgDBQHAqAIAMBcEAwABATAQMA4DBQHAqAICAwUAyAAAADAGBAIAAQUAMCEGA1Ud
+DgQaBBgub8YveBEYQ3Q3XbeiHtrh38tnkuzOOtQwDgYDVR0PAQH/BAQDAgGGMFIG
+A1UdEQRLMEmBFXRlc3RpbmdAcmFuZG9tYml0Lm5ldIITYm90YW4ucmFuZG9tYml0
+Lm5ldIYbaHR0cHM6Ly9ib3Rhbi5yYW5kb21iaXQubmV0MBIGA1UdEwEB/wQIMAYB
+Af8CAQEwIwYDVR0jBBwwGoAYLm/GL3gRGEN0N123oh7a4d/LZ5LszjrUMAoGCCqG
+SM49BAMCAzcAMDQCGF6Idq8d0ibVHxOTBA7xzFrquTz7crUfBAIYMNxljBJPw+CX
+VaIdhfLji2fOE9P8vx9O
+-----END CERTIFICATE-----
+";
+    let ip_addr_blocks_cert = botan::Certificate::load(ip_addr_blocks_pem)?;
+    let (v4, v6) = ip_addr_blocks_cert.ext_ip_addr_blocks()?;
+
+    assert_eq!(
+        v4,
+        vec![
+            (None, None),
+            (
+                Some(1),
+                Some(vec![(
+                    Ipv4Addr::new(192, 168, 0, 0),
+                    Ipv4Addr::new(200, 0, 0, 0)
+                )])
+            ),
+            (Some(2), None),
+        ]
+    );
+
+    assert_eq!(
+        v6,
+        vec![
+            (
+                None,
+                Some(vec![(Ipv6Addr::from([255; 16]), Ipv6Addr::from([255; 16]))])
+            ),
+            (Some(1), None)
+        ]
+    );
+
+    Ok(())
+}
+
+#[test]
 fn test_bcrypt() -> Result<(), botan::Error> {
     let pass = "password";
     let mut rng = botan::RandomNumberGenerator::new_system()?;

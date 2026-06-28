@@ -57,6 +57,54 @@ pub(crate) fn call_botan_ffi_returning_vec_u8(
     Ok(output)
 }
 
+#[allow(unused)]
+pub(crate) fn call_botan_ffi_returning_vec_pair(
+    initial_size1: usize,
+    initial_size2: usize,
+    cb: &dyn Fn(*mut u8, *mut usize, *mut u8, *mut usize) -> c_int,
+) -> Result<(Vec<u8>, Vec<u8>)> {
+    let mut buf1 = vec![0; initial_size1];
+    let mut buf1_len = buf1.len();
+
+    let mut buf2 = vec![0; initial_size2];
+    let mut buf2_len = buf2.len();
+
+    let rc = cb(
+        buf1.as_mut_ptr(),
+        &mut buf1_len,
+        buf2.as_mut_ptr(),
+        &mut buf2_len,
+    );
+    if rc == 0 {
+        assert!(buf1_len <= buf1.len());
+        assert!(buf2_len <= buf2.len());
+
+        buf1.resize(buf1_len, 0);
+        buf2.resize(buf2_len, 0);
+        return Ok((buf1, buf2));
+    } else if rc != BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE {
+        return Err(Error::from_rc(rc));
+    }
+
+    buf1.resize(buf1_len, 0);
+    buf2.resize(buf2_len, 0);
+    let rc = cb(
+        buf1.as_mut_ptr(),
+        &mut buf1_len,
+        buf2.as_mut_ptr(),
+        &mut buf2_len,
+    );
+
+    if rc != 0 {
+        return Err(Error::from_rc(rc));
+    }
+
+    buf1.resize(buf1_len, 0);
+    buf2.resize(buf2_len, 0);
+
+    Ok((buf1, buf2))
+}
+
 #[cfg(botan_ffi_20230403)]
 pub(crate) mod view {
     use super::*;
