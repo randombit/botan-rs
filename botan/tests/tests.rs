@@ -488,7 +488,7 @@ fn test_rng() -> Result<(), botan::Error> {
 
     #[cfg(feature = "rand")]
     {
-        use rand::TryRngCore;
+        use rand_core::TryRng;
 
         let read1 = rng.try_next_u32()?;
         let read2 = rng.try_next_u32()?;
