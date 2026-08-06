@@ -14,8 +14,8 @@ use botan_sys::*;
 /// let v = botan::kdf("HKDF(SHA-256)", 23, &secret, &salt, &label).unwrap();
 /// assert_eq!(v.len(), 23);
 /// ```
-pub fn kdf(
-    algo: &str,
+pub fn kdf<A: crate::KdfAlgorithmIdentifier>(
+    algo: A,
     output_len: usize,
     secret: &[u8],
     salt: &[u8],
@@ -23,7 +23,8 @@ pub fn kdf(
 ) -> Result<Vec<u8>> {
     let mut output = vec![0u8; output_len];
 
-    let algo = make_cstr(algo)?;
+    let algo = algo.botan_name();
+    let algo = make_cstr(&algo)?;
 
     botan_call!(
         botan_kdf,

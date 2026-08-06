@@ -26,8 +26,9 @@ impl MsgAuthCode {
     /// ```
     /// let poly1305 = botan::MsgAuthCode::new("Poly1305").unwrap();
     /// ```
-    pub fn new(name: &str) -> Result<MsgAuthCode> {
-        let obj = botan_init!(botan_mac_init, make_cstr(name)?.as_ptr(), 0u32)?;
+    pub fn new<A: crate::MacAlgorithmIdentifier>(name: A) -> Result<MsgAuthCode> {
+        let name = name.botan_name();
+        let obj = botan_init!(botan_mac_init, make_cstr(&name)?.as_ptr(), 0u32)?;
         let output_length = botan_usize!(botan_mac_output_length, obj)?;
 
         let (min_keylen, max_keylen, mod_keylen) = botan_usize3!(botan_mac_get_keyspec, obj)?;

@@ -10,8 +10,8 @@ use botan_sys::*;
 /// let key = botan::derive_key_from_password("Scrypt", 32, "passphrase", &salt, 8192, 8, 1).unwrap();
 /// assert_eq!(key.len(), 32);
 /// ```
-pub fn derive_key_from_password(
-    algo: &str,
+pub fn derive_key_from_password<A: crate::PasswordHashAlgorithmIdentifier>(
+    algo: A,
     out_len: usize,
     passphrase: &str,
     salt: &[u8],
@@ -19,7 +19,8 @@ pub fn derive_key_from_password(
     param2: usize,
     param3: usize,
 ) -> Result<Vec<u8>> {
-    let algo = make_cstr(algo)?;
+    let algo = algo.botan_name();
+    let algo = make_cstr(&algo)?;
     let passphrase = make_cstr(passphrase)?;
 
     let mut output = vec![0u8; out_len];
@@ -53,14 +54,15 @@ pub fn derive_key_from_password(
 /// let key2 = botan::derive_key_from_password("Scrypt", 32, "passphrase", &salt, n, r, p).unwrap();
 /// assert_eq!(key, key2);
 /// ```
-pub fn derive_key_from_password_timed(
-    algo: &str,
+pub fn derive_key_from_password_timed<A: crate::PasswordHashAlgorithmIdentifier>(
+    algo: A,
     out_len: usize,
     passphrase: &str,
     salt: &[u8],
     msec: u32,
 ) -> Result<(Vec<u8>, usize, usize, usize)> {
-    let algo = make_cstr(algo)?;
+    let algo = algo.botan_name();
+    let algo = make_cstr(&algo)?;
     let passphrase = make_cstr(passphrase)?;
 
     let mut output = vec![0u8; out_len];
@@ -98,8 +100,8 @@ pub fn derive_key_from_password_timed(
 /// let key = botan::pbkdf("PBKDF2(SHA-256)", 32, "passphrase", &salt, 10000).unwrap();
 /// assert_eq!(key.len(), 32);
 /// ```
-pub fn pbkdf(
-    algo: &str,
+pub fn pbkdf<A: crate::PasswordHashAlgorithmIdentifier>(
+    algo: A,
     out_len: usize,
     passphrase: &str,
     salt: &[u8],
@@ -131,5 +133,13 @@ pub fn scrypt(
     r: usize,
     p: usize,
 ) -> Result<Vec<u8>> {
-    derive_key_from_password("Scrypt", out_len, passphrase, salt, n, r, p)
+    derive_key_from_password(
+        crate::PasswordHashAlgorithm::Scrypt,
+        out_len,
+        passphrase,
+        salt,
+        n,
+        r,
+        p,
+    )
 }

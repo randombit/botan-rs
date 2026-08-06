@@ -113,6 +113,7 @@ macro_rules! botan_bool_in_rc {
     }};
 }
 
+mod algo;
 mod asn1;
 mod bcrypt;
 mod block;
@@ -137,6 +138,7 @@ mod x509_cert;
 mod x509_crl;
 mod zfec;
 
+pub use algo::*;
 pub use asn1::*;
 pub use bcrypt::*;
 pub use block::*;

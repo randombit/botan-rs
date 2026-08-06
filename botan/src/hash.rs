@@ -29,8 +29,9 @@ impl HashFunction {
     /// assert!(botan::HashFunction::new("SHA-256").is_ok());
     /// assert!(botan::HashFunction::new("Hash9000").is_err());
     /// ```
-    pub fn new(name: &str) -> Result<HashFunction> {
-        let obj = botan_init!(botan_hash_init, make_cstr(name)?.as_ptr(), 0u32)?;
+    pub fn new<A: crate::HashAlgorithmIdentifier>(name: A) -> Result<HashFunction> {
+        let name = name.botan_name();
+        let obj = botan_init!(botan_hash_init, make_cstr(&name)?.as_ptr(), 0u32)?;
         let output_length = botan_usize!(botan_hash_output_length, obj)?;
 
         Ok(HashFunction { obj, output_length })

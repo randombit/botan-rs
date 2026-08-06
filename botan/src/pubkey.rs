@@ -52,11 +52,17 @@ impl Privkey {
 
     /// Create a new private key
     ///
-    pub fn create(alg: &str, params: &str, rng: &mut RandomNumberGenerator) -> Result<Privkey> {
+    pub fn create<A: crate::PublicKeyAlgorithmIdentifier, P: crate::KeyGenParamsIdentifier>(
+        alg: A,
+        params: P,
+        rng: &mut RandomNumberGenerator,
+    ) -> Result<Privkey> {
+        let alg = alg.botan_name();
+        let params = params.botan_name();
         let obj = botan_init!(
             botan_privkey_create,
-            make_cstr(alg)?.as_ptr(),
-            make_cstr(params)?.as_ptr(),
+            make_cstr(&alg)?.as_ptr(),
+            make_cstr(&params)?.as_ptr(),
             rng.handle()
         )?;
 
@@ -65,14 +71,15 @@ impl Privkey {
 
     /// Create a new EC private key
     #[cfg(botan_ffi_20250506)]
-    pub fn create_ec(
-        alg: &str,
+    pub fn create_ec<A: crate::PublicKeyAlgorithmIdentifier>(
+        alg: A,
         ec_group: &EcGroup,
         rng: &mut RandomNumberGenerator,
     ) -> Result<Privkey> {
+        let alg = alg.botan_name();
         let obj = botan_init!(
             botan_ec_privkey_create,
-            make_cstr(alg)?.as_ptr(),
+            make_cstr(&alg)?.as_ptr(),
             ec_group.handle(),
             rng.handle()
         )?;
@@ -347,17 +354,22 @@ impl Privkey {
     }
 
     /// DER encode the key (encrypted), specifying cipher/hash options
-    pub fn der_encode_encrypted_with_options(
+    pub fn der_encode_encrypted_with_options<
+        C: crate::CipherAlgorithmIdentifier,
+        P: crate::Pkcs8KdfIdentifier,
+    >(
         &self,
         passphrase: &str,
-        cipher: &str,
-        pbkdf: &str,
+        cipher: C,
+        pbkdf: P,
         pbkdf_iter: usize,
         rng: &mut RandomNumberGenerator,
     ) -> Result<Vec<u8>> {
         let passphrase = make_cstr(passphrase)?;
-        let cipher = make_cstr(cipher)?;
-        let pbkdf = make_cstr(pbkdf)?;
+        let cipher = cipher.botan_name();
+        let pbkdf = pbkdf.botan_name();
+        let cipher = make_cstr(&cipher)?;
+        let pbkdf = make_cstr(&pbkdf)?;
 
         let rng_handle = rng.handle();
 
@@ -412,17 +424,22 @@ impl Privkey {
     }
 
     /// PEM encode the key (encrypted), specifying cipher/hash options
-    pub fn pem_encode_encrypted_with_options(
+    pub fn pem_encode_encrypted_with_options<
+        C: crate::CipherAlgorithmIdentifier,
+        P: crate::Pkcs8KdfIdentifier,
+    >(
         &self,
         passphrase: &str,
-        cipher: &str,
-        pbkdf: &str,
+        cipher: C,
+        pbkdf: P,
         pbkdf_iter: usize,
         rng: &mut RandomNumberGenerator,
     ) -> Result<String> {
         let passphrase = make_cstr(passphrase)?;
-        let cipher = make_cstr(cipher)?;
-        let pbkdf = make_cstr(pbkdf)?;
+        let cipher = cipher.botan_name();
+        let pbkdf = pbkdf.botan_name();
+        let cipher = make_cstr(&cipher)?;
+        let pbkdf = make_cstr(&pbkdf)?;
         let rng_handle = rng.handle();
 
         #[cfg(botan_ffi_20230403)]
@@ -568,10 +585,10 @@ impl Privkey {
     }
 
     /// Sign a message using the specified padding method
-    pub fn sign(
+    pub fn sign<P: crate::SignatureParamsIdentifier>(
         &self,
         message: &[u8],
-        padding: &str,
+        padding: P,
         rng: &mut RandomNumberGenerator,
     ) -> Result<Vec<u8>> {
         #[cfg(not(botan_ffi_20260303))]
@@ -582,7 +599,11 @@ impl Privkey {
     }
 
     /// Decrypt a message that was encrypted using the specified padding method
-    pub fn decrypt(&self, ctext: &[u8], padding: &str) -> Result<Vec<u8>> {
+    pub fn decrypt<P: crate::EncryptionParamsIdentifier>(
+        &self,
+        ctext: &[u8],
+        padding: P,
+    ) -> Result<Vec<u8>> {
         #[cfg(not(botan_ffi_20260303))]
         let _lock = self.op_lock.lock().expect("lock poisoned");
         let mut decryptor = Decryptor::new(self, padding)?;
@@ -590,12 +611,12 @@ impl Privkey {
     }
 
     /// Perform key agreement
-    pub fn agree(
+    pub fn agree<K: crate::KdfAlgorithmIdentifier>(
         &self,
         other_key: &[u8],
         output_len: usize,
         salt: &[u8],
-        kdf: &str,
+        kdf: K,
     ) -> Result<Vec<u8>> {
         #[cfg(not(botan_ffi_20260303))]
         let _lock = self.op_lock.lock().expect("lock poisoned");
@@ -755,8 +776,9 @@ impl Pubkey {
     }
 
     /// Return hash of the public key data
-    pub fn fingerprint(&self, hash: &str) -> Result<Vec<u8>> {
-        let hash = make_cstr(hash)?;
+    pub fn fingerprint<A: crate::HashAlgorithmIdentifier>(&self, hash: A) -> Result<Vec<u8>> {
+        let hash = hash.botan_name();
+        let hash = make_cstr(&hash)?;
         let fprint_len = 64; // hashes > 512 bits are rare
         call_botan_ffi_returning_vec_u8(fprint_len, &|out_buf, out_len| unsafe {
             botan_pubkey_fingerprint(self.obj, hash.as_ptr(), out_buf, out_len)
@@ -880,10 +902,10 @@ impl Pubkey {
     }
 
     /// Encrypt a message using the specified padding method
-    pub fn encrypt(
+    pub fn encrypt<P: crate::EncryptionParamsIdentifier>(
         &self,
         message: &[u8],
-        padding: &str,
+        padding: P,
         rng: &mut RandomNumberGenerator,
     ) -> Result<Vec<u8>> {
         #[cfg(not(botan_ffi_20260303))]
@@ -893,7 +915,12 @@ impl Pubkey {
     }
 
     /// Verify a message that was signed using the specified padding method
-    pub fn verify(&self, message: &[u8], signature: &[u8], padding: &str) -> Result<bool> {
+    pub fn verify<P: crate::SignatureParamsIdentifier>(
+        &self,
+        message: &[u8],
+        signature: &[u8],
+        padding: P,
+    ) -> Result<bool> {
         #[cfg(not(botan_ffi_20260303))]
         let _lock = self.op_lock.lock().expect("lock poisoned");
         let mut op = Verifier::new(self, padding)?;
@@ -903,8 +930,9 @@ impl Pubkey {
 }
 
 /// Return the identifier used for PKCS1 v1.5 signatures for the specified hash
-pub fn pkcs_hash_id(hash_algo: &str) -> Result<Vec<u8>> {
-    let hash_algo = make_cstr(hash_algo)?;
+pub fn pkcs_hash_id<A: crate::HashAlgorithmIdentifier>(hash_algo: A) -> Result<Vec<u8>> {
+    let hash_algo = hash_algo.botan_name();
+    let hash_algo = make_cstr(&hash_algo)?;
     let id_len = 32; // largest currently is 20 bytes
     call_botan_ffi_returning_vec_u8(id_len, &|out_buf, out_len| unsafe {
         botan_pkcs_hash_id(hash_algo.as_ptr(), out_buf, out_len)

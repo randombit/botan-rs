@@ -29,8 +29,9 @@ impl BlockCipher {
     /// let no_such_cipher = botan::BlockCipher::new("SuperCipher9000");
     /// assert!(no_such_cipher.is_err());
     /// ```
-    pub fn new(name: &str) -> Result<BlockCipher> {
-        let obj = botan_init!(botan_block_cipher_init, make_cstr(name)?.as_ptr())?;
+    pub fn new<A: crate::BlockCipherAlgorithmIdentifier>(name: A) -> Result<BlockCipher> {
+        let name = name.botan_name();
+        let obj = botan_init!(botan_block_cipher_init, make_cstr(&name)?.as_ptr())?;
 
         let block_size = {
             let rc = unsafe { botan_block_cipher_block_size(obj) };
