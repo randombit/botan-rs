@@ -1324,14 +1324,22 @@ fn test_totp() -> Result<(), botan::Error> {
         30,
     )?;
 
-    assert_eq!(totp.generate(59)?, 90693936);
-    assert_eq!(totp.generate(1111111109)?, 25091201);
-    assert_eq!(totp.generate(1111111111)?, 99943326);
+    let time = 1000215000;
+    let code = 98961851;
 
-    assert!(totp.check(90693936, 59, 0)?);
-    assert!(!totp.check(90693936, 60, 0)?);
-    assert!(totp.check(90693936, 59 + 30, 1)?);
-    assert!(!totp.check(90693936, 59 + 31, 1)?);
+    for skew in 0..=29 {
+        assert_eq!(totp.generate(time + skew)?, code);
+    }
+
+    for skew in 0..=29 {
+        assert!(totp.check(code, time + skew, 0)?);
+    }
+
+    for skew in 30..=59 {
+        assert!(!totp.check(code, time + skew, 0)?);
+        assert!(totp.check(code, time + skew, 1)?);
+    }
+
     Ok(())
 }
 
