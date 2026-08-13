@@ -166,3 +166,9 @@ mod pk_ops_kem;
 
 #[cfg(botan_ffi_20230403)]
 pub use pk_ops_kem::*;
+
+#[cfg(botan_ffi_20260811)]
+mod spake2p;
+
+#[cfg(botan_ffi_20260811)]
+pub use spake2p::*;
