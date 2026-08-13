@@ -58,6 +58,17 @@ impl EcGroup {
         interp_as_bool(result, "botan_ec_group_supports_named_group")
     }
 
+    /// Unregister a previously registered group.
+    ///
+    /// Using this is discouraged for normal use. This is only useful or necessary if
+    /// you are registering a very large number of distinct groups, and need to worry about memory constraints.
+    ///
+    /// Returns true if the group was found and unregistered.
+    #[cfg(botan_ffi_20260303)]
+    pub fn unregister(oid: &OID) -> Result<bool> {
+        botan_bool_in_rc!(botan_ec_group_unregister, oid.handle())
+    }
+
     /// Create a group from a named/well known set of parameters
     pub fn from_name(name: &str) -> Result<Self> {
         let obj = botan_init!(botan_ec_group_from_name, make_cstr(name)?.as_ptr())?;
