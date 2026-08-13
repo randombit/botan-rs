@@ -14,6 +14,9 @@ unsafe extern "C" {
     pub fn botan_hash_output_length(hash: botan_hash_t, output_length: *mut usize) -> c_int;
     pub fn botan_hash_block_size(hash: botan_hash_t, block_size: *mut usize) -> c_int;
 
+    #[cfg(botan_ffi_20260811)]
+    pub fn botan_hash_security_level(hash: botan_hash_t, security_level: *mut usize) -> c_int;
+
     pub fn botan_hash_update(hash: botan_hash_t, data: *const u8, len: usize) -> c_int;
     pub fn botan_hash_final(hash: botan_hash_t, digest: *mut u8) -> c_int;
     pub fn botan_hash_clear(hash: botan_hash_t) -> c_int;

@@ -370,6 +370,52 @@ unsafe extern "C" {
 
     pub fn botan_x509_cert_validation_status(code: c_int) -> *const c_char;
 
+    #[cfg(botan_ffi_20260811)]
+    pub fn botan_x509_ext_ip_addr_blocks_get_counts(
+        cert: botan_x509_cert_t,
+        v4_count: *mut usize,
+        v6_count: *mut usize,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20260811)]
+    pub fn botan_x509_ext_ip_addr_blocks_get_family(
+        cert: botan_x509_cert_t,
+        ipv6: c_int,
+        i: usize,
+        has_safi: *mut c_int,
+        safi: *mut u8,
+        present: *mut c_int,
+        count: *mut usize,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20260811)]
+    pub fn botan_x509_ext_ip_addr_blocks_get_address(
+        cert: botan_x509_cert_t,
+        ipv6: c_int,
+        i: usize,
+        entry: usize,
+        min_out: *mut u8,
+        max_out: *mut u8,
+        out_len: *mut usize,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20260811)]
+    pub fn botan_x509_ext_as_blocks_get_info(
+        cert: botan_x509_cert_t,
+        asnum: c_int,
+        present: *mut c_int,
+        count: *mut usize,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20260811)]
+    pub fn botan_x509_ext_as_blocks_get_entry_at(
+        cert: botan_x509_cert_t,
+        asnum: c_int,
+        i: usize,
+        min: *mut u32,
+        max: *mut u32,
+    ) -> c_int;
+
     pub fn botan_x509_crl_load_file(crl: *mut botan_x509_crl_t, file_path: *const c_char) -> c_int;
 
     pub fn botan_x509_crl_load(
