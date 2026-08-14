@@ -50,6 +50,8 @@ jobs:
           - toolchain: stable
             features: git
           - toolchain: stable
+            features: git+minimized
+          - toolchain: stable
             features: vendored
           - toolchain: 1.85.1 # MSRV no-std
             features: no-std+git
