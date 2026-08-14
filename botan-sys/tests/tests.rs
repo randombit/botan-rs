@@ -45,7 +45,12 @@ fn test_hash() {
     unsafe {
         let mut hash = std::ptr::null_mut();
         let hash_name = CString::new("SHA-384").unwrap();
-        assert_eq!(botan_hash_init(&mut hash, hash_name.as_ptr(), 0u32), 0);
+        let rc = botan_hash_init(&mut hash, hash_name.as_ptr(), 0u32);
+        if rc == BOTAN_FFI_ERROR_NOT_IMPLEMENTED {
+            // SHA-384 was not compiled into the library we are running against
+            return;
+        }
+        assert_eq!(rc, 0);
 
         let input = [97, 98, 99];
         assert_eq!(botan_hash_update(hash, input.as_ptr(), input.len()), 0);

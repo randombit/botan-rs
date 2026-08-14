@@ -63,7 +63,7 @@ def main(args = None):
             os.environ["SCCACHE_MAXSIZE"] = "2G"
 
     KNOWN_TOOLCHAINS = ['stable', 'nightly', '1.85.1']
-    KNOWN_FEATURES = ['vendored', 'git', 'no-std']
+    KNOWN_FEATURES = ['vendored', 'git', 'no-std', 'minimized']
 
     toolchain = args[1]
 
@@ -101,6 +101,10 @@ def main(args = None):
         print("ERROR: Incompatible features vendored and git")
         return 1
 
+    if 'minimized' in features and 'git' not in features:
+        print("ERROR: Feature minimized requires git")
+        return 1
+
     if 'vendored' in features:
         run_command([sys.executable, './botan-src/scripts/fetch.py'])
     elif 'git' in features:
@@ -119,12 +123,21 @@ def main(args = None):
                 elif os.path.isfile(path):
                     os.remove(path)
 
-        run_command(['./configure.py',
-                     '--compiler-cache=%s' % (options.compiler_cache),
-                     '--without-documentation',
-                     '--no-install-python-module',
-                     '--build-targets=shared',
-                     '--disable-modules=%s' % (disabled_modules)], botan_src)
+        configure_args = ['./configure.py',
+                          '--compiler-cache=%s' % (options.compiler_cache),
+                          '--without-documentation',
+                          '--no-install-python-module',
+                          '--build-targets=shared']
+
+        if 'minimized' in features:
+            # Build with the smallest possible module set that still
+            # includes the FFI layer, to verify that the tests correctly
+            # skip whatever functionality is not available
+            configure_args += ['--minimized-build', '--enable-modules=ffi']
+        else:
+            configure_args += ['--disable-modules=%s' % (disabled_modules)]
+
+        run_command(configure_args, botan_src)
         run_command(['make', '-j', str(nproc)], botan_src)
         run_command(['sudo', 'make', 'install'], botan_src)
         os.environ["RUSTFLAGS"] = "-D warnings -L/usr/local/lib"
@@ -143,11 +156,16 @@ def main(args = None):
     sys_features = compute_features(features, 'sys')
     lib_features = compute_features(features, 'lib')
 
+    # The doctest examples assume a full build, so run only the test
+    # binaries (which skip unavailable functionality) against a minimized
+    # library
+    test_args = ['--tests'] if 'minimized' in features else []
+
     run_command(['cargo', 'build'] + sys_features, 'botan-sys')
-    run_command(['cargo', 'test'] + sys_features, 'botan-sys')
+    run_command(['cargo', 'test'] + test_args + sys_features, 'botan-sys')
 
     run_command(['cargo', 'build'] + lib_features, 'botan')
-    run_command(['cargo', 'test'] + lib_features, 'botan')
+    run_command(['cargo', 'test'] + test_args + lib_features, 'botan')
 
     run_command([options.compiler_cache, '--show-stats'])
 
