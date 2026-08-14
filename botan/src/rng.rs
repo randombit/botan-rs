@@ -166,7 +166,7 @@ impl RandomNumberGenerator {
 }
 
 #[cfg(feature = "rand")]
-impl rand::TryRngCore for RandomNumberGenerator {
+impl rand_core::TryRng for RandomNumberGenerator {
     type Error = Error;
 
     fn try_next_u32(&mut self) -> Result<u32> {
@@ -188,4 +188,4 @@ impl rand::TryRngCore for RandomNumberGenerator {
 }
 
 #[cfg(feature = "rand")]
-impl rand::TryCryptoRng for RandomNumberGenerator {}
+impl rand_core::TryCryptoRng for RandomNumberGenerator {}
