@@ -2,6 +2,24 @@ extern crate botan;
 
 use std::str::FromStr;
 
+/// If the first Botan call in a test fails with NotImplemented, the
+/// functionality was not compiled into the library we are running against,
+/// and the test is skipped. This must only be applied to a test's initial
+/// call (or to the first use of an independent algorithm); once an algorithm
+/// has been created successfully, a NotImplemented error from any later call
+/// is a real failure.
+macro_rules! skip_if_not_implemented {
+    ($call:expr) => {
+        match $call {
+            Ok(val) => val,
+            Err(e) if e.error_type() == botan::ErrorType::NotImplemented => {
+                return Ok(());
+            }
+            Err(e) => return Err(e),
+        }
+    };
+}
+
 #[test]
 fn test_version() -> Result<(), botan::Error> {
     let version = botan::Version::current()?;
@@ -49,7 +67,7 @@ fn test_version() -> Result<(), botan::Error> {
 
 #[test]
 fn test_hash() -> Result<(), botan::Error> {
-    let mut hash = botan::HashFunction::new("SHA-384")?;
+    let mut hash = skip_if_not_implemented!(botan::HashFunction::new("SHA-384"));
 
     assert_eq!(hash.output_length()?, 48);
     assert_eq!(hash.block_size()?, 128);
@@ -92,7 +110,7 @@ fn test_hash() -> Result<(), botan::Error> {
 
 #[test]
 fn test_mac() -> Result<(), botan::Error> {
-    let mut mac = botan::MsgAuthCode::new("HMAC(SHA-384)")?;
+    let mut mac = skip_if_not_implemented!(botan::MsgAuthCode::new("HMAC(SHA-384)"));
 
     let key_spec = mac.key_spec()?;
     assert_eq!(mac.output_length()?, 48);
@@ -117,7 +135,7 @@ fn test_mac() -> Result<(), botan::Error> {
 
 #[test]
 fn test_block_cipher() -> Result<(), botan::Error> {
-    let mut bc = botan::BlockCipher::new("AES-128")?;
+    let mut bc = skip_if_not_implemented!(botan::BlockCipher::new("AES-128"));
 
     assert_eq!(bc.algo_name()?, "AES-128");
     assert_eq!(bc.block_size()?, 16);
@@ -156,7 +174,10 @@ fn test_block_cipher() -> Result<(), botan::Error> {
 
 #[test]
 fn test_cipher() -> Result<(), botan::Error> {
-    let mut cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt)?;
+    let mut cipher = skip_if_not_implemented!(botan::Cipher::new(
+        "AES-128/GCM",
+        botan::CipherDirection::Encrypt
+    ));
 
     assert_eq!(cipher.tag_length(), 16);
 
@@ -218,7 +239,10 @@ fn test_incremental_cipher() -> Result<(), botan::Error> {
     )?;
 
     // encode
-    let mut cipher = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt)?;
+    let mut cipher = skip_if_not_implemented!(botan::Cipher::new(
+        "AES-128/GCM",
+        botan::CipherDirection::Encrypt
+    ));
     cipher.set_key(&key)?;
     cipher.start(&nonce)?;
 
@@ -307,7 +331,10 @@ fn test_incremental_cipher() -> Result<(), botan::Error> {
 
 #[test]
 fn test_cipher_padding() -> Result<(), botan::Error> {
-    let mut cipher = botan::Cipher::new("AES-128/CBC/PKCS7", botan::CipherDirection::Encrypt)?;
+    let mut cipher = skip_if_not_implemented!(botan::Cipher::new(
+        "AES-128/CBC/PKCS7",
+        botan::CipherDirection::Encrypt
+    ));
     let key = [0; 16];
     let nonce = [0; 16];
     let msg = [0; 8];
@@ -326,7 +353,10 @@ fn test_cipher_padding() -> Result<(), botan::Error> {
 
 #[test]
 fn test_chacha() -> Result<(), botan::Error> {
-    let mut cipher = botan::Cipher::new("ChaCha20", botan::CipherDirection::Encrypt)?;
+    let mut cipher = skip_if_not_implemented!(botan::Cipher::new(
+        "ChaCha20",
+        botan::CipherDirection::Encrypt
+    ));
 
     assert_eq!(cipher.tag_length(), 0);
 
@@ -366,13 +396,13 @@ fn test_kdf() -> Result<(), botan::Error> {
         "3CB25F25FAACD57A90434F64D0362F2A2D2D0A90CF1A5A4C5DB02D56ECC4C5BF34007208D5B887185865",
     )?;
 
-    let output = botan::kdf(
+    let output = skip_if_not_implemented!(botan::kdf(
         "HKDF(SHA-256)",
         expected_output.len(),
         &secret,
         &salt,
         &label,
-    )?;
+    ));
 
     assert_eq!(output, expected_output);
     Ok(())
@@ -386,13 +416,13 @@ fn test_pbkdf() -> Result<(), botan::Error> {
     let expected_output =
         botan::hex_decode("DEFD2987FA26A4672F4D16D98398432AD95E896BF619F6A6B8D4ED")?;
 
-    let output = botan::pbkdf(
+    let output = skip_if_not_implemented!(botan::pbkdf(
         "PBKDF2(SHA-256)",
         expected_output.len(),
         passphrase,
         &salt,
         iterations,
-    )?;
+    ));
 
     assert_eq!(output, expected_output);
     Ok(())
@@ -408,7 +438,14 @@ fn test_scrypt() -> Result<(), botan::Error> {
     let expected_output =
         botan::hex_decode("fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622e")?;
 
-    let output = botan::scrypt(expected_output.len(), passphrase, &salt, n, r, p)?;
+    let output = skip_if_not_implemented!(botan::scrypt(
+        expected_output.len(),
+        passphrase,
+        &salt,
+        n,
+        r,
+        p
+    ));
 
     assert_eq!(output, expected_output);
     Ok(())
@@ -419,8 +456,13 @@ fn test_pwdhash() -> Result<(), botan::Error> {
     let mut rng = botan::RandomNumberGenerator::new()?;
     let salt = rng.read(10)?;
     let msec = 30;
-    let (key, r, p, n) =
-        botan::derive_key_from_password_timed("Scrypt", 32, "passphrase", &salt, msec)?;
+    let (key, r, p, n) = skip_if_not_implemented!(botan::derive_key_from_password_timed(
+        "Scrypt",
+        32,
+        "passphrase",
+        &salt,
+        msec
+    ));
     assert_eq!(key.len(), 32);
     let key2 = botan::derive_key_from_password("Scrypt", 32, "passphrase", &salt, n, r, p)?;
     assert_eq!(key, key2);
@@ -500,7 +542,7 @@ zjd8FaHJYT9q6z5fRhloqN6w46mS9nbt8xa4As9ULoMcpeVglDXXLh+A8HLLudWD
 ZB6LDkS9rU3WAqYfPzNZ5AR06A==
 -----END CERTIFICATE-----";
 
-    let crl = botan::CRL::load(crl_pem.as_bytes())?;
+    let crl = skip_if_not_implemented!(botan::CRL::load(crl_pem.as_bytes()));
 
     let cert = botan::Certificate::load(cert_pem.as_bytes())?;
 
@@ -566,7 +608,7 @@ rWSdD+Aor4KcEQ==
         .unwrap()
         .as_secs();
 
-    let ca_cert = botan::Certificate::load(ca_pem.as_bytes())?;
+    let ca_cert = skip_if_not_implemented!(botan::Certificate::load(ca_pem.as_bytes()));
     let ca_key = botan::Privkey::load_pem(ca_key_pem)?;
     let ca_pubkey = ca_cert.public_key()?;
 
@@ -632,7 +674,7 @@ fn test_certs() -> Result<(), botan::Error> {
         "3082035A30820305A003020102020101300C06082A8648CE3D04030105003050310B3009060355040613024445310D300B060355040A0C0462756E64310C300A060355040B0C03627369310D300B06035504051304343536373115301306035504030C0C637363612D6765726D616E79301E170D3037303731393135323731385A170D3238303131393135313830305A3050310B3009060355040613024445310D300B060355040A0C0462756E64310C300A060355040B0C03627369310D300B06035504051304343536373115301306035504030C0C637363612D6765726D616E79308201133081D406072A8648CE3D02013081C8020101302806072A8648CE3D0101021D00D7C134AA264366862A18302575D1D787B09F075797DA89F57EC8C0FF303C041C68A5E62CA9CE6C1C299803A6C1530B514E182AD8B0042A59CAD29F43041C2580F63CCFE44138870713B1A92369E33E2135D266DBB372386C400B0439040D9029AD2C7E5CF4340823B2A87DC68C9E4CE3174C1E6EFDEE12C07D58AA56F772C0726F24C6B89E4ECDAC24354B9E99CAA3F6D3761402CD021D00D7C134AA264366862A18302575D0FB98D116BC4B6DDEBCA3A5A7939F020101033A000401364A4B0F0102E9502AB9DC6855D90B065A6F5E5E48395F8309D57C11ABAFF21756607EF6757EC9886CA222D83CA04B1A99FA43C5A9BCE1A38201103082010C30360603551D11042F302D8118637363612D6765726D616E79406273692E62756E642E646586116661783A2B343932323839353832373232300E0603551D0F0101FF040403020106301D0603551D0E041604140096452DE588F966C4CCDF161DD1F3F5341B71E7301F0603551D230418301680140096452DE588F966C4CCDF161DD1F3F5341B71E730410603551D20043A30383036060904007F0007030101013029302706082B06010505070201161B687474703A2F2F7777772E6273692E62756E642E64652F6373636130120603551D130101FF040830060101FF020100302B0603551D1004243022800F32303037303731393135323731385A810F32303237313131393135313830305A300C06082A8648CE3D0403010500034100303E021D00C6B41E830217FD4C93B59E9E2B13734E09C182FA63FAEE4115A8EDD5021D00D27938DA01B8951A9064A1B696AEDF181B74968829C138F0EB2F623B",
     )?;
 
-    let cert = botan::Certificate::load(&cert_bits)?;
+    let cert = skip_if_not_implemented!(botan::Certificate::load(&cert_bits));
 
     let key_id = botan::hex_decode("0096452DE588F966C4CCDF161DD1F3F5341B71E7")?;
     assert_eq!(cert.serial_number()?, vec![1]);
@@ -708,7 +750,7 @@ BggqhkjOPQQDAgNIADBFAiEAowK8jGhosOxQpOCjlRg0nFceQ0ETITQC43fk0CZA
 AzMCIEJSRDmXjX8TMTbSfoTLmhaYJnCL+AfHLZLdHlSLDIzz
 -----END CERTIFICATE-----";
 
-    let ca = botan::Certificate::load(ca)?;
+    let ca = skip_if_not_implemented!(botan::Certificate::load(ca));
 
     assert!(ca.to_string()?.starts_with("Version: 3"));
 
@@ -771,7 +813,7 @@ cANBAFhRmPvQ0gPxfUI2NYSj5/hRn59rgYqkOpXHWnV/RTGAMccUSVwOITNUa/Y7
 Dy94ca65ondQ2JGAxBuxZX2HZAE=
 -----END CERTIFICATE-----";
 
-    let cert = botan::Certificate::load(cert_pem.as_bytes())?;
+    let cert = skip_if_not_implemented!(botan::Certificate::load(cert_pem.as_bytes()));
 
     assert!(cert.is_ca()?);
     assert_eq!(cert.path_limit()?, 3);
@@ -814,7 +856,7 @@ fn test_bcrypt() -> Result<(), botan::Error> {
     let pass = "password";
     let mut rng = botan::RandomNumberGenerator::new_system()?;
 
-    let bcrypt1 = botan::bcrypt_hash(pass, &mut rng, 10)?;
+    let bcrypt1 = skip_if_not_implemented!(botan::bcrypt_hash(pass, &mut rng, 10));
 
     assert_eq!(bcrypt1.len(), 60);
 
@@ -835,7 +877,8 @@ fn test_bcrypt() -> Result<(), botan::Error> {
 fn test_pubkey() -> Result<(), botan::Error> {
     let mut rng = botan::RandomNumberGenerator::new_system()?;
 
-    let ecdsa_key = botan::Privkey::create("ECDSA", "secp256r1", &mut rng)?;
+    let ecdsa_key =
+        skip_if_not_implemented!(botan::Privkey::create("ECDSA", "secp256r1", &mut rng));
 
     assert!(ecdsa_key.check_key(&mut rng)?);
     assert_eq!(ecdsa_key.algo_name()?, "ECDSA");
@@ -888,7 +931,7 @@ fn test_x25519() -> Result<(), botan::Error> {
     let expected_shared =
         botan::hex_decode("4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742")?;
 
-    let a_pub = botan::Pubkey::load_x25519(&a_pub_bits)?;
+    let a_pub = skip_if_not_implemented!(botan::Pubkey::load_x25519(&a_pub_bits));
     assert_eq!(a_pub.get_x25519_key()?, a_pub_bits);
 
     let b_priv = botan::Privkey::load_x25519(&b_priv_bits)?;
@@ -910,7 +953,7 @@ fn test_ed25519() -> Result<(), botan::Error> {
     let msg = vec![23, 42, 69, 6, 66];
     let padding = "Pure";
 
-    let ed_priv = botan::Privkey::create("Ed25519", "", &mut rng)?;
+    let ed_priv = skip_if_not_implemented!(botan::Privkey::create("Ed25519", "", &mut rng));
 
     let signature1 = ed_priv.sign(&msg, padding, &mut rng)?;
 
@@ -941,7 +984,7 @@ fn test_rsa() -> Result<(), botan::Error> {
     let padding = "EMSA-PKCS1-v1_5(SHA-256)";
     let msg = rng.read(32)?;
 
-    let privkey = botan::Privkey::create("RSA", "1024", &mut rng)?;
+    let privkey = skip_if_not_implemented!(botan::Privkey::create("RSA", "1024", &mut rng));
     let pubkey = privkey.pubkey()?;
 
     assert_eq!(privkey.get_field("e"), botan::MPI::from_str("65537"));
@@ -969,7 +1012,7 @@ fn test_pubkey_encryption() -> Result<(), botan::Error> {
     let msg = [1, 2, 3];
 
     let mut rng = botan::RandomNumberGenerator::new_system()?;
-    let key = botan::Privkey::create("RSA", "1024", &mut rng)?;
+    let key = skip_if_not_implemented!(botan::Privkey::create("RSA", "1024", &mut rng));
 
     let der = key.der_encode_encrypted("passphrase", &mut rng)?;
     let pem = key.pem_encode_encrypted("pemword", &mut rng)?;
@@ -999,7 +1042,8 @@ fn test_pubkey_sign() -> Result<(), botan::Error> {
 
     let mut rng = botan::RandomNumberGenerator::new_system()?;
 
-    let ecdsa_key = botan::Privkey::create("ECDSA", "secp256r1", &mut rng)?;
+    let ecdsa_key =
+        skip_if_not_implemented!(botan::Privkey::create("ECDSA", "secp256r1", &mut rng));
     assert!(ecdsa_key.key_agreement_key().is_err());
 
     let signature = ecdsa_key.sign(&msg, "EMSA1(SHA-256)", &mut rng)?;
@@ -1029,7 +1073,8 @@ fn test_pubkey_sign_der() -> Result<(), botan::Error> {
 
     let mut rng = botan::RandomNumberGenerator::new_system()?;
 
-    let ecdsa_key = botan::Privkey::create("ECDSA", "secp256r1", &mut rng)?;
+    let ecdsa_key =
+        skip_if_not_implemented!(botan::Privkey::create("ECDSA", "secp256r1", &mut rng));
     assert!(ecdsa_key.key_agreement_key().is_err());
 
     let hash = "EMSA1(SHA-256)";
@@ -1078,7 +1123,7 @@ fn test_pubkey_encrypt() -> Result<(), botan::Error> {
 
     let mut rng = botan::RandomNumberGenerator::new_system()?;
 
-    let priv_key = botan::Privkey::create("RSA", "2048", &mut rng)?;
+    let priv_key = skip_if_not_implemented!(botan::Privkey::create("RSA", "2048", &mut rng));
     assert!(priv_key.key_agreement_key().is_err());
     let pub_key = priv_key.pubkey()?;
 
@@ -1099,13 +1144,13 @@ fn test_pubkey_encrypt() -> Result<(), botan::Error> {
 fn test_pubkey_key_agreement() -> Result<(), botan::Error> {
     let mut rng = botan::RandomNumberGenerator::new_system()?;
 
-    let a_priv = botan::Privkey::create("ECDH", "secp384r1", &mut rng)?;
+    let a_priv = skip_if_not_implemented!(botan::Privkey::create("ECDH", "secp384r1", &mut rng));
     let b_priv = botan::Privkey::create("ECDH", "secp384r1", &mut rng)?;
 
     let a_pub = a_priv.key_agreement_key()?;
     let b_pub = b_priv.key_agreement_key()?;
 
-    let mut a_ka = botan::KeyAgreement::new(&a_priv, "KDF2(SHA-384)")?;
+    let mut a_ka = skip_if_not_implemented!(botan::KeyAgreement::new(&a_priv, "KDF2(SHA-384)"));
     let mut b_ka = botan::KeyAgreement::new(&b_priv, "KDF2(SHA-384)")?;
 
     let salt = rng.read(16)?;
@@ -1132,7 +1177,7 @@ fn test_rfc3394_aes_key_wrap() -> Result<(), botan::Error> {
     let key =
         botan::hex_decode("00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F")?;
 
-    let wrapped = botan::rfc3394_key_wrap(&kek, &key)?;
+    let wrapped = skip_if_not_implemented!(botan::rfc3394_key_wrap(&kek, &key));
 
     assert_eq!(
         botan::hex_encode(&wrapped)?,
@@ -1152,13 +1197,7 @@ fn test_aes_key_wrap() -> Result<(), botan::Error> {
     let key =
         botan::hex_decode("00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F")?;
 
-    let wrapped = match botan::nist_kw_enc("AES-256", false, &kek, &key) {
-        Ok(s) => s,
-        Err(e) => {
-            assert_eq!(e.error_type(), botan::ErrorType::NotImplemented);
-            return Ok(());
-        }
-    };
+    let wrapped = skip_if_not_implemented!(botan::nist_kw_enc("AES-256", false, &kek, &key));
 
     assert_eq!(
         botan::hex_encode(&wrapped)?,
@@ -1175,7 +1214,7 @@ fn test_aes_key_wrap() -> Result<(), botan::Error> {
 fn test_pkcs_hash_id() -> Result<(), botan::Error> {
     assert!(botan::pkcs_hash_id("SHA-192").is_err());
 
-    let id = botan::pkcs_hash_id("SHA-384")?;
+    let id = skip_if_not_implemented!(botan::pkcs_hash_id("SHA-384"));
 
     assert_eq!(
         botan::hex_encode(&id)?,
@@ -1292,7 +1331,7 @@ fn test_fpe() -> Result<(), botan::Error> {
     let key = vec![0; 32];
     let tweak = vec![0; 8];
 
-    let fpe = botan::FPE::new_fe1(&modulus, &key, 8, false)?;
+    let fpe = skip_if_not_implemented!(botan::FPE::new_fe1(&modulus, &key, 8, false));
 
     let ctext = fpe.encrypt(&input, &tweak)?;
 
@@ -1306,7 +1345,7 @@ fn test_fpe() -> Result<(), botan::Error> {
 
 #[test]
 fn test_hotp() -> Result<(), botan::Error> {
-    let hotp = botan::HOTP::new(&[0xFF], "SHA-1", 6)?;
+    let hotp = skip_if_not_implemented!(botan::HOTP::new(&[0xFF], "SHA-1", 6));
     assert_eq!(hotp.generate(23)?, 330795);
 
     assert!(hotp.check(330795, 23)?);
@@ -1317,12 +1356,12 @@ fn test_hotp() -> Result<(), botan::Error> {
 
 #[test]
 fn test_totp() -> Result<(), botan::Error> {
-    let totp = botan::TOTP::new(
+    let totp = skip_if_not_implemented!(botan::TOTP::new(
         b"1234567890123456789012345678901234567890123456789012345678901234",
         "SHA-512",
         8,
         30,
-    )?;
+    ));
 
     let time = 1000215000;
     let code = 98961851;
@@ -1350,7 +1389,7 @@ fn test_elgamal() -> Result<(), botan::Error> {
     let p_bits = 1024;
     let q_bits = 256;
 
-    let elg = botan::Privkey::create_elgamal(p_bits, q_bits, &mut rng)?;
+    let elg = skip_if_not_implemented!(botan::Privkey::create_elgamal(p_bits, q_bits, &mut rng));
 
     // extract the elements:
     let p = elg.get_field("p")?;
@@ -1387,7 +1426,7 @@ fn test_dsa() -> Result<(), botan::Error> {
     let p_bits = 1024;
     let q_bits = 256;
 
-    let dsa = botan::Privkey::create_dsa(p_bits, q_bits, &mut rng)?;
+    let dsa = skip_if_not_implemented!(botan::Privkey::create_dsa(p_bits, q_bits, &mut rng));
 
     // extract the elements:
     let p = dsa.get_field("p")?;
@@ -1424,13 +1463,7 @@ fn test_zfec() -> Result<(), botan::Error> {
     let n = 3;
     let input_bytes = b"abcdefghijklmnop";
 
-    let output_shares = match botan::zfec_encode(k, n, input_bytes) {
-        Ok(s) => s,
-        Err(e) => {
-            assert_eq!(e.error_type(), botan::ErrorType::NotImplemented);
-            return Ok(());
-        }
-    };
+    let output_shares = skip_if_not_implemented!(botan::zfec_encode(k, n, input_bytes));
 
     assert_eq!(output_shares.len(), n);
     assert_eq!(output_shares[0], b"abcdefgh");
@@ -1454,14 +1487,15 @@ fn test_zfec() -> Result<(), botan::Error> {
 #[test]
 fn test_kyber() -> Result<(), botan::Error> {
     let mut rng = botan::RandomNumberGenerator::new()?;
-    let kyber_priv = botan::Privkey::create("Kyber", "Kyber-1024-r3", &mut rng)?;
+    let kyber_priv =
+        skip_if_not_implemented!(botan::Privkey::create("Kyber", "Kyber-1024-r3", &mut rng));
     let kyber_pub = kyber_priv.pubkey()?;
 
     let salt = rng.read(12)?;
     let shared_key_len = 32;
     let kdf = "KDF2(SHA-256)";
 
-    let kem_e = botan::KeyEncapsulation::new(&kyber_pub, kdf)?;
+    let kem_e = skip_if_not_implemented!(botan::KeyEncapsulation::new(&kyber_pub, kdf));
     let (shared_key, encap_key) = kem_e.create_shared_key(&mut rng, &salt, shared_key_len)?;
 
     assert_eq!(shared_key.len(), shared_key_len);
@@ -1482,7 +1516,7 @@ fn test_ml_kem() -> Result<(), botan::Error> {
 
     for kl in [512, 768, 1024] {
         let params = format!("ML-KEM-{kl}");
-        let sk = botan::Privkey::create("ML-KEM", &params, &mut rng)?;
+        let sk = skip_if_not_implemented!(botan::Privkey::create("ML-KEM", &params, &mut rng));
         let pk = sk.pubkey()?;
 
         let pk_bytes = pk.raw_bytes()?;
@@ -1492,7 +1526,7 @@ fn test_ml_kem() -> Result<(), botan::Error> {
         let shared_key_len = 32;
         let kdf = "KDF2(SHA-256)";
 
-        let kem_e = botan::KeyEncapsulation::new(&pk2, kdf)?;
+        let kem_e = skip_if_not_implemented!(botan::KeyEncapsulation::new(&pk2, kdf));
         let (shared_key, encap_key) = kem_e.create_shared_key(&mut rng, &salt, shared_key_len)?;
 
         assert_eq!(shared_key.len(), shared_key_len);

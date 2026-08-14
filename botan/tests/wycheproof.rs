@@ -1,5 +1,41 @@
 use wycheproof::{EllipticCurve, HashFunction, TestResult};
 
+/// If creating the algorithm under test fails with NotImplemented, it was
+/// not compiled into the library we are running against, so skip the current
+/// test group. This must only be applied to the first use of an algorithm;
+/// once it has been created successfully, a NotImplemented error from any
+/// later call is a real failure.
+macro_rules! continue_if_not_implemented {
+    ($call:expr) => {
+        match $call {
+            Ok(val) => val,
+            Err(e) if e.error_type() == botan::ErrorType::NotImplemented => continue,
+            Err(e) => return Err(e),
+        }
+    };
+}
+
+/// Like continue_if_not_implemented, but for loading a public or private
+/// key: Botan reports a key of an unavailable algorithm as a decoding
+/// error, distinguishable from a genuine parse failure only by the message.
+macro_rules! continue_if_pk_unavailable {
+    ($call:expr) => {
+        match $call {
+            Ok(val) => val,
+            Err(e) if e.error_type() == botan::ErrorType::NotImplemented => continue,
+            Err(e)
+                if e.error_type() == botan::ErrorType::InvalidInput
+                    && e.error_message()
+                        .unwrap_or_default()
+                        .contains("Unknown or unavailable public key algorithm") =>
+            {
+                continue
+            }
+            Err(e) => return Err(e),
+        }
+    };
+}
+
 fn hash_id_to_str(hash: HashFunction) -> Option<&'static str> {
     match hash {
         HashFunction::Sha1 => Some("SHA-1"),
@@ -39,7 +75,9 @@ fn wycheproof_hkdf_tests() -> Result<(), botan::Error> {
                     continue;
                 }
 
-                let output = botan::kdf(hkdf_name, test.size, &test.ikm, &test.salt, &test.info)?;
+                let output = continue_if_not_implemented!(botan::kdf(
+                    hkdf_name, test.size, &test.ikm, &test.salt, &test.info
+                ));
 
                 assert_eq!(output, test.okm.as_ref());
             }
@@ -69,7 +107,8 @@ fn wycheproof_keywrap_tests() -> Result<(), botan::Error> {
                 }
 
                 if !test.result.must_fail() {
-                    let wrapped = botan::rfc3394_key_wrap(&test.key, &test.pt)?;
+                    let wrapped =
+                        continue_if_not_implemented!(botan::rfc3394_key_wrap(&test.key, &test.pt));
                     assert_eq!(wrapped, test.ct.as_ref());
 
                     let unwrapped = botan::rfc3394_key_unwrap(&test.key, &test.ct)?;
@@ -119,7 +158,9 @@ fn wycheproof_nist_kw_tests() -> Result<(), botan::Error> {
                 if test.result.must_fail() {
                     assert!(botan::nist_kw_dec(cipher, padding, &test.key, &test.ct).is_err());
                 } else {
-                    let wrapped = botan::nist_kw_enc(cipher, padding, &test.key, &test.pt)?;
+                    let wrapped = continue_if_not_implemented!(botan::nist_kw_enc(
+                        cipher, padding, &test.key, &test.pt
+                    ));
                     assert_eq!(wrapped, test.ct.as_ref());
 
                     let unwrapped = botan::nist_kw_dec(cipher, padding, &test.key, &test.ct)?;
@@ -165,7 +206,10 @@ fn wycheproof_cipher_tests() -> Result<(), botan::Error> {
                 (_, _) => panic!("Unhandled cipher"),
             };
 
-            let mut enc = botan::Cipher::new(cipher_name, botan::CipherDirection::Encrypt)?;
+            let mut enc = continue_if_not_implemented!(botan::Cipher::new(
+                cipher_name,
+                botan::CipherDirection::Encrypt
+            ));
             let mut dec = botan::Cipher::new(cipher_name, botan::CipherDirection::Decrypt)?;
 
             for test in &test_group.tests {
@@ -309,7 +353,10 @@ fn wycheproof_aead_test(
 
         let tag_first = cipher_name.contains("/SIV");
 
-        let mut enc = botan::Cipher::new(&cipher_name, botan::CipherDirection::Encrypt)?;
+        let mut enc = continue_if_not_implemented!(botan::Cipher::new(
+            &cipher_name,
+            botan::CipherDirection::Encrypt
+        ));
         let mut dec = botan::Cipher::new(&cipher_name, botan::CipherDirection::Decrypt)?;
 
         for test in &test_group.tests {
@@ -462,7 +509,7 @@ fn wycheproof_mac_test(
             None => continue,
         };
 
-        let mut mac = botan::MsgAuthCode::new(&mac_name)?;
+        let mut mac = continue_if_not_implemented!(botan::MsgAuthCode::new(&mac_name));
 
         for test in &test_group.tests {
             mac.set_key(&test.key)?;
@@ -492,7 +539,7 @@ fn wycheproof_mac_with_nonce_tests() -> Result<(), botan::Error> {
     for test_group in &test_set.test_groups {
         let mac_name = format!("GMAC(AES-{})", test_group.key_size);
 
-        let mut mac = botan::MsgAuthCode::new(&mac_name)?;
+        let mut mac = continue_if_not_implemented!(botan::MsgAuthCode::new(&mac_name));
 
         for test in &test_group.tests {
             mac.set_key(&test.key)?;
@@ -560,9 +607,10 @@ fn wycheproof_rsa_pkcs1_decrypt_tests() -> Result<(), botan::Error> {
         let test_set = TestSet::load(test_name).expect("Loading tests failed");
 
         for test_group in &test_set.test_groups {
-            let key = botan::Privkey::load_der(&test_group.pkcs8)?;
+            let key = continue_if_pk_unavailable!(botan::Privkey::load_der(&test_group.pkcs8));
 
-            let mut decryptor = botan::Decryptor::new(&key, "PKCS1v15")?;
+            let mut decryptor =
+                continue_if_not_implemented!(botan::Decryptor::new(&key, "PKCS1v15"));
 
             for test in &test_group.tests {
                 if is_botan2 && test.comment == "Prepended bytes to ciphertext" {
@@ -612,9 +660,10 @@ fn wycheproof_rsa_oaep_decrypt_tests() -> Result<(), botan::Error> {
                 None => continue,
             };
 
-            let key = botan::Privkey::load_der(&test_group.pkcs8)?;
+            let key = continue_if_pk_unavailable!(botan::Privkey::load_der(&test_group.pkcs8));
 
-            let mut decryptor = botan::Decryptor::new(&key, &oaep_string)?;
+            let mut decryptor =
+                continue_if_not_implemented!(botan::Decryptor::new(&key, &oaep_string));
 
             for test in &test_group.tests {
                 if !test.label.is_empty() {
@@ -654,9 +703,12 @@ fn wycheproof_rsa_pkcs1_verify_tests() -> Result<(), botan::Error> {
                 None => continue,
             };
 
-            let key = botan::Pubkey::load_der(&test_group.der)?;
+            let key = continue_if_pk_unavailable!(botan::Pubkey::load_der(&test_group.der));
 
-            let mut verifier = botan::Verifier::new(&key, &format!("EMSA_PKCS1({hash})"))?;
+            let mut verifier = continue_if_not_implemented!(botan::Verifier::new(
+                &key,
+                &format!("EMSA_PKCS1({hash})")
+            ));
 
             for test in &test_group.tests {
                 verifier.update(&test.msg)?;
@@ -704,14 +756,15 @@ fn wycheproof_rsa_pss_verify_tests() -> Result<(), botan::Error> {
         let test_set = TestSet::load(test_name).expect("Loading tests failed");
 
         for test_group in &test_set.test_groups {
-            let key = botan::Pubkey::load_der(&test_group.der)?;
+            let key = continue_if_pk_unavailable!(botan::Pubkey::load_der(&test_group.der));
 
             let pssr_config = match form_pssr_format(test_group) {
                 Some(config) => config,
                 None => continue,
             };
 
-            let mut verifier = botan::Verifier::new(&key, &pssr_config)?;
+            let mut verifier =
+                continue_if_not_implemented!(botan::Verifier::new(&key, &pssr_config));
 
             for test in &test_group.tests {
                 if is_botan2 && test.comment == "prepending 0's to signature" {
@@ -754,19 +807,19 @@ fn wycheproof_dsa_verify_tests() -> Result<(), botan::Error> {
                 None => continue,
             };
 
-            let key = botan::Pubkey::load_der(&test_group.der)?;
+            let key = continue_if_pk_unavailable!(botan::Pubkey::load_der(&test_group.der));
 
             for test in &test_group.tests {
                 // Has to be inside the loop to work around the bug addressed in
                 // https://github.com/randombit/botan/pull/3333
-                let mut verifier = if is_ieee {
-                    botan::Verifier::new(&key, &format!("EMSA1({hash})"))?
+                let mut verifier = continue_if_not_implemented!(if is_ieee {
+                    botan::Verifier::new(&key, &format!("EMSA1({hash})"))
                 } else {
                     botan::Verifier::new_with_der_formatted_signatures(
                         &key,
                         &format!("EMSA1({hash})"),
-                    )?
-                };
+                    )
+                });
 
                 verifier.update(&test.msg)?;
                 let accept = verifier.finish(&test.sig)?;
@@ -855,9 +908,10 @@ fn wycheproof_ecdsa_verify_tests() -> Result<(), botan::Error> {
                 }
             }
 
-            let key = botan::Pubkey::load_der(&test_group.der)?;
+            let key = continue_if_pk_unavailable!(botan::Pubkey::load_der(&test_group.der));
 
-            let mut verifier_ieee = botan::Verifier::new(&key, &format!("EMSA1({hash})"))?;
+            let mut verifier_ieee =
+                continue_if_not_implemented!(botan::Verifier::new(&key, &format!("EMSA1({hash})")));
 
             for test in &test_group.tests {
                 let accept = if is_ieee {
@@ -911,7 +965,7 @@ fn wycheproof_eddsa_verify_tests() -> Result<(), botan::Error> {
         let test_set = TestSet::load(test_name).expect("Loading tests failed");
 
         for test_group in &test_set.test_groups {
-            let key = botan::Pubkey::load_der(&test_group.der)?;
+            let key = continue_if_pk_unavailable!(botan::Pubkey::load_der(&test_group.der));
 
             let mut verifier = botan::Verifier::new(&key, "Pure")?;
 
@@ -968,7 +1022,8 @@ fn wycheproof_ecdh_tests() -> Result<(), botan::Error> {
 
             for test in &test_group.tests {
                 let s = botan::MPI::new_from_bytes(&test.private_key)?;
-                let priv_key = botan::Privkey::load_ecdh(&s, curve_id)?;
+                let priv_key =
+                    continue_if_not_implemented!(botan::Privkey::load_ecdh(&s, curve_id));
 
                 let mut ka = botan::KeyAgreement::new(&priv_key, "Raw")?;
 
@@ -1007,11 +1062,11 @@ fn wycheproof_xdh_tests() -> Result<(), botan::Error> {
 
         for test_group in &test_set.test_groups {
             for test in &test_group.tests {
-                let priv_key = match test_name {
+                let priv_key = continue_if_not_implemented!(match test_name {
                     #[cfg(botan_ffi_20240408)]
                     TestName::X448 => botan::Privkey::load_x448(&test.private_key),
                     _ => botan::Privkey::load_x25519(&test.private_key),
-                }?;
+                });
 
                 let mut ka = botan::KeyAgreement::new(&priv_key, "Raw")?;
 
