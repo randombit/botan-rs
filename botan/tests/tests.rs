@@ -1583,10 +1583,7 @@ fn test_ec_group() -> Result<(), botan::Error> {
         assert!(supports_secp256r1);
     }
 
-    assert_eq!(
-        botan::EcGroup::supports_named_group("nosuchgroup256r1")?,
-        false
-    );
+    assert!(!botan::EcGroup::supports_named_group("nosuchgroup256r1")?);
 
     if supports_secp256r1 {
         let secp256r1 = botan::EcGroup::from_name("secp256r1")?;

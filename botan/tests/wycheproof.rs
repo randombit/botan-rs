@@ -579,8 +579,8 @@ fn wycheproof_primality_tests() -> Result<(), botan::Error> {
                 // twos complement encoding
                 let mpi = if !test.value.is_empty() && (test.value[0] & 0x80 == 0x80) {
                     let mut flipped: Vec<u8> = test.value.to_vec();
-                    for i in 0..flipped.len() {
-                        flipped[i] = !flipped[i];
+                    for byte in &mut flipped {
+                        *byte = !*byte;
                     }
                     let one = botan::MPI::new_from_u32(1)?;
                     botan::MPI::new_from_bytes(&flipped)? + &one
