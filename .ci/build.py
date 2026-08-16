@@ -19,6 +19,41 @@ def run_command(cmdline, cwd = None):
         print("ERROR: Running %s failed with rc %d" % (cmdline, proc.returncode))
         sys.exit(1)
 
+def apt_package_available(pkg):
+    proc = subprocess.run(['apt-cache', 'show', pkg],
+                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return proc.returncode == 0
+
+def apt_botan_packages():
+    """
+    Returns (dev_pkg, runtime_pkg) for the newest Botan the distribution provides.
+
+    Ubuntu 24.04 ships only Botan 2 (libbotan-2-dev / libbotan-2-19) while
+    Ubuntu 26.04 ships only Botan 3 (libbotan-3-dev / libbotan-3-10), so which
+    version gets tested is determined by the runner OS.
+    """
+    for major in [3, 2]:
+        dev_pkg = 'libbotan-%d-dev' % (major)
+        if not apt_package_available(dev_pkg):
+            continue
+
+        # The runtime package is named after the ABI revision (eg
+        # libbotan-3-10); find it via the dependencies of the -dev package
+        deps = subprocess.check_output(['apt-cache', 'depends', dev_pkg]).decode()
+        prefix = 'libbotan-%d-' % (major)
+        for line in deps.splitlines():
+            line = line.strip()
+            if line.startswith('Depends:'):
+                dep = line.split(':', 1)[1].strip()
+                if dep.startswith(prefix) and dep != dev_pkg:
+                    return (dev_pkg, dep)
+
+        print("ERROR: Unable to determine the runtime package for %s" % (dev_pkg))
+        sys.exit(1)
+
+    print("ERROR: No libbotan packages are available")
+    sys.exit(1)
+
 def compute_features(features, for_who):
     feat = []
     if 'vendored' in features:
@@ -160,13 +195,14 @@ def main(args = None):
         os.environ["RUSTDOCFLAGS"] = "-D warnings -L/opt/homebrew/lib"
         os.environ["DYLD_LIBRARY_PATH"] = homebrew_dir
     elif os.access('/usr/bin/apt-get', os.R_OK):
+        (dev_pkg, runtime_pkg) = apt_botan_packages()
         if 'dynamic' in features:
             # With dynamic loading no headers are needed to build, and the
             # library is located at runtime; install only the runtime package
             # to verify this
-            run_command(['sudo', 'apt-get', 'install', 'libbotan-2-19'])
+            run_command(['sudo', 'apt-get', 'install', runtime_pkg])
         else:
-            run_command(['sudo', 'apt-get', 'install', 'libbotan-2-dev'])
+            run_command(['sudo', 'apt-get', 'install', dev_pkg])
 
     run_command(['rustc', '--version'])
 
