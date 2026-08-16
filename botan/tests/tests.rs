@@ -1818,3 +1818,115 @@ fn test_ec_points() -> Result<(), botan::Error> {
 
     Ok(())
 }
+
+#[cfg(botan_ffi_20260811)]
+#[test]
+fn test_spake2p() -> Result<(), botan::Error> {
+    let params = match botan::Spake2pParams::new(botan::Spake2pCiphersuite::P256Sha256) {
+        Ok(params) => params,
+        Err(e) => {
+            assert_eq!(e.error_type(), botan::ErrorType::NotImplemented);
+            return Ok(());
+        }
+    };
+
+    // Each ciphersuite must be recognized, even if unavailable in this build
+    for suite in [
+        botan::Spake2pCiphersuite::P256Sha256,
+        botan::Spake2pCiphersuite::P256Sha512,
+        botan::Spake2pCiphersuite::P384Sha256,
+        botan::Spake2pCiphersuite::P384Sha512,
+        botan::Spake2pCiphersuite::P521Sha512,
+    ] {
+        if let Err(e) = botan::Spake2pParams::new(suite) {
+            assert_ne!(e.error_type(), botan::ErrorType::BadParameter);
+        }
+    }
+
+    let mut rng = botan::RandomNumberGenerator::new()?;
+
+    let prover_id = b"client";
+    let verifier_id = b"server";
+    let context = b"botan-rs test";
+    let salt = rng.read(16)?;
+
+    let share_size = params.share_size()?;
+    let confirmation_size = params.confirmation_size()?;
+    assert_eq!(share_size, 65);
+    assert_eq!(confirmation_size, 32);
+
+    let secret = params.derive_secret(
+        "correct horse battery staple",
+        prover_id,
+        verifier_id,
+        &salt,
+    )?;
+    assert_eq!(secret.len(), 64);
+
+    let record = params.registration_record(&mut rng, &secret)?;
+    assert_eq!(record.len(), 97);
+
+    // A successful exchange
+    let mut prover = botan::Spake2pProver::new(&params, &secret, prover_id, verifier_id, context)?;
+    let mut verifier =
+        botan::Spake2pVerifier::new(&params, &record, prover_id, verifier_id, context)?;
+
+    let share_p = prover.generate_message(&mut rng)?;
+    assert_eq!(share_p.len(), share_size);
+
+    let response = verifier.process_message(&mut rng, &share_p)?;
+    assert_eq!(response.len(), share_size + confirmation_size);
+
+    let confirm_p = prover.process_message(&mut rng, &response)?;
+    assert_eq!(confirm_p.len(), confirmation_size);
+
+    verifier.verify_confirmation(&confirm_p)?;
+
+    let key = prover.shared_secret()?;
+    assert!(!key.is_empty());
+    assert_eq!(key, verifier.shared_secret()?);
+
+    // An exchange where the prover has the wrong password
+    let wrong_secret =
+        params.derive_secret("incorrect zebra paperclip", prover_id, verifier_id, &salt)?;
+    let mut prover =
+        botan::Spake2pProver::new(&params, &wrong_secret, prover_id, verifier_id, context)?;
+    let mut verifier =
+        botan::Spake2pVerifier::new(&params, &record, prover_id, verifier_id, context)?;
+
+    let share_p = prover.generate_message(&mut rng)?;
+    let response = verifier.process_message(&mut rng, &share_p)?;
+    let confirm_p = prover.process_message(&mut rng, &response);
+    assert!(confirm_p.is_err());
+    assert_eq!(
+        confirm_p.unwrap_err().error_type(),
+        botan::ErrorType::BadAuthCode
+    );
+
+    // An exchange where the verifier skips checking the prover's confirmation
+    let mut prover = botan::Spake2pProver::new(&params, &secret, prover_id, verifier_id, context)?;
+    let mut verifier =
+        botan::Spake2pVerifier::new(&params, &record, prover_id, verifier_id, context)?;
+
+    let share_p = prover.generate_message(&mut rng)?;
+    let response = verifier.process_message(&mut rng, &share_p)?;
+    let _confirm_p = prover.process_message(&mut rng, &response)?;
+    verifier.skip_confirmation()?;
+    assert_eq!(prover.shared_secret()?, verifier.shared_secret()?);
+
+    // Custom system parameters
+    if botan::EcGroup::supports_named_group("secp256r1")? {
+        let group = botan::EcGroup::from_name("secp256r1")?;
+        match botan::Spake2pParams::new_custom(&group, b"botan-rs test seed", "SHA-256") {
+            Ok(custom) => {
+                assert_eq!(custom.share_size()?, 65);
+            }
+            Err(e) => {
+                // The group may not support hash to curve in this build
+                assert_eq!(e.error_type(), botan::ErrorType::NotImplemented);
+            }
+        }
+    }
+
+    Ok(())
+}
