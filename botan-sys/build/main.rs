@@ -227,6 +227,12 @@ fn main() {
         println!("cargo:rustc-check-cfg=cfg(botan_ffi_{v})");
     }
 
+    // With dynamic loading nothing is linked and no headers are needed; the
+    // library is located and loaded at runtime.
+    if cfg!(feature = "dynamic-loading") {
+        return;
+    }
+
     #[cfg(feature = "vendored")]
     {
         let (lib_dir, inc_dir) = botan_src::build();

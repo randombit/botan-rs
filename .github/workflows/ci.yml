@@ -33,6 +33,7 @@ jobs:
 
       - run: ./botan-src/scripts/fetch.py
       - run: cargo +nightly clippy --all-targets -- --deny warnings
+      - run: cargo +nightly clippy --all-targets --features dynamic-loading -- --deny warnings
   ci:
     runs-on: ubuntu-24.04
 
@@ -53,9 +54,15 @@ jobs:
             features: git+minimized
           - toolchain: stable
             features: vendored
+          - toolchain: stable
+            features: dynamic
+          - toolchain: stable
+            features: dynamic+git
           - toolchain: 1.85.1 # MSRV no-std
             features: no-std+git
           - toolchain: 1.85.1 # MSRV
+          - toolchain: 1.85.1 # MSRV dynamic loading
+            features: dynamic
           - toolchain: nightly
           - toolchain: nightly
             features: no-std+git
@@ -90,6 +97,8 @@ jobs:
           - toolchain: stable
           - toolchain: stable
             features: git
+          - toolchain: stable
+            features: dynamic
           - toolchain: nightly
 
     steps:
@@ -122,6 +131,8 @@ jobs:
           - toolchain: stable
           - toolchain: stable
             features: vendored
+          - toolchain: stable
+            features: dynamic
           - toolchain: nightly
 
     steps:

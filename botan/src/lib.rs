@@ -3,6 +3,30 @@
 #![allow(unused_imports)]
 
 //! A wrapper for the Botan cryptography library
+//!
+//! # Linking to Botan
+//!
+//! By default the crate links against an installed Botan shared library
+//! (or a static library with the `static` feature, or one built from source
+//! with the `vendored` feature). Which functions the Botan headers declare
+//! is detected at build time.
+//!
+//! With the `dynamic-loading` feature nothing is linked at build time and no
+//! Botan installation is required to build. Instead the Botan shared library
+//! is located and loaded the first time it is needed (see `load_library`
+//! for how to control this), and functions are resolved from it as they are
+//! used. This means an application can be built once and pick up newer
+//! features when run against a newer Botan, without being rebuilt.
+//!
+//! # Availability of newer APIs
+//!
+//! Every wrapper in this crate exists regardless of the version of Botan it
+//! is built or run against. When an operation requires a function that the
+//! Botan library in use does not provide, an error of type
+//! [`ErrorType::NotImplemented`] is returned and [`Error::is_function_unavailable`]
+//! returns true. The documentation of each affected item notes the minimum
+//! version of Botan required. [`Version::current`] and
+//! [`Version::supports_version`] report on the library in use.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -189,3 +213,9 @@ mod spake2p;
 
 pub use pk_ops_kem::*;
 pub use spake2p::*;
+
+#[cfg(feature = "dynamic-loading")]
+mod dynamic_loading;
+
+#[cfg(feature = "dynamic-loading")]
+pub use dynamic_loading::*;
