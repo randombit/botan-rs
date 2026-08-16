@@ -1,6 +1,10 @@
 ## 0.14.0 Not Yet Released
 
 - Minor version bump due to changes to `ErrorType`
+- Add enumeration-based algorithm specifiers instead of forcing the use of
+  string based names, eg for `botan::mac::new` instead of "HMAC/SHA-256",
+  one can use `botan::MacAlgorithm::Hmac(botan::HashAlgorithm::Sha256)`.
+  The string naming still works too.
 - All APIs are available no matter what version of Botan the crate builds against.
   If an older library is in use, the API will fail with `NotImplemented`; the
   new `Error::is_function_unavailable` distinguishes this from functionality
