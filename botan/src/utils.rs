@@ -105,7 +105,6 @@ pub(crate) fn call_botan_ffi_returning_vec_pair(
     Ok((buf1, buf2))
 }
 
-#[cfg(botan_ffi_20230403)]
 pub(crate) mod view {
     use super::*;
 
@@ -128,6 +127,7 @@ pub(crate) mod view {
     }
 
     pub(crate) fn call_botan_ffi_viewing_vec_u8(
+        fn_name: &'static str,
         cb: &dyn Fn(*mut c_void, FfiViewBinaryFn) -> c_int,
     ) -> Result<Vec<u8>> {
         let mut view_ctx: Vec<u8> = vec![];
@@ -136,7 +136,7 @@ pub(crate) mod view {
             botan_ffi_view_u8_fn,
         );
         if rc != 0 {
-            return Err(Error::from_rc(rc));
+            return Err(Error::from_named_rc(fn_name, rc));
         }
 
         Ok(view_ctx)
@@ -171,6 +171,7 @@ pub(crate) mod view {
     }
 
     pub(crate) fn call_botan_ffi_viewing_str_fn(
+        fn_name: &'static str,
         cb: &dyn Fn(*mut c_void, FfiViewStrFn) -> c_int,
     ) -> Result<String> {
         let mut view_ctx = String::new();
@@ -179,14 +180,13 @@ pub(crate) mod view {
             botan_ffi_view_str_fn,
         );
         if rc != 0 {
-            return Err(Error::from_rc(rc));
+            return Err(Error::from_named_rc(fn_name, rc));
         }
 
         Ok(view_ctx)
     }
 }
 
-#[cfg(botan_ffi_20230403)]
 pub(crate) use crate::view::*;
 
 fn cstr_slice_to_str(raw_cstr: &[u8]) -> Result<String> {
@@ -194,13 +194,17 @@ fn cstr_slice_to_str(raw_cstr: &[u8]) -> Result<String> {
     Ok(cstr.to_str().map_err(Error::conversion_error)?.to_owned())
 }
 
-#[cfg(botan_ffi_20230403)]
 unsafe fn cstr_to_str(raw_cstr: *const c_char) -> Result<String> {
+    if raw_cstr.is_null() {
+        return Err(Error::with_message(
+            ErrorType::NullPointer,
+            "Null string returned from library".to_owned(),
+        ));
+    }
     let cstr = unsafe { CStr::from_ptr(raw_cstr) };
     Ok(cstr.to_str().map_err(Error::conversion_error)?.to_owned())
 }
 
-#[cfg(botan_ffi_20250506)]
 pub(crate) fn interp_as_bool(result: c_int, fn_name: &'static str) -> Result<bool> {
     if result == 0 {
         Ok(false)
@@ -222,48 +226,31 @@ pub(crate) fn call_botan_ffi_returning_string(
     cstr_slice_to_str(&v)
 }
 
-#[allow(unused_macros)]
-macro_rules! ffi_version_from_cfg {
-    (botan_ffi_20230403) => {
-        20230403
-    };
-    (botan_ffi_20240408) => {
-        20240408
-    };
-    (botan_ffi_20250506) => {
-        20250506
-    };
+/// Extension trait used to fall back to an older API when the newer one is not available
+pub(crate) trait OrIfUnavailable<T> {
+    /// If `self` is an error caused by the FFI function not being available in
+    /// the Botan library in use, evaluate `fallback` instead
+    fn or_if_unavailable(self, fallback: impl FnOnce() -> Result<T>) -> Result<T>;
 }
 
-pub(crate) use ffi_version_from_cfg;
-
-macro_rules! ffi_version_guard {
-    ($fn_name:expr, $cfg_val:ident, [ $($arg:ident),* ], $if_impl:block) => {{
-        #[cfg($cfg_val)]
-        {
-            $if_impl
+impl<T> OrIfUnavailable<T> for Result<T> {
+    fn or_if_unavailable(self, fallback: impl FnOnce() -> Result<T>) -> Result<T> {
+        match self {
+            Err(e) if e.is_function_unavailable() => fallback(),
+            r => r,
         }
-
-        #[cfg(not($cfg_val))]
-        {
-            $(
-                let _ = $arg;
-            )*
-            Err(Error::not_implemented(
-                $fn_name,
-                ffi_version_from_cfg!($cfg_val),
-            ))
-        }
-    }};
+    }
 }
-
-pub(crate) use ffi_version_guard;
 
 /// The library error type
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Error {
     err_type: ErrorType,
     message: Option<String>,
+    // Set when the error was caused by an FFI function not being available
+    // in the Botan library in use (as opposed to Botan itself reporting that
+    // some functionality is not implemented)
+    fn_unavailable: bool,
 }
 
 impl Error {
@@ -274,16 +261,32 @@ impl Error {
 
     /// Return an optional message specific to the error
     ///
-    /// This is only available in Botan 3.x; with older versions
-    /// it will always be None
+    /// Messages describing errors reported by Botan itself are only available
+    /// with Botan 3.x; with older versions this will typically be None
     pub fn error_message(&self) -> Option<&str> {
         self.message.as_deref()
     }
 
+    /// Return true if this error was caused by the Botan library in use not
+    /// providing an FFI function required for the requested operation
+    ///
+    /// The error type of such errors is `ErrorType::NotImplemented`. This
+    /// occurs when the Botan library (or, for the linked build modes, the
+    /// Botan headers detected at build time) predates the function.
+    pub fn is_function_unavailable(&self) -> bool {
+        self.fn_unavailable
+    }
+
     pub(crate) fn from_rc(rc: c_int) -> Self {
+        if rc == BOTAN_FFI_ERROR_FUNCTION_NOT_AVAILABLE {
+            return Self::function_unavailable(None);
+        }
+        if rc == BOTAN_FFI_ERROR_LIBRARY_NOT_LOADED {
+            return Self::library_not_loaded();
+        }
+
         let err_type = ErrorType::from(rc);
 
-        #[cfg(botan_ffi_20230403)]
         let message = {
             let cptr = unsafe { botan_sys::botan_error_last_exception_message() };
             match unsafe { cstr_to_str(cptr) } {
@@ -293,16 +296,56 @@ impl Error {
             }
         };
 
-        #[cfg(not(botan_ffi_20230403))]
-        let message = None;
+        Self {
+            err_type,
+            message,
+            fn_unavailable: false,
+        }
+    }
 
-        Self { err_type, message }
+    /// Like `from_rc` but names the FFI function which was invoked, which
+    /// allows for a more useful message when the function is not available
+    pub(crate) fn from_named_rc(fn_name: &'static str, rc: c_int) -> Self {
+        if rc == BOTAN_FFI_ERROR_FUNCTION_NOT_AVAILABLE {
+            Self::function_unavailable(Some(fn_name))
+        } else {
+            Self::from_rc(rc)
+        }
+    }
+
+    fn function_unavailable(fn_name: Option<&'static str>) -> Self {
+        let message = match fn_name {
+            Some(name) => {
+                format!("Function {name} is not available in the Botan library in use")
+            }
+            None => "A required function is not available in the Botan library in use".to_owned(),
+        };
+
+        Self {
+            err_type: ErrorType::NotImplemented,
+            message: Some(message),
+            fn_unavailable: true,
+        }
+    }
+
+    fn library_not_loaded() -> Self {
+        let message = match botan_sys::last_load_error() {
+            Some(msg) => msg.to_owned(),
+            None => "The Botan library could not be loaded".to_owned(),
+        };
+
+        Self {
+            err_type: ErrorType::LibraryNotLoaded,
+            message: Some(message),
+            fn_unavailable: false,
+        }
     }
 
     pub(crate) fn with_message(err_type: ErrorType, message: String) -> Self {
         Self {
             err_type,
             message: Some(message),
+            fn_unavailable: false,
         }
     }
 
@@ -310,29 +353,15 @@ impl Error {
         Self::with_message(ErrorType::BadParameter, message.to_owned())
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn not_implemented(fn_name: &'static str, ffi_version: u32) -> Self {
-        Self::with_message(
-            ErrorType::NotImplemented,
-            format!("Function {fn_name} not available - requires Botan FFI {ffi_version}"),
-        )
-    }
-
     #[cfg(feature = "std")]
     pub(crate) fn conversion_error<T: std::error::Error>(e: T) -> Self {
-        Self {
-            err_type: ErrorType::ConversionError,
-            message: Some(format!("{e}")),
-        }
+        Self::with_message(ErrorType::ConversionError, format!("{e}"))
     }
 
     // Hack to deal with missing std::error::Error in no-std
     #[cfg(not(feature = "std"))]
     pub(crate) fn conversion_error<T: core::fmt::Display>(e: T) -> Self {
-        Self {
-            err_type: ErrorType::ConversionError,
-            message: Some(format!("{}", e)),
-        }
+        Self::with_message(ErrorType::ConversionError, format!("{}", e))
     }
 }
 
@@ -346,6 +375,7 @@ impl core::fmt::Display for Error {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 /// Possible error categories
 pub enum ErrorType {
     /// A provided authentication code was incorrect
@@ -377,6 +407,10 @@ pub enum ErrorType {
     /// An object was invoked without the key being set
     KeyNotSet,
     /// Some functionality is not implemented in the current library version
+    ///
+    /// This is also returned when the Botan library in use does not provide
+    /// an FFI function needed for the operation (see
+    /// [`Error::is_function_unavailable`]).
     NotImplemented,
     /// A null pointer was incorrectly provided
     NullPointer,
@@ -392,6 +426,10 @@ pub enum ErrorType {
     TlsError,
     /// An error occurred during an HTTP transaction
     HttpError,
+    /// The Botan shared library could not be loaded
+    ///
+    /// This only occurs when the `dynamic-loading` feature is in use
+    LibraryNotLoaded,
 }
 
 impl fmt::Display for ErrorType {
@@ -425,6 +463,7 @@ impl fmt::Display for ErrorType {
             Self::ConversionError => "An error occured while converting data to C",
             Self::TlsError => "An error occurred in TLS",
             Self::HttpError => "An error occurred during an HTTP transaction",
+            Self::LibraryNotLoaded => "The Botan library could not be loaded",
         };
 
         write!(f, "{msg}")
@@ -458,6 +497,8 @@ impl From<i32> for ErrorType {
             BOTAN_FFI_ERROR_TLS_ERROR => Self::TlsError,
             BOTAN_FFI_ERROR_UNKNOWN_ERROR => Self::UnknownError,
             BOTAN_FFI_INVALID_VERIFIER => Self::InvalidVerifier,
+            BOTAN_FFI_ERROR_FUNCTION_NOT_AVAILABLE => Self::NotImplemented,
+            BOTAN_FFI_ERROR_LIBRARY_NOT_LOADED => Self::LibraryNotLoaded,
             _ => Self::UnknownError,
         }
     }

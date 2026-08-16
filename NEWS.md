@@ -1,5 +1,16 @@
-## 0.13.1 Not Yet Released
+## 0.14.0 Not Yet Released
 
+- Minor version bump due to changes to `ErrorType`
+
+- All APIs are available no matter what version of Botan the crate builds against.
+  If an older library is in use, the API will fail with `NotImplemented`; the
+  new `Error::is_function_unavailable` distinguishes this from functionality
+  compiled out of the library.
+- `ErrorType` is now `#[non_exhaustive]` and gains the `LibraryNotLoaded` variant
+- The `no_std` build no longer requires Botan 3.11.0 at build time; instead
+  relevant public key operations return an error at runtime with older versions
+- `botan-sys` now declares every FFI function unconditionally, replacing functions
+  not present in the detected headers with stubs which return an error.
 - Add support for SPAKE2+ added in Botan 3.13
 - Add support for X.509 RPKI extensions added in Botan 3.13
 - Upgrade `rand` dependency to 0.10

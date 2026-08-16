@@ -212,12 +212,20 @@ fn find_botan_include_dir() -> std::path::PathBuf {
     }
 }
 
+fn emit_version_info(version: &DetectedVersionInfo) {
+    // TODO(MSRV) cargo::metadata after 1.77
+    println!("cargo:ffi_version={}", version.ffi_version);
+    for (_, ffi) in &KNOWN_FFI_VERSIONS {
+        if *ffi <= version.ffi_version {
+            println!("cargo:rustc-cfg=botan_ffi_{ffi}");
+        }
+    }
+}
+
 fn main() {
     for (_, v) in &KNOWN_FFI_VERSIONS {
         println!("cargo:rustc-check-cfg=cfg(botan_ffi_{v})");
     }
-
-    // TODO refactor this to avoid duplication between the two branches
 
     #[cfg(feature = "vendored")]
     {
@@ -234,12 +242,7 @@ fn main() {
         for dylib in emit_dylibs() {
             println!("cargo:rustc-flags=-l dylib={}", dylib);
         }
-        println!("cargo:ffi_version={}", version.ffi_version);
-        for (_, ffi) in &KNOWN_FFI_VERSIONS {
-            if *ffi <= version.ffi_version {
-                println!("cargo:rustc-cfg=botan_ffi_{}", ffi);
-            }
-        }
+        emit_version_info(&version);
     }
     #[cfg(not(feature = "vendored"))]
     {
@@ -261,12 +264,6 @@ fn main() {
         } else {
             println!("cargo:rustc-link-lib={}", version.library_link_name());
         }
-        // TODO(MSRV) cargo::metadata after 1.77
-        println!("cargo:ffi_version={}", version.ffi_version);
-        for (_, ffi) in &KNOWN_FFI_VERSIONS {
-            if *ffi <= version.ffi_version {
-                println!("cargo:rustc-cfg=botan_ffi_{ffi}");
-            }
-        }
+        emit_version_info(&version);
     }
 }

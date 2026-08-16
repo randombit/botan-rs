@@ -44,12 +44,19 @@ The following features are supported:
 * `pkg-config`: Enable finding a non-vendored, externally provided
   Botan with pkg-config. Can be used in combination with `static`.
 
-The crate detects at build time what features are exported from the C interface,
-and adjusts itself accordingly. These feature sets can be checked using
-`#[cfg(botan_ffi_YYYYMMDD)]` where YYYYMMDD can be any of
+Availability Of Newer APIs
+--------------------------
 
-* 20230403: Botan 3.0
-* 20240408: Botan 3.4
-* 20250506: Botan 3.8
-* 20250829: Botan 3.10
-* 20260303: Botan 3.11
+Botan's C interface gains new functions with most releases, and this crate
+exposes wrappers for all of them regardless of which version of Botan it is
+built or run against. If an operation requires a function that the Botan
+library in use does not provide, it returns an error of type
+`ErrorType::NotImplemented` (the same error returned when an algorithm was
+compiled out of the library), and `Error::is_function_unavailable` returns
+true. The documentation of each affected function notes the minimum Botan
+version required, and `Version::current` / `Version::supports_version` can be
+used to check the version of the library in use at runtime.
+
+When building against a system installed Botan, `botan-sys` detects at build
+time which functions the headers declare; functions the headers predate are
+replaced by stubs which return the error above.

@@ -38,31 +38,75 @@ fn test_version() -> Result<(), botan::Error> {
 
     println!("{version:?}");
 
-    if cfg!(botan_ffi_20250506) {
-        assert!(version.at_least(3, 8));
-    }
+    // The FFI API version and the library version must be consistent
+    assert!(version.ffi_api >= 20191214);
+    assert!(!botan::Version::supports_version(version.ffi_api + 1));
 
-    if cfg!(botan_ffi_20240408) {
-        assert!(version.at_least(3, 4));
-    }
+    let ffi_versions = [
+        (20260811, 3, 13),
+        (20260506, 3, 12),
+        (20260303, 3, 11),
+        (20250829, 3, 10),
+        (20250506, 3, 8),
+        (20240408, 3, 4),
+        (20231009, 3, 2),
+        (20230711, 3, 1),
+        (20230403, 3, 0),
+        (20210220, 2, 18),
+        (20191214, 2, 13),
+    ];
 
-    if cfg!(botan_ffi_20231009) {
-        assert!(version.at_least(3, 2));
-    }
-
-    if cfg!(botan_ffi_20230711) {
-        assert!(version.at_least(3, 1));
-    }
-
-    if cfg!(botan_ffi_20230403) {
-        assert!(version.at_least(3, 0));
-    }
-
-    if cfg!(botan_ffi_20191214) {
-        assert!(version.at_least(2, 13));
+    for (ffi, major, minor) in ffi_versions {
+        if version.ffi_api >= ffi {
+            assert!(botan::Version::supports_version(ffi));
+            assert!(version.at_least(major, minor));
+        } else {
+            assert!(!botan::Version::supports_version(ffi));
+        }
     }
 
     Ok(())
+}
+
+/// Functions which are not provided by the Botan library in use are reported
+/// as NotImplemented errors, with a message naming the function
+#[test]
+fn test_unavailable_function() -> Result<(), botan::Error> {
+    // botan_ec_group_supports_application_specific_group was added in Botan 3.8
+    match botan::EcGroup::supports_application_specific_groups() {
+        Ok(_) => {
+            assert!(botan::Version::supports_version(20250506));
+        }
+        Err(e) => {
+            assert_eq!(e.error_type(), botan::ErrorType::NotImplemented);
+            if e.is_function_unavailable() {
+                let msg = e.error_message().expect("has a message");
+                assert!(
+                    msg.contains("botan_ec_group_supports_application_specific_group"),
+                    "unexpected message {msg}"
+                );
+            }
+        }
+    }
+
+    // A dual-path API: with old libraries the older FFI functions are used instead
+    let mut rng = botan::RandomNumberGenerator::new()?;
+    let key = skip_if_not_implemented!(botan::Privkey::create("ECDSA", "secp256r1", &mut rng));
+    let der = key.der_encode()?;
+    assert!(!der.is_empty());
+    let pem = key.pubkey()?.pem_encode()?;
+    assert!(pem.starts_with("-----BEGIN PUBLIC KEY-----"));
+
+    Ok(())
+}
+
+#[test]
+fn test_cert_validation_status_display() {
+    // Botan returns null for negative codes, which must be handled
+    let s = format!("{}", botan::CertValidationStatus::Failed(-1));
+    assert!(s.contains("Unknown"), "unexpected {s}");
+    let s = format!("{}", botan::CertValidationStatus::Success(0));
+    assert!(!s.is_empty());
 }
 
 #[test]
@@ -1237,7 +1281,6 @@ ZB6LDkS9rU3WAqYfPzNZ5AR06A==
     Ok(())
 }
 
-#[cfg(botan_ffi_20260303)]
 #[test]
 fn test_crl_creation() -> Result<(), botan::Error> {
     let ca_key_pem = r"-----BEGIN PRIVATE KEY-----
@@ -1301,7 +1344,9 @@ rWSdD+Aor4KcEQ==
     let sub1_cert = botan::Certificate::load(sub1_pem.as_bytes())?;
     let sub2_cert = botan::Certificate::load(sub2_pem.as_bytes())?;
 
-    let crl = botan::CRL::new(&mut rng, &ca_cert, &ca_key, now, 600, None, None)?;
+    let crl = skip_if_not_implemented!(botan::CRL::new(
+        &mut rng, &ca_cert, &ca_key, now, 600, None, None
+    ));
     assert!(crl.verify(&ca_pubkey)?);
     assert!(
         sub1_cert
@@ -1472,7 +1517,6 @@ AzMCIEJSRDmXjX8TMTbSfoTLmhaYJnCL+AfHLZLdHlSLDIzz
     Ok(())
 }
 
-#[cfg(botan_ffi_20260303)]
 #[test]
 fn test_cert_getters() -> Result<(), botan::Error> {
     // openssl req -x509 -newkey ed25519 \
@@ -1501,7 +1545,7 @@ Dy94ca65ondQ2JGAxBuxZX2HZAE=
 
     let cert = skip_if_not_implemented!(botan::Certificate::load(cert_pem.as_bytes()));
 
-    assert!(cert.is_ca()?);
+    assert!(skip_if_not_implemented!(cert.is_ca()));
     assert_eq!(cert.path_limit()?, 3);
 
     let ocsp = cert.ocsp_responders()?;
@@ -1538,7 +1582,6 @@ Dy94ca65ondQ2JGAxBuxZX2HZAE=
 }
 
 #[test]
-#[cfg(botan_ffi_20260811)]
 fn test_cert_rfc3779_exts() -> Result<(), botan::Error> {
     use std::net::{Ipv4Addr, Ipv6Addr};
 
@@ -1554,6 +1597,13 @@ AiB30ZIFV1cZbknu5lt1fWrM9tNSgCbj5BN9CI+Q9aq1LQIgD9o/8oGmFgvWLjsx
 b39VOu00+Vy9kpNO1Sgx7wSWoIU=
 -----END CERTIFICATE-----";
     let no_ext_cert = skip_if_not_implemented!(botan::Certificate::load(no_ext_pem));
+
+    // The RFC 3779 getters require Botan 3.13
+    if let Err(e) = no_ext_cert.ext_as_blocks_asnum() {
+        if e.is_function_unavailable() {
+            return Ok(());
+        }
+    }
 
     assert!(
         no_ext_cert
@@ -2249,6 +2299,14 @@ fn test_zfec() -> Result<(), botan::Error> {
     let n = 3;
     let input_bytes = b"abcdefghijklmnop";
 
+    // Invalid parameters are rejected regardless of the library version
+    for (bad_k, bad_n) in [(0, 3), (4, 3)] {
+        let e = botan::zfec_encode(bad_k, bad_n, input_bytes).unwrap_err();
+        assert_eq!(e.error_type(), botan::ErrorType::BadParameter);
+        let e = botan::zfec_decode(bad_k, bad_n, &[], 8).unwrap_err();
+        assert_eq!(e.error_type(), botan::ErrorType::BadParameter);
+    }
+
     let output_shares = skip_if_not_implemented!(botan::zfec_encode(k, n, input_bytes));
 
     assert_eq!(output_shares.len(), n);
@@ -2269,7 +2327,6 @@ fn test_zfec() -> Result<(), botan::Error> {
     Ok(())
 }
 
-#[cfg(botan_ffi_20230403)]
 #[test]
 fn test_kyber() -> Result<(), botan::Error> {
     let mut rng = botan::RandomNumberGenerator::new()?;
@@ -2295,7 +2352,6 @@ fn test_kyber() -> Result<(), botan::Error> {
     Ok(())
 }
 
-#[cfg(botan_ffi_20230403)]
 #[test]
 fn test_ml_kem() -> Result<(), botan::Error> {
     let mut rng = botan::RandomNumberGenerator::new()?;
@@ -2305,8 +2361,9 @@ fn test_ml_kem() -> Result<(), botan::Error> {
         let sk = skip_if_not_implemented!(botan::Privkey::create("ML-KEM", &params, &mut rng));
         let pk = sk.pubkey()?;
 
-        let pk_bytes = pk.raw_bytes()?;
-        let pk2 = botan::Pubkey::load_ml_kem(&pk_bytes)?;
+        // Loading raw ML-KEM keys requires Botan 3.8
+        let pk_bytes = skip_if_not_implemented!(pk.raw_bytes());
+        let pk2 = skip_if_not_implemented!(botan::Pubkey::load_ml_kem(&pk_bytes));
 
         let salt = rng.read(12)?;
         let shared_key_len = 32;
@@ -2326,10 +2383,9 @@ fn test_ml_kem() -> Result<(), botan::Error> {
     Ok(())
 }
 
-#[cfg(botan_ffi_20250506)]
 #[test]
 fn test_asn1_oid() -> Result<(), botan::Error> {
-    let oid = botan::OID::from_str("1.2.840.10045.3.1.7")?;
+    let oid = skip_if_not_implemented!(botan::OID::from_str("1.2.840.10045.3.1.7"));
 
     assert_eq!(oid.as_string()?, "1.2.840.10045.3.1.7");
     assert_eq!(oid.as_name()?, "secp256r1");
@@ -2358,10 +2414,10 @@ fn test_asn1_oid() -> Result<(), botan::Error> {
     Ok(())
 }
 
-#[cfg(botan_ffi_20250506)]
 #[test]
 fn test_ec_group() -> Result<(), botan::Error> {
-    let supports_app_groups = botan::EcGroup::supports_application_specific_groups()?;
+    let supports_app_groups =
+        skip_if_not_implemented!(botan::EcGroup::supports_application_specific_groups());
 
     let supports_secp256r1 = botan::EcGroup::supports_named_group("secp256r1")?;
 
@@ -2411,17 +2467,19 @@ fn test_ec_group() -> Result<(), botan::Error> {
         // Equality is for just the params and ignores the OIDs
         assert_eq!(mycustomp256, secp256r1);
 
-        assert!(botan::EcGroup::unregister(&curve_oid)?);
+        // Unregistering groups requires Botan 3.11
+        assert!(skip_if_not_implemented!(botan::EcGroup::unregister(
+            &curve_oid
+        )));
         assert!(!botan::EcGroup::unregister(&curve_oid)?);
     }
 
     Ok(())
 }
 
-#[cfg(botan_ffi_20260506)]
 #[test]
 fn test_ec_points() -> Result<(), botan::Error> {
-    if !botan::EcGroup::supports_named_group("secp256r1")? {
+    if !skip_if_not_implemented!(botan::EcGroup::supports_named_group("secp256r1")) {
         return Ok(());
     }
 
@@ -2429,7 +2487,8 @@ fn test_ec_points() -> Result<(), botan::Error> {
     let mut rng = botan::RandomNumberGenerator::new()?;
 
     let forty_two = botan::MPI::new_from_u32(42)?;
-    let scalar_forty_two = botan::EcScalar::from_mpi(&group, &forty_two)?;
+    // EcScalar/EcPoint require Botan 3.12
+    let scalar_forty_two = skip_if_not_implemented!(botan::EcScalar::from_mpi(&group, &forty_two));
     assert_eq!(forty_two, scalar_forty_two.to_mpi()?);
 
     let identity = group.identity()?;
@@ -2505,7 +2564,6 @@ fn test_ec_points() -> Result<(), botan::Error> {
     Ok(())
 }
 
-#[cfg(botan_ffi_20260811)]
 #[test]
 fn test_spake2p() -> Result<(), botan::Error> {
     let params = match botan::Spake2pParams::new(botan::Spake2pCiphersuite::P256Sha256) {

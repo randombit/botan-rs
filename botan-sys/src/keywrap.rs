@@ -1,6 +1,6 @@
 use crate::ffi_types::{c_char, c_int};
 
-unsafe extern "C" {
+botan_ffi_functions! {
 
     pub fn botan_key_wrap3394(
         input: *const u8,

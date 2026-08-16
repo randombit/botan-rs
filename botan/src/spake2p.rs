@@ -42,6 +42,9 @@ impl Spake2pCiphersuite {
 ///
 /// Both sides must use the same system parameters, identities, and
 /// context string.
+///
+/// This requires Botan 3.13 or later; with older versions an error of type
+/// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
 pub struct Spake2pParams {
     obj: botan_spake2p_params_t,
 }
@@ -53,6 +56,9 @@ botan_impl_drop!(Spake2pParams, botan_spake2p_params_destroy);
 
 impl Spake2pParams {
     /// Create SPAKE2+ system parameters from an RFC 9383 ciphersuite
+    ///
+    /// This requires Botan 3.13 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn new(ciphersuite: Spake2pCiphersuite) -> Result<Self> {
         let ciphersuite = make_cstr(ciphersuite.name())?;
         let obj = botan_init!(botan_spake2p_params_init, ciphersuite.as_ptr())?;
@@ -69,6 +75,9 @@ impl Spake2pParams {
     /// additionally makes the scheme "quantum annoying", in that an
     /// attacker with a discrete logarithm oracle must compute a new
     /// discrete log for each (prover, verifier) pair they wish to attack.
+    ///
+    /// This requires Botan 3.13 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn new_custom(group: &EcGroup, seed: &[u8], hash_fn: &str) -> Result<Self> {
         let hash_fn = make_cstr(hash_fn)?;
         let obj = botan_init!(
@@ -105,20 +114,17 @@ impl Spake2pParams {
         salt: &[u8],
     ) -> Result<Vec<u8>> {
         let password = make_cstr(password)?;
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_spake2p_derive_secret(
-                self.obj,
-                password.as_ptr(),
-                prover_id.as_ptr(),
-                prover_id.len(),
-                verifier_id.as_ptr(),
-                verifier_id.len(),
-                salt.as_ptr(),
-                salt.len(),
-                ctx,
-                cb,
-            )
-        })
+        botan_view_vec!(
+            botan_spake2p_derive_secret,
+            self.obj,
+            password.as_ptr(),
+            prover_id.as_ptr(),
+            prover_id.len(),
+            verifier_id.as_ptr(),
+            verifier_id.len(),
+            salt.as_ptr(),
+            salt.len()
+        )
     }
 
     /// Compute a SPAKE2+ registration record (w0 and L) from a prover secret
@@ -133,9 +139,13 @@ impl Spake2pParams {
         secret: &[u8],
     ) -> Result<Vec<u8>> {
         let rng = rng.handle();
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_spake2p_registration_record(self.obj, rng, secret.as_ptr(), secret.len(), ctx, cb)
-        })
+        botan_view_vec!(
+            botan_spake2p_registration_record,
+            self.obj,
+            rng,
+            secret.as_ptr(),
+            secret.len()
+        )
     }
 }
 
@@ -153,6 +163,9 @@ impl Spake2pParams {
 ///    key confirmation to the verifier.
 /// 4. The verifier calls [`Spake2pVerifier::verify_confirmation`].
 /// 5. Both sides extract the shared secret.
+///
+/// This requires Botan 3.13 or later; with older versions an error of type
+/// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
 pub struct Spake2pProver {
     obj: botan_spake2p_prover_t,
 }
@@ -196,9 +209,7 @@ impl Spake2pProver {
     /// This can be called only once per prover object.
     pub fn generate_message(&mut self, rng: &mut RandomNumberGenerator) -> Result<Vec<u8>> {
         let rng = rng.handle();
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_spake2p_prover_generate_message(self.obj, rng, ctx, cb)
-        })
+        botan_view_vec!(botan_spake2p_prover_generate_message, self.obj, rng)
     }
 
     /// Consume the verifier's response and produce the prover's key confirmation
@@ -216,16 +227,13 @@ impl Spake2pProver {
         peer_message: &[u8],
     ) -> Result<Vec<u8>> {
         let rng = rng.handle();
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_spake2p_prover_process_message(
-                self.obj,
-                rng,
-                peer_message.as_ptr(),
-                peer_message.len(),
-                ctx,
-                cb,
-            )
-        })
+        botan_view_vec!(
+            botan_spake2p_prover_process_message,
+            self.obj,
+            rng,
+            peer_message.as_ptr(),
+            peer_message.len()
+        )
     }
 
     /// Return the prover's shared secret (K_shared)
@@ -233,9 +241,7 @@ impl Spake2pProver {
     /// This may be called only after [`Spake2pProver::process_message`]
     /// has succeeded.
     pub fn shared_secret(&self) -> Result<Vec<u8>> {
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_spake2p_prover_shared_secret(self.obj, ctx, cb)
-        })
+        botan_view_vec!(botan_spake2p_prover_shared_secret, self.obj)
     }
 }
 
@@ -244,6 +250,9 @@ impl Spake2pProver {
 ///
 /// The verifier ("server") side of a SPAKE2+ exchange; see
 /// [`Spake2pProver`] for an outline of the exchange.
+///
+/// This requires Botan 3.13 or later; with older versions an error of type
+/// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
 pub struct Spake2pVerifier {
     obj: botan_spake2p_verifier_t,
 }
@@ -295,16 +304,13 @@ impl Spake2pVerifier {
         peer_message: &[u8],
     ) -> Result<Vec<u8>> {
         let rng = rng.handle();
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_spake2p_verifier_process_message(
-                self.obj,
-                rng,
-                peer_message.as_ptr(),
-                peer_message.len(),
-                ctx,
-                cb,
-            )
-        })
+        botan_view_vec!(
+            botan_spake2p_verifier_process_message,
+            self.obj,
+            rng,
+            peer_message.as_ptr(),
+            peer_message.len()
+        )
     }
 
     /// Check the prover's key confirmation (confirmP)
@@ -345,8 +351,6 @@ impl Spake2pVerifier {
     /// [`Spake2pVerifier::verify_confirmation`] has succeeded, or after
     /// [`Spake2pVerifier::skip_confirmation`].
     pub fn shared_secret(&self) -> Result<Vec<u8>> {
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_spake2p_verifier_shared_secret(self.obj, ctx, cb)
-        })
+        botan_view_vec!(botan_spake2p_verifier_shared_secret, self.obj)
     }
 }

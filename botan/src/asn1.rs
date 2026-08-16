@@ -2,22 +2,20 @@ use crate::utils::*;
 use botan_sys::*;
 use core::cmp::Ordering;
 
-#[cfg(botan_ffi_20250506)]
 #[derive(Debug)]
 /// ASN.1 object identifier
+///
+/// Creating this object requires Botan 3.8 or later; with older versions
+/// an error of type [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
 pub struct OID {
     obj: botan_asn1_oid_t,
 }
 
-#[cfg(botan_ffi_20250506)]
 unsafe impl Sync for OID {}
-#[cfg(botan_ffi_20250506)]
 unsafe impl Send for OID {}
 
-#[cfg(botan_ffi_20250506)]
 botan_impl_drop!(OID, botan_oid_destroy);
 
-#[cfg(botan_ffi_20250506)]
 impl OID {
     pub(crate) fn handle(&self) -> botan_asn1_oid_t {
         self.obj
@@ -42,14 +40,12 @@ impl OID {
 
     /// Return the OID formatted as a dotted decimal
     pub fn as_string(&self) -> Result<String> {
-        call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
-            botan_oid_view_string(self.obj, ctx, cb)
-        })
+        botan_view_str!(botan_oid_view_string, self.obj)
     }
 
     /// Return the OID formatted as a name
     pub fn as_name(&self) -> Result<String> {
-        call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe { botan_oid_view_name(self.obj, ctx, cb) })
+        botan_view_str!(botan_oid_view_name, self.obj)
     }
 
     /// Compare two OIDs for equality
@@ -75,24 +71,20 @@ impl OID {
     }
 }
 
-#[cfg(botan_ffi_20250506)]
 impl PartialOrd for OID {
     fn partial_cmp(&self, other: &OID) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-#[cfg(botan_ffi_20250506)]
 impl PartialEq for OID {
     fn eq(&self, other: &OID) -> bool {
         self.cmp(other) == Ordering::Equal
     }
 }
 
-#[cfg(botan_ffi_20250506)]
 impl Eq for OID {}
 
-#[cfg(botan_ffi_20250506)]
 impl Ord for OID {
     fn cmp(&self, other: &OID) -> Ordering {
         self.compare(other).expect("botan_oid_cmp should succeed")

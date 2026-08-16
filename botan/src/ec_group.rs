@@ -1,28 +1,24 @@
 use crate::{MPI, utils::*};
 use botan_sys::*;
 
-#[cfg(botan_ffi_20250506)]
 use crate::OID;
 
-#[cfg(botan_ffi_20260506)]
 use crate::EcPoint;
 
-#[cfg(botan_ffi_20250506)]
 #[derive(Debug)]
 /// An elliptic curve group
+///
+/// Creating this object requires Botan 3.8 or later; with older versions
+/// an error of type [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
 pub struct EcGroup {
     obj: botan_ec_group_t,
 }
 
-#[cfg(botan_ffi_20250506)]
 unsafe impl Sync for EcGroup {}
-#[cfg(botan_ffi_20250506)]
 unsafe impl Send for EcGroup {}
 
-#[cfg(botan_ffi_20250506)]
 botan_impl_drop!(EcGroup, botan_ec_group_destroy);
 
-#[cfg(botan_ffi_20250506)]
 impl EcGroup {
     pub(crate) fn handle(&self) -> botan_ec_group_t {
         self.obj
@@ -64,7 +60,9 @@ impl EcGroup {
     /// you are registering a very large number of distinct groups, and need to worry about memory constraints.
     ///
     /// Returns true if the group was found and unregistered.
-    #[cfg(botan_ffi_20260303)]
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn unregister(oid: &OID) -> Result<bool> {
         botan_bool_in_rc!(botan_ec_group_unregister, oid.handle())
     }
@@ -122,16 +120,12 @@ impl EcGroup {
 
     /// Return the DER encoding of the group
     pub fn der(&self) -> Result<Vec<u8>> {
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_ec_group_view_der(self.obj, ctx, cb)
-        })
+        botan_view_vec!(botan_ec_group_view_der, self.obj)
     }
 
     /// Return the PEM encoding of the group
     pub fn pem(&self) -> Result<String> {
-        call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
-            botan_ec_group_view_pem(self.obj, ctx, cb)
-        })
+        botan_view_str!(botan_ec_group_view_pem, self.obj)
     }
 
     /// Return the group's parameter p
@@ -169,14 +163,18 @@ impl EcGroup {
         OID::from_handle(botan_init!(botan_ec_group_get_curve_oid, self.obj)?)
     }
 
-    #[cfg(botan_ffi_20260506)]
     /// Return the group's identity element
+    ///
+    /// This requires Botan 3.12 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn identity(&self) -> Result<EcPoint> {
         EcPoint::identity(self)
     }
 
-    #[cfg(botan_ffi_20260506)]
     /// Return the group's generator element
+    ///
+    /// This requires Botan 3.12 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn generator(&self) -> Result<EcPoint> {
         EcPoint::generator(self)
     }
@@ -187,7 +185,6 @@ impl EcGroup {
     }
 }
 
-#[cfg(botan_ffi_20250506)]
 impl PartialEq for EcGroup {
     fn eq(&self, other: &EcGroup) -> bool {
         self.equals(other)
@@ -195,5 +192,4 @@ impl PartialEq for EcGroup {
     }
 }
 
-#[cfg(botan_ffi_20250506)]
 impl Eq for EcGroup {}

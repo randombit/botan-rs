@@ -24,7 +24,7 @@ pub type botan_pk_op_kem_encrypt_t = *mut botan_pk_op_kem_encrypt_struct;
 pub enum botan_pk_op_kem_decrypt_struct {}
 pub type botan_pk_op_kem_decrypt_t = *mut botan_pk_op_kem_decrypt_struct;
 
-unsafe extern "C" {
+botan_ffi_functions! {
     pub fn botan_pk_op_encrypt_create(
         op: *mut botan_pk_op_encrypt_t,
         key: botan_pubkey_t,

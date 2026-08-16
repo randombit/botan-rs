@@ -29,11 +29,28 @@ pub const BOTAN_FFI_ERROR_ROUGHTIME_ERROR: BOTAN_FFI_ERROR = -77;
 pub const BOTAN_FFI_ERROR_TPM_ERROR: BOTAN_FFI_ERROR = -78;
 pub const BOTAN_FFI_ERROR_UNKNOWN_ERROR: BOTAN_FFI_ERROR = -100;
 
-unsafe extern "C" {
+/// Not an error code returned by Botan itself.
+///
+/// This value is returned by `botan-sys` when the requested FFI function is
+/// not provided by the Botan library this program is using: either because
+/// the headers found at build time predate the function, or (with dynamic
+/// loading) because the loaded library does not export the symbol.
+///
+/// The value is chosen well outside the range of codes used by Botan.
+pub const BOTAN_FFI_ERROR_FUNCTION_NOT_AVAILABLE: BOTAN_FFI_ERROR = -1000;
 
-    pub fn botan_error_description(err: BOTAN_FFI_ERROR) -> *const c_char;
+/// Not an error code returned by Botan itself.
+///
+/// This value is returned by `botan-sys` when the Botan shared library could
+/// not be loaded at runtime. It is only ever returned when the
+/// `dynamic-loading` feature is in use.
+pub const BOTAN_FFI_ERROR_LIBRARY_NOT_LOADED: BOTAN_FFI_ERROR = -1001;
+
+botan_ffi_functions! {
+
+    pub fn botan_error_description(err: BOTAN_FFI_ERROR) -> *const c_char = core::ptr::null();
 
     #[cfg(botan_ffi_20230403)]
-    pub fn botan_error_last_exception_message() -> *const c_char;
+    pub fn botan_error_last_exception_message() -> *const c_char = core::ptr::null();
 
 }

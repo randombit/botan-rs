@@ -2,7 +2,7 @@ use crate::ffi_types::{c_char, c_int};
 
 use crate::rng::botan_rng_t;
 
-unsafe extern "C" {
+botan_ffi_functions! {
 
     pub fn botan_bcrypt_generate(
         out: *mut u8,

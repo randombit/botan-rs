@@ -19,6 +19,7 @@ botan_impl_drop!(KeyEncapsulation, botan_pk_op_kem_encrypt_destroy);
 impl KeyEncapsulation {
     /// Create a KeyEncapsulation operation
     pub fn new<K: crate::KdfAlgorithmIdentifier>(key: &Pubkey, kdf: K) -> Result<Self> {
+        key.check_op_supported()?;
         let kdf = kdf.botan_name();
         let kdf = make_cstr(&kdf)?;
         let obj = botan_init!(botan_pk_op_kem_encrypt_create, key.handle(), kdf.as_ptr())?;
@@ -88,6 +89,7 @@ botan_impl_drop!(KeyDecapsulation, botan_pk_op_kem_decrypt_destroy);
 impl KeyDecapsulation {
     /// Create a KeyDecapsulation operation
     pub fn new<K: crate::KdfAlgorithmIdentifier>(key: &Privkey, kdf: K) -> Result<Self> {
+        key.check_op_supported()?;
         let kdf = kdf.botan_name();
         let kdf = make_cstr(&kdf)?;
         let obj = botan_init!(botan_pk_op_kem_decrypt_create, key.handle(), kdf.as_ptr())?;

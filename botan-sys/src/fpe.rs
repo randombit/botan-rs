@@ -5,7 +5,7 @@ use crate::mp::botan_mp_t;
 pub enum botan_fpe_struct {}
 pub type botan_fpe_t = *mut botan_fpe_struct;
 
-unsafe extern "C" {
+botan_ffi_functions! {
 
     pub fn botan_fpe_fe1_init(
         fpe: *mut botan_fpe_t,

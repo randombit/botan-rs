@@ -1,4 +1,3 @@
-#[cfg(botan_ffi_20260811)]
 use core::net::{Ipv4Addr, Ipv6Addr};
 
 use crate::{CRL, utils::*};
@@ -110,12 +109,16 @@ impl core::fmt::Display for CertValidationStatus {
             CertValidationStatus::Failed(x) => x,
         };
 
-        unsafe {
-            let result_str = botan_x509_cert_validation_status(*code);
+        // Botan returns null for codes it does not recognize (and the FFI
+        // stub returns null if the function is not available)
+        let result_str = unsafe { botan_x509_cert_validation_status(*code) };
 
-            let cstr = CStr::from_ptr(result_str);
-            write!(f, "{}", cstr.to_str().unwrap())
+        if result_str.is_null() {
+            return write!(f, "Unknown certificate validation status {code}");
         }
+
+        let cstr = unsafe { CStr::from_ptr(result_str) };
+        write!(f, "{}", cstr.to_str().unwrap_or("Invalid status string"))
     }
 }
 
@@ -218,20 +221,12 @@ impl Certificate {
 
     /// Return the byte representation of the public key
     pub fn public_key_bits(&self) -> Result<Vec<u8>> {
-        #[cfg(not(botan_ffi_20230403))]
-        {
+        botan_view_vec!(botan_x509_cert_view_public_key_bits, self.obj).or_if_unavailable(|| {
             let pk_len = 4096; // fixme
             call_botan_ffi_returning_vec_u8(pk_len, &|out_buf, out_len| unsafe {
                 botan_x509_cert_get_public_key_bits(self.obj, out_buf, out_len)
             })
-        }
-
-        #[cfg(botan_ffi_20230403)]
-        {
-            call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-                botan_x509_cert_view_public_key_bits(self.obj, ctx, cb)
-            })
-        }
+        })
     }
 
     /// Return the public key included in this certificate
@@ -241,8 +236,10 @@ impl Certificate {
         Ok(Pubkey::from_handle(key))
     }
 
-    #[cfg(botan_ffi_20260303)]
     /// Return the listed addresses of OCSP Responders
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn ocsp_responders(&self) -> Result<Vec<String>> {
         let mut count = 0;
         botan_call!(
@@ -253,24 +250,23 @@ impl Certificate {
         )?;
         let mut urls = Vec::new();
         for i in 0..count {
-            let item = call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
-                botan_x509_cert_view_string_values(
-                    self.obj,
-                    X509ValueType::BOTAN_X509_OCSP_RESPONDER_URLS as i32,
-                    i,
-                    ctx,
-                    cb,
-                )
-            })?;
+            let item = botan_view_str!(
+                botan_x509_cert_view_string_values,
+                self.obj,
+                X509ValueType::BOTAN_X509_OCSP_RESPONDER_URLS as i32,
+                i
+            )?;
             urls.push(item);
         }
         Ok(urls)
     }
 
-    #[cfg(botan_ffi_20260303)]
     /// Get a value for a specific subject distinguished name parameter.
     ///
     /// See `subject_dn()` for valid values.
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn issuer_dn(&self, key: &str) -> Result<Vec<String>> {
         let mut count = 0;
         let key = make_cstr(key)?;
@@ -290,7 +286,6 @@ impl Certificate {
         Ok(entries)
     }
 
-    #[cfg(botan_ffi_20260303)]
     /// Get a value for a specific subject distinguished name parameter.
     ///
     /// Valid values:
@@ -301,6 +296,9 @@ impl Certificate {
     /// - "IP"
     ///
     /// ... and more. See `Botan::X509_Certificate.subject_info()`.
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn subject_dn(&self, key: &str) -> Result<Vec<String>> {
         let mut count = 0;
         let key = make_cstr(key)?;
@@ -320,14 +318,18 @@ impl Certificate {
         Ok(entries)
     }
 
-    #[cfg(botan_ffi_20260303)]
     /// Check if the certificate is marked as a certificate authority
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn is_ca(&self) -> Result<bool> {
         botan_bool_in_rc!(botan_x509_cert_is_ca, self.obj)
     }
 
-    #[cfg(botan_ffi_20260303)]
     /// Get the CA path limit for this certificate, if it has one
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn path_limit(&self) -> Result<usize> {
         let mut path_limit = 0;
         botan_call!(
@@ -340,48 +342,38 @@ impl Certificate {
 
     /// Return a free-form string representation of this certificate
     pub fn to_string(&self) -> Result<String> {
-        #[cfg(not(botan_ffi_20230403))]
-        {
+        botan_view_str!(botan_x509_cert_view_as_string, self.obj).or_if_unavailable(|| {
             let as_str_len = 4096;
             call_botan_ffi_returning_string(as_str_len, &|out_buf, out_len| unsafe {
                 botan_x509_cert_to_string(self.obj, out_buf as *mut c_char, out_len)
             })
-        }
-
-        #[cfg(botan_ffi_20230403)]
-        {
-            call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
-                botan_x509_cert_view_as_string(self.obj, ctx, cb)
-            })
-        }
+        })
     }
 
-    #[cfg(botan_ffi_20260303)]
     /// Get the PEM encoding of this certificate
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn pem_encode(&self) -> Result<String> {
-        call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
-            botan_x509_cert_view_string_values(
-                self.obj,
-                X509ValueType::BOTAN_X509_PEM_ENCODING as i32,
-                0,
-                ctx,
-                cb,
-            )
-        })
+        botan_view_str!(
+            botan_x509_cert_view_string_values,
+            self.obj,
+            X509ValueType::BOTAN_X509_PEM_ENCODING as i32,
+            0
+        )
     }
 
-    #[cfg(botan_ffi_20260303)]
     /// Get the DER encoding of this certificate
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn der_encode(&self) -> Result<Vec<u8>> {
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_x509_cert_view_binary_values(
-                self.obj,
-                X509ValueType::BOTAN_X509_DER_ENCODING as i32,
-                0,
-                ctx,
-                cb,
-            )
-        })
+        botan_view_vec!(
+            botan_x509_cert_view_binary_values,
+            self.obj,
+            X509ValueType::BOTAN_X509_DER_ENCODING as i32,
+            0
+        )
     }
 
     /// Test if the certificate is allowed for a particular usage
@@ -400,7 +392,9 @@ impl Certificate {
     /// Each contains a vec of families. Each family is a tuple (SAFI, ranges).
     /// Both SAFI and the ranges may be `None`, if ranges is `None` the family was marked as "inherit".
     /// The ranges are vecs of (min address, max address) tuples.
-    #[cfg(botan_ffi_20260811)]
+    ///
+    /// This requires Botan 3.13 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     #[allow(clippy::type_complexity)]
     pub fn ext_ip_addr_blocks(
         &self,
@@ -491,7 +485,6 @@ impl Certificate {
         Ok((v4, v6))
     }
 
-    #[cfg(botan_ffi_20260811)]
     fn ext_as_blocks_impl(&self, asnum: bool) -> Result<Option<Vec<(u32, u32)>>> {
         let mut present = 0;
         let mut count = 0;
@@ -530,7 +523,9 @@ impl Certificate {
     /// Returns all AS numbers contained in the extension.
     /// Each tuple in the vector are the minimum and maximum values of a range respectively.
     /// If AS numbers are marked as "inherit", `None` is returned instead.
-    #[cfg(botan_ffi_20260811)]
+    ///
+    /// This requires Botan 3.13 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn ext_as_blocks_asnum(&self) -> Result<Option<Vec<(u32, u32)>>> {
         self.ext_as_blocks_impl(true)
     }
@@ -541,7 +536,9 @@ impl Certificate {
     /// Returns all RDIs contained in the extension.
     /// Each tuple in the vector are the minimum and maximum values of a range respectively.
     /// If RDIs are marked as "inherit", `None` is returned instead.
-    #[cfg(botan_ffi_20260811)]
+    ///
+    /// This requires Botan 3.13 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn ext_as_blocks_rdi(&self) -> Result<Option<Vec<(u32, u32)>>> {
         self.ext_as_blocks_impl(false)
     }

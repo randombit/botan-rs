@@ -1,4 +1,3 @@
-#[cfg(botan_ffi_20260303)]
 use crate::{Certificate, MPI, Privkey, RandomNumberGenerator};
 use crate::{Pubkey, utils::*};
 use botan_sys::*;
@@ -32,8 +31,10 @@ impl CRL {
         Ok(Self { obj })
     }
 
-    #[cfg(botan_ffi_20260303)]
     /// Create a new CRL without entries
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn new(
         rng: &mut RandomNumberGenerator,
         ca_cert: &Certificate,
@@ -64,9 +65,11 @@ impl CRL {
         Ok(Self { obj })
     }
 
-    #[cfg(botan_ffi_20260303)]
     #[allow(clippy::too_many_arguments)]
     /// Add new entries to the CRL, does not modify the CRL in place
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn revoke(
         &self,
         rng: &mut RandomNumberGenerator,
@@ -119,8 +122,10 @@ impl CRL {
         }
     }
 
-    #[cfg(botan_ffi_20260303)]
     /// Get all the entries listed in this CRL.
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn revoked(&self) -> Result<Vec<CRLEntry>> {
         let mut entries = Vec::new();
         let mut count = 0;
@@ -139,44 +144,46 @@ impl CRL {
     }
 
     /// Verify the signature of this CRL against a public key.
-    #[cfg(botan_ffi_20260303)]
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn verify(&self, key: &Pubkey) -> Result<bool> {
         let res = botan_bool_in_rc!(botan_x509_crl_verify_signature, self.obj, key.handle())?;
         Ok(res)
     }
 
     /// Get the PEM encoding of this CRL
-    #[cfg(botan_ffi_20260303)]
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn pem_encode(&self) -> Result<String> {
-        call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
-            botan_x509_crl_view_string_values(
-                self.obj,
-                X509ValueType::BOTAN_X509_PEM_ENCODING as i32,
-                0,
-                ctx,
-                cb,
-            )
-        })
+        botan_view_str!(
+            botan_x509_crl_view_string_values,
+            self.obj,
+            X509ValueType::BOTAN_X509_PEM_ENCODING as i32,
+            0
+        )
     }
 
     /// Get the DER encoding of this CRL
-    #[cfg(botan_ffi_20260303)]
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn der_encode(&self) -> Result<Vec<u8>> {
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_x509_crl_view_binary_values(
-                self.obj,
-                X509ValueType::BOTAN_X509_DER_ENCODING as i32,
-                0,
-                ctx,
-                cb,
-            )
-        })
+        botan_view_vec!(
+            botan_x509_crl_view_binary_values,
+            self.obj,
+            X509ValueType::BOTAN_X509_DER_ENCODING as i32,
+            0
+        )
     }
 }
 
 /// Reason a certificate was revoked for
+///
+/// This requires Botan 3.11 or later; with older versions an error of type
+/// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-#[cfg(botan_ffi_20260303)]
 #[allow(missing_docs)]
 pub enum CRLReason {
     Unspecified,
@@ -191,7 +198,6 @@ pub enum CRLReason {
     AaCompromise,
 }
 
-#[cfg(botan_ffi_20260303)]
 impl From<X509CrlReasonCode> for CRLReason {
     fn from(value: X509CrlReasonCode) -> Self {
         match value {
@@ -211,7 +217,6 @@ impl From<X509CrlReasonCode> for CRLReason {
     }
 }
 
-#[cfg(botan_ffi_20260303)]
 impl From<CRLReason> for X509CrlReasonCode {
     fn from(value: CRLReason) -> Self {
         match value {
@@ -231,23 +236,21 @@ impl From<CRLReason> for X509CrlReasonCode {
     }
 }
 
-#[cfg(botan_ffi_20260303)]
 #[derive(Debug)]
 /// X.509 certificate revocation entry
+///
+/// Creating this object requires Botan 3.11 or later; with older versions
+/// an error of type [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
 pub struct CRLEntry {
     obj: botan_x509_crl_entry_t,
 }
 
-#[cfg(botan_ffi_20260303)]
 unsafe impl Sync for CRLEntry {}
 
-#[cfg(botan_ffi_20260303)]
 unsafe impl Send for CRLEntry {}
 
-#[cfg(botan_ffi_20260303)]
 botan_impl_drop!(CRLEntry, botan_x509_crl_entry_destroy);
 
-#[cfg(botan_ffi_20260303)]
 impl CRLEntry {
     pub(crate) fn handle(&self) -> botan_x509_crl_entry_t {
         self.obj

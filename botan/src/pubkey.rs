@@ -1,10 +1,8 @@
 use crate::utils::*;
 use botan_sys::*;
 
-#[cfg(botan_ffi_20250506)]
 use crate::EcGroup;
 
-#[cfg(botan_ffi_20260506)]
 use crate::{EcPoint, EcScalar};
 
 use crate::mp::MPI;
@@ -15,8 +13,8 @@ use crate::rng::RandomNumberGenerator;
 /// A public key object
 pub struct Pubkey {
     obj: botan_pubkey_t,
-    #[cfg(not(botan_ffi_20260303))]
-    op_lock: std::sync::Mutex<()>,
+    #[cfg(feature = "std")]
+    op_lock: Option<std::sync::Mutex<()>>,
 }
 
 unsafe impl Sync for Pubkey {}
@@ -28,8 +26,44 @@ botan_impl_drop!(Pubkey, botan_pubkey_destroy);
 /// A private key object
 pub struct Privkey {
     obj: botan_privkey_t,
-    #[cfg(not(botan_ffi_20260303))]
-    op_lock: std::sync::Mutex<()>,
+    #[cfg(feature = "std")]
+    op_lock: Option<std::sync::Mutex<()>>,
+}
+
+// Botan versions before 3.11 have a thread safety issue when performing
+// multiple concurrent operations using the same key object. When running
+// against such a version, all operations on a key are serialized using a
+// per-key lock. In no_std builds no lock is available, and instead the
+// affected operations return an error with older versions.
+
+#[cfg(feature = "std")]
+fn new_op_lock() -> Option<std::sync::Mutex<()>> {
+    if crate::Version::supports_version(20260303) {
+        None
+    } else {
+        Some(std::sync::Mutex::new(()))
+    }
+}
+
+#[cfg(feature = "std")]
+fn op_guard(lock: &Option<std::sync::Mutex<()>>) -> Result<Option<std::sync::MutexGuard<'_, ()>>> {
+    Ok(lock.as_ref().map(|m| m.lock().expect("lock poisoned")))
+}
+
+/// Placeholder guard type for no_std builds, where no locking is performed
+#[cfg(not(feature = "std"))]
+struct OpGuard;
+
+#[cfg(not(feature = "std"))]
+fn op_guard(_: &()) -> Result<OpGuard> {
+    if crate::Version::supports_version(20260303) {
+        Ok(OpGuard)
+    } else {
+        Err(Error::with_message(
+            ErrorType::NotImplemented,
+            "no_std builds require Botan 3.11 or later for public key operations".to_owned(),
+        ))
+    }
 }
 
 unsafe impl Sync for Privkey {}
@@ -41,9 +75,31 @@ impl Privkey {
     fn from_obj(obj: botan_privkey_t) -> Self {
         Self {
             obj,
-            #[cfg(not(botan_ffi_20260303))]
-            op_lock: std::sync::Mutex::new(()),
+            #[cfg(feature = "std")]
+            op_lock: new_op_lock(),
         }
+    }
+
+    #[cfg(feature = "std")]
+    fn op_guard(&self) -> Result<Option<std::sync::MutexGuard<'_, ()>>> {
+        op_guard(&self.op_lock)
+    }
+
+    #[cfg(not(feature = "std"))]
+    fn op_guard(&self) -> Result<OpGuard> {
+        op_guard(&())
+    }
+
+    /// Check that operations using this key are supported by the library
+    ///
+    /// In no_std builds this fails with versions of Botan prior to 3.11;
+    /// see the comment on `op_guard`. In std builds it always succeeds.
+    pub(crate) fn check_op_supported(&self) -> Result<()> {
+        #[cfg(not(feature = "std"))]
+        {
+            self.op_guard()?;
+        }
+        Ok(())
     }
 
     pub(crate) fn handle(&self) -> botan_privkey_t {
@@ -70,7 +126,9 @@ impl Privkey {
     }
 
     /// Create a new EC private key
-    #[cfg(botan_ffi_20250506)]
+    ///
+    /// This requires Botan 3.8 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn create_ec<A: crate::PublicKeyAlgorithmIdentifier>(
         alg: A,
         ec_group: &EcGroup,
@@ -83,7 +141,7 @@ impl Privkey {
             ec_group.handle(),
             rng.handle()
         )?;
-        Ok(Self { obj })
+        Ok(Self::from_obj(obj))
     }
 
     /// Create a new ElGamal private key with a random group
@@ -158,7 +216,8 @@ impl Privkey {
 
     /// Load an X448 private key
     ///
-    /// This requires `botan_ffi_20240408`, otherwise a not implemented error is returned
+    /// This requires Botan 3.4 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     ///
     /// # Examples
     ///
@@ -167,10 +226,8 @@ impl Privkey {
     /// let key = botan::Privkey::load_x448(&v);
     /// ```
     pub fn load_x448(key: &[u8]) -> Result<Privkey> {
-        crate::ffi_version_guard!("load_x448", botan_ffi_20240408, [key], {
-            let obj = botan_init!(botan_privkey_load_x448, key.as_ptr())?;
-            Ok(Privkey::from_obj(obj))
-        })
+        let obj = botan_init!(botan_privkey_load_x448, key.as_ptr())?;
+        Ok(Privkey::from_obj(obj))
     }
 
     /// Load a PKCS#1 encoded RSA private key
@@ -305,36 +362,20 @@ impl Privkey {
 
     /// DER encode the key (unencrypted)
     pub fn der_encode(&self) -> Result<Vec<u8>> {
-        #[cfg(botan_ffi_20230403)]
-        {
-            call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-                botan_privkey_view_der(self.obj, ctx, cb)
-            })
-        }
-
-        #[cfg(not(botan_ffi_20230403))]
-        {
+        botan_view_vec!(botan_privkey_view_der, self.obj).or_if_unavailable(|| {
             call_botan_ffi_returning_vec_u8(4096, &|out_buf, out_len| unsafe {
                 botan_privkey_export(self.obj, out_buf, out_len, 0u32)
             })
-        }
+        })
     }
 
     /// PEM encode the private key (unencrypted)
     pub fn pem_encode(&self) -> Result<String> {
-        #[cfg(botan_ffi_20230403)]
-        {
-            call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
-                botan_privkey_view_pem(self.obj, ctx, cb)
-            })
-        }
-
-        #[cfg(not(botan_ffi_20230403))]
-        {
+        botan_view_str!(botan_privkey_view_pem, self.obj).or_if_unavailable(|| {
             call_botan_ffi_returning_string(4096, &|out_buf, out_len| unsafe {
                 botan_privkey_export(self.obj, out_buf, out_len, 1u32)
             })
-        }
+        })
     }
 
     /// DER encode the key (encrypted)
@@ -373,24 +414,16 @@ impl Privkey {
 
         let rng_handle = rng.handle();
 
-        #[cfg(botan_ffi_20230403)]
-        {
-            call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-                botan_privkey_view_encrypted_der(
-                    self.obj,
-                    rng_handle,
-                    passphrase.as_ptr(),
-                    cipher.as_ptr(),
-                    pbkdf.as_ptr(),
-                    pbkdf_iter,
-                    ctx,
-                    cb,
-                )
-            })
-        }
-
-        #[cfg(not(botan_ffi_20230403))]
-        {
+        botan_view_vec!(
+            botan_privkey_view_encrypted_der,
+            self.obj,
+            rng_handle,
+            passphrase.as_ptr(),
+            cipher.as_ptr(),
+            pbkdf.as_ptr(),
+            pbkdf_iter
+        )
+        .or_if_unavailable(|| {
             call_botan_ffi_returning_vec_u8(4096, &|out_buf, out_len| unsafe {
                 botan_privkey_export_encrypted_pbkdf_iter(
                     self.obj,
@@ -404,7 +437,7 @@ impl Privkey {
                     0u32,
                 )
             })
-        }
+        })
     }
 
     /// PEM encode the key (encrypted)
@@ -442,24 +475,16 @@ impl Privkey {
         let pbkdf = make_cstr(&pbkdf)?;
         let rng_handle = rng.handle();
 
-        #[cfg(botan_ffi_20230403)]
-        {
-            call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
-                botan_privkey_view_encrypted_pem(
-                    self.obj,
-                    rng_handle,
-                    passphrase.as_ptr(),
-                    cipher.as_ptr(),
-                    pbkdf.as_ptr(),
-                    pbkdf_iter,
-                    ctx,
-                    cb,
-                )
-            })
-        }
-
-        #[cfg(not(botan_ffi_20230403))]
-        {
+        botan_view_str!(
+            botan_privkey_view_encrypted_pem,
+            self.obj,
+            rng_handle,
+            passphrase.as_ptr(),
+            cipher.as_ptr(),
+            pbkdf.as_ptr(),
+            pbkdf_iter
+        )
+        .or_if_unavailable(|| {
             call_botan_ffi_returning_string(4096, &|out_buf, out_len| unsafe {
                 botan_privkey_export_encrypted_pbkdf_iter(
                     self.obj,
@@ -473,40 +498,27 @@ impl Privkey {
                     1u32,
                 )
             })
-        }
+        })
     }
 
     /// Check if the key in question is stateful (eg XMMS, LMS)
     ///
-    /// This requires `botan_ffi_20250506`, otherwise a not implemented error is returned
+    /// This requires Botan 3.8 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn is_stateful(&self) -> Result<bool> {
-        crate::ffi_version_guard!("is_stateful", botan_ffi_20250506, [], {
-            let mut stateful = 0;
-            let rc = unsafe { botan_privkey_stateful_operation(self.obj, &mut stateful) };
-            if rc != 0 {
-                Err(Error::from_rc(rc))
-            } else {
-                interp_as_bool(stateful, "botan_privkey_stateful_operation")
-            }
-        })
+        let mut stateful = 0;
+        botan_call!(botan_privkey_stateful_operation, self.obj, &mut stateful)?;
+        interp_as_bool(stateful, "botan_privkey_stateful_operation")
     }
 
     /// Return the key agrement key, only valid for DH/ECDH
     pub fn key_agreement_key(&self) -> Result<Vec<u8>> {
-        #[cfg(botan_ffi_20230403)]
-        {
-            call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-                botan_pk_op_key_agreement_view_public(self.obj, ctx, cb)
-            })
-        }
-
-        #[cfg(not(botan_ffi_20230403))]
-        {
+        botan_view_vec!(botan_pk_op_key_agreement_view_public, self.obj).or_if_unavailable(|| {
             let ka_key_len = 512;
             call_botan_ffi_returning_vec_u8(ka_key_len, &|out_buf, out_len| unsafe {
                 botan_pk_op_key_agreement_export_public(self.obj, out_buf, out_len)
             })
-        }
+        })
     }
 
     /// Get a value for the private key
@@ -527,7 +539,9 @@ impl Privkey {
     /// Return the private value of this key
     ///
     /// Only valid for EC based keys
-    #[cfg(botan_ffi_20260506)]
+    ///
+    /// This requires Botan 3.12 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn get_private_value(&self) -> Result<EcScalar> {
         let obj = botan_init_at!(botan_ec_privkey_get_private_key, self.obj;)?;
         Ok(EcScalar::from_handle(obj))
@@ -536,7 +550,9 @@ impl Privkey {
     /// Return the group associated with this key
     ///
     /// Only valid for EC based keys
-    #[cfg(botan_ffi_20260506)]
+    ///
+    /// This requires Botan 3.12 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn get_group(&self) -> Result<EcGroup> {
         let obj = botan_init_at!(botan_ec_privkey_get_group, self.obj;)?;
         Ok(EcGroup::from_handle(obj))
@@ -547,13 +563,10 @@ impl Privkey {
     /// This is not defined for certain schemes which do not have an obvious
     /// encoding (eg RSA), so will return an error for some keys
     ///
-    /// This requires `botan_ffi_20250506`, otherwise a not implemented error is returned
+    /// This requires Botan 3.8 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn raw_bytes(&self) -> Result<Vec<u8>> {
-        crate::ffi_version_guard!("raw_bytes", botan_ffi_20250506, [], {
-            call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-                botan_privkey_view_raw(self.obj, ctx, cb)
-            })
-        })
+        botan_view_vec!(botan_privkey_view_raw, self.obj)
     }
 
     /// Get the public and private key associated with this key
@@ -571,17 +584,11 @@ impl Privkey {
 
     /// Get the X25519 private key
     pub fn get_x25519_key(&self) -> Result<Vec<u8>> {
-        #[cfg(botan_ffi_20250506)]
-        {
-            self.raw_bytes()
-        }
-
-        #[cfg(not(botan_ffi_20250506))]
-        {
+        self.raw_bytes().or_if_unavailable(|| {
             let mut out = vec![0; 32];
             botan_call!(botan_privkey_x25519_get_privkey, self.obj, out.as_mut_ptr())?;
             Ok(out)
-        }
+        })
     }
 
     /// Sign a message using the specified padding method
@@ -591,8 +598,7 @@ impl Privkey {
         padding: P,
         rng: &mut RandomNumberGenerator,
     ) -> Result<Vec<u8>> {
-        #[cfg(not(botan_ffi_20260303))]
-        let _lock = self.op_lock.lock().expect("lock poisoned");
+        let _lock = self.op_guard()?;
         let mut signer = Signer::new(self, padding)?;
         signer.update(message)?;
         signer.finish(rng)
@@ -604,8 +610,7 @@ impl Privkey {
         ctext: &[u8],
         padding: P,
     ) -> Result<Vec<u8>> {
-        #[cfg(not(botan_ffi_20260303))]
-        let _lock = self.op_lock.lock().expect("lock poisoned");
+        let _lock = self.op_guard()?;
         let mut decryptor = Decryptor::new(self, padding)?;
         decryptor.decrypt(ctext)
     }
@@ -618,8 +623,7 @@ impl Privkey {
         salt: &[u8],
         kdf: K,
     ) -> Result<Vec<u8>> {
-        #[cfg(not(botan_ffi_20260303))]
-        let _lock = self.op_lock.lock().expect("lock poisoned");
+        let _lock = self.op_guard()?;
         let mut op = KeyAgreement::new(self, kdf)?;
         op.agree(output_len, other_key, salt)
     }
@@ -629,9 +633,31 @@ impl Pubkey {
     pub(crate) fn from_handle(obj: botan_pubkey_t) -> Pubkey {
         Pubkey {
             obj,
-            #[cfg(not(botan_ffi_20260303))]
-            op_lock: std::sync::Mutex::new(()),
+            #[cfg(feature = "std")]
+            op_lock: new_op_lock(),
         }
+    }
+
+    #[cfg(feature = "std")]
+    fn op_guard(&self) -> Result<Option<std::sync::MutexGuard<'_, ()>>> {
+        op_guard(&self.op_lock)
+    }
+
+    #[cfg(not(feature = "std"))]
+    fn op_guard(&self) -> Result<OpGuard> {
+        op_guard(&())
+    }
+
+    /// Check that operations using this key are supported by the library
+    ///
+    /// In no_std builds this fails with versions of Botan prior to 3.11;
+    /// see the comment on `op_guard`. In std builds it always succeeds.
+    pub(crate) fn check_op_supported(&self) -> Result<()> {
+        #[cfg(not(feature = "std"))]
+        {
+            self.op_guard()?;
+        }
+        Ok(())
     }
 
     pub(crate) fn handle(&self) -> botan_pubkey_t {
@@ -661,10 +687,12 @@ impl Pubkey {
     }
 
     /// Load a PKCS#1 encoded RSA public key
-    #[cfg(botan_ffi_20260303)]
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn load_rsa_pkcs1(pkcs1: &[u8]) -> Result<Pubkey> {
         let obj = botan_init!(botan_pubkey_load_rsa_pkcs1, pkcs1.as_ptr(), pkcs1.len())?;
-        Ok(Pubkey { obj })
+        Ok(Pubkey::from_handle(obj))
     }
 
     /// Load an DH public key (p,g,y)
@@ -736,24 +764,23 @@ impl Pubkey {
     ///
     /// The exact type can be determined by the length and does not need to be specified
     ///
-    /// This requires `botan_ffi_20250506`, otherwise a not implemented error is returned
+    /// This requires Botan 3.8 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn load_ml_kem(key: &[u8]) -> Result<Pubkey> {
-        crate::ffi_version_guard!("load_ml_kem", botan_ffi_20250506, [key], {
-            let params = make_cstr(match key.len() {
-                800 => "ML-KEM-512",
-                1184 => "ML-KEM-768",
-                1568 => "ML-KEM-1024",
-                _ => return Err(Error::bad_parameter("Invalid ML-KEM key length")),
-            })?;
+        let params = make_cstr(match key.len() {
+            800 => "ML-KEM-512",
+            1184 => "ML-KEM-768",
+            1568 => "ML-KEM-1024",
+            _ => return Err(Error::bad_parameter("Invalid ML-KEM key length")),
+        })?;
 
-            let obj = botan_init!(
-                botan_pubkey_load_ml_kem,
-                key.as_ptr(),
-                key.len(),
-                params.as_ptr()
-            )?;
-            Ok(Pubkey::from_handle(obj))
-        })
+        let obj = botan_init!(
+            botan_pubkey_load_ml_kem,
+            key.as_ptr(),
+            key.len(),
+            params.as_ptr()
+        )?;
+        Ok(Pubkey::from_handle(obj))
     }
 
     /// Return estimated bit strength of this key
@@ -787,51 +814,32 @@ impl Pubkey {
 
     /// DER encode this public key
     pub fn der_encode(&self) -> Result<Vec<u8>> {
-        #[cfg(botan_ffi_20230403)]
-        {
-            call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-                botan_pubkey_view_der(self.obj, ctx, cb)
-            })
-        }
-
-        #[cfg(not(botan_ffi_20230403))]
-        {
+        botan_view_vec!(botan_pubkey_view_der, self.obj).or_if_unavailable(|| {
             let der_len = 4096;
             call_botan_ffi_returning_vec_u8(der_len, &|out_buf, out_len| unsafe {
                 botan_pubkey_export(self.obj, out_buf, out_len, 0u32)
             })
-        }
+        })
     }
 
     /// PEM encode this public key
     pub fn pem_encode(&self) -> Result<String> {
-        #[cfg(botan_ffi_20230403)]
-        {
-            call_botan_ffi_viewing_str_fn(&|ctx, cb| unsafe {
-                botan_pubkey_view_pem(self.obj, ctx, cb)
-            })
-        }
-
-        #[cfg(not(botan_ffi_20230403))]
-        {
+        botan_view_str!(botan_pubkey_view_pem, self.obj).or_if_unavailable(|| {
             let pem_len = 4096;
             call_botan_ffi_returning_string(pem_len, &|out_buf, out_len| unsafe {
                 botan_pubkey_export(self.obj, out_buf, out_len, 1u32)
             })
-        }
+        })
     }
 
     /// Return the encoded elliptic curve point associated with this key
     ///
     /// Only valid for EC based keys
     ///
-    /// This requires `botan_ffi_20230403`, otherwise a not implemented error is returned
+    /// This requires Botan 3.0 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn ec_public_point(&self) -> Result<Vec<u8>> {
-        crate::ffi_version_guard!("ec_public_point", botan_ffi_20230403, [], {
-            call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-                botan_pubkey_view_ec_public_point(self.obj, ctx, cb)
-            })
-        })
+        botan_view_vec!(botan_pubkey_view_ec_public_point, self.obj)
     }
 
     /// Return the name of the algorithm
@@ -854,7 +862,9 @@ impl Pubkey {
     /// Return the group associated with this key
     ///
     /// Only valid for EC based keys
-    #[cfg(botan_ffi_20260506)]
+    ///
+    /// This requires Botan 3.12 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn get_group(&self) -> Result<EcGroup> {
         let obj = botan_init_at!(botan_ec_pubkey_get_group, self.obj; )?;
         Ok(EcGroup::from_handle(obj))
@@ -862,43 +872,28 @@ impl Pubkey {
 
     /// Return the raw byte encoding of this key
     ///
-    /// This requires `botan_ffi_20250506`, otherwise a not implemented error is returned
+    /// This requires Botan 3.8 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn raw_bytes(&self) -> Result<Vec<u8>> {
-        crate::ffi_version_guard!("raw_bytes", botan_ffi_20250506, [], {
-            call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-                botan_pubkey_view_raw(self.obj, ctx, cb)
-            })
-        })
+        botan_view_vec!(botan_pubkey_view_raw, self.obj)
     }
 
     /// Return the 32-byte Ed25519 public key
     pub fn get_ed25519_key(&self) -> Result<Vec<u8>> {
-        #[cfg(botan_ffi_20250506)]
-        {
-            self.raw_bytes()
-        }
-
-        #[cfg(not(botan_ffi_20250506))]
-        {
+        self.raw_bytes().or_if_unavailable(|| {
             let mut out = vec![0; 32];
             botan_call!(botan_pubkey_ed25519_get_pubkey, self.obj, out.as_mut_ptr())?;
             Ok(out)
-        }
+        })
     }
 
     /// Get the X25519 public key
     pub fn get_x25519_key(&self) -> Result<Vec<u8>> {
-        #[cfg(botan_ffi_20250506)]
-        {
-            self.raw_bytes()
-        }
-
-        #[cfg(not(botan_ffi_20250506))]
-        {
+        self.raw_bytes().or_if_unavailable(|| {
             let mut out = vec![0; 32];
             botan_call!(botan_pubkey_x25519_get_pubkey, self.obj, out.as_mut_ptr())?;
             Ok(out)
-        }
+        })
     }
 
     /// Encrypt a message using the specified padding method
@@ -908,8 +903,7 @@ impl Pubkey {
         padding: P,
         rng: &mut RandomNumberGenerator,
     ) -> Result<Vec<u8>> {
-        #[cfg(not(botan_ffi_20260303))]
-        let _lock = self.op_lock.lock().expect("lock poisoned");
+        let _lock = self.op_guard()?;
         let mut op = Encryptor::new(self, padding)?;
         op.encrypt(message, rng)
     }
@@ -921,8 +915,7 @@ impl Pubkey {
         signature: &[u8],
         padding: P,
     ) -> Result<bool> {
-        #[cfg(not(botan_ffi_20260303))]
-        let _lock = self.op_lock.lock().expect("lock poisoned");
+        let _lock = self.op_guard()?;
         let mut op = Verifier::new(self, padding)?;
         op.update(message)?;
         op.finish(signature)

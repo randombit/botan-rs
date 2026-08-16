@@ -3,7 +3,7 @@ use crate::ffi_types::{c_char, c_int};
 pub enum botan_cipher_struct {}
 pub type botan_cipher_t = *mut botan_cipher_struct;
 
-unsafe extern "C" {
+botan_ffi_functions! {
     pub fn botan_cipher_init(cipher: *mut botan_cipher_t, name: *const c_char, flags: u32)
     -> c_int;
     pub fn botan_cipher_valid_nonce_length(cipher: botan_cipher_t, nl: usize) -> c_int;
@@ -63,7 +63,7 @@ unsafe extern "C" {
     #[cfg(botan_ffi_20240408)]
     pub fn botan_cipher_requires_entire_message(cipher: botan_cipher_t) -> c_int;
 
-    #[cfg(botan_ffi_20230403)]
+    #[cfg(botan_ffi_20240408)]
     pub fn botan_cipher_is_authenticated(cipher: botan_cipher_t) -> c_int;
 
     pub fn botan_cipher_reset(cipher: botan_cipher_t) -> c_int;
