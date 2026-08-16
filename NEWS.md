@@ -1,3 +1,13 @@
+## 0.13.1 Not Yet Released
+
+- Add support for SPAKE2+ added in Botan 3.13
+- Add support for X.509 RPKI extensions added in Botan 3.13
+- Upgrade `rand` dependency to 0.10
+- Fix various tests which could fail if features were compiled out
+  of the underlying C++ library
+- Upgrade `botan-src` to Botan 3.13
+- Add Botan 3.13 API decls to `botan-sys`
+
 ## 0.13.0 2026-05-07
 
 - Minor version bump due to MSRV increase
