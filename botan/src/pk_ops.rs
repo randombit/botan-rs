@@ -29,6 +29,7 @@ botan_impl_drop!(Signer, botan_pk_op_sign_destroy);
 impl Signer {
     /// Create a new signature operator
     pub fn new<P: crate::SignatureParamsIdentifier>(key: &Privkey, padding: P) -> Result<Signer> {
+        key.check_op_supported()?;
         let padding = padding.botan_name();
         let padding = make_cstr(&padding)?;
         let obj = botan_init!(
@@ -46,6 +47,7 @@ impl Signer {
         key: &Privkey,
         padding: P,
     ) -> Result<Signer> {
+        key.check_op_supported()?;
         let padding = padding.botan_name();
         let padding = make_cstr(&padding)?;
         let obj = botan_init!(
@@ -94,6 +96,7 @@ impl Decryptor {
         key: &Privkey,
         padding: P,
     ) -> Result<Decryptor> {
+        key.check_op_supported()?;
         let padding = padding.botan_name();
         let padding = make_cstr(&padding)?;
         let obj = botan_init!(
@@ -136,6 +139,7 @@ botan_impl_drop!(Verifier, botan_pk_op_verify_destroy);
 impl Verifier {
     /// Create a new verifier object
     pub fn new<P: crate::SignatureParamsIdentifier>(key: &Pubkey, padding: P) -> Result<Verifier> {
+        key.check_op_supported()?;
         let padding = padding.botan_name();
         let padding = make_cstr(&padding)?;
         let obj = botan_init!(
@@ -152,6 +156,7 @@ impl Verifier {
         key: &Pubkey,
         padding: P,
     ) -> Result<Verifier> {
+        key.check_op_supported()?;
         let padding = padding.botan_name();
         let padding = make_cstr(&padding)?;
         let obj = botan_init!(
@@ -210,6 +215,7 @@ impl Encryptor {
         key: &Pubkey,
         padding: P,
     ) -> Result<Encryptor> {
+        key.check_op_supported()?;
         let padding = padding.botan_name();
         let padding = make_cstr(&padding)?;
         let obj = botan_init!(
@@ -260,6 +266,7 @@ botan_impl_drop!(KeyAgreement, botan_pk_op_key_agreement_destroy);
 impl KeyAgreement {
     /// Create a new key agreement operator
     pub fn new<K: crate::KdfAlgorithmIdentifier>(key: &Privkey, kdf: K) -> Result<KeyAgreement> {
+        key.check_op_supported()?;
         let kdf = kdf.botan_name();
         let kdf = make_cstr(&kdf)?;
         let obj = botan_init!(

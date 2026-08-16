@@ -15,14 +15,20 @@ This crate is always `no_std`
 * `static`: Statically link the library. This is always used if `vendored` is set
 * `pkg-config`: Use `pkg-config` instead of probing to find the library
 
-## Exported cfg
+## Availability of functions
 
-This crate will detect which version of the FFI interface is supported and enable
-features on that basis. The feature sets can be checked using
+Every function in Botan's C API is declared by this crate, regardless of the
+version of Botan detected at build time. Functions which the detected headers
+predate are replaced by stubs with the identical name and signature which
+return `BOTAN_FFI_ERROR_FUNCTION_NOT_AVAILABLE` (a code never returned by
+Botan itself; for the few functions which do not return an error code the
+stub returns 0 or a null pointer). This means code using this crate can be
+written against the newest API without regard to which version will be
+present, and handle unavailable functionality at runtime.
 
-* `#[cfg(botan_ffi_20230403)]`: Botan 3.0
-* `#[cfg(botan_ffi_20240408)]`: Botan 3.4
-* `#[cfg(botan_ffi_20250506)]`: Botan 3.8
+Internally the crate detects which version of the FFI interface the headers
+declare and enables `#[cfg(botan_ffi_YYYYMMDD)]` for each supported version;
+these cfgs are not visible to dependent crates.
 
 ## Environment Variables
 

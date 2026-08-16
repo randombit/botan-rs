@@ -55,14 +55,12 @@ impl Cipher {
 
         let (min_keylen, max_keylen, mod_keylen) = botan_usize3!(botan_cipher_get_keyspec, obj)?;
 
-        #[cfg(botan_ffi_20230403)]
-        let ideal_update_granularity = Some(botan_usize!(
-            botan_cipher_get_ideal_update_granularity,
-            obj
-        )?);
-
-        #[cfg(not(botan_ffi_20230403))]
-        let ideal_update_granularity = None;
+        let ideal_update_granularity =
+            match botan_usize!(botan_cipher_get_ideal_update_granularity, obj) {
+                Ok(g) => Some(g),
+                Err(e) if e.is_function_unavailable() => None,
+                Err(e) => return Err(e),
+            };
 
         Ok(Cipher {
             obj,

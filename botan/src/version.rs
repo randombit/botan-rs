@@ -19,13 +19,20 @@ pub struct Version {
     pub string: String,
 }
 
+/// The oldest FFI API version (corresponding to Botan 2.13) that this crate supports
+const MINIMUM_SUPPORTED_FFI_VERSION: u32 = 20191214;
+
 impl Version {
     pub(crate) fn major_version() -> u32 {
         unsafe { botan_version_major() }
     }
 
-    /// Read the version information of the currently linked lib
+    /// Read the version information of the Botan library in use
     pub fn current() -> Result<Version> {
+        // Every supported version of Botan accepts this query; it fails only
+        // if the library itself is not usable (eg it could not be loaded)
+        botan_call!(botan_ffi_supports_api, MINIMUM_SUPPORTED_FFI_VERSION)?;
+
         unsafe {
             let version_str = CStr::from_ptr(botan_version_string())
                 .to_str()

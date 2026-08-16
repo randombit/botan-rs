@@ -121,7 +121,6 @@ fn wycheproof_keywrap_tests() -> Result<(), botan::Error> {
     Ok(())
 }
 
-#[cfg(botan_ffi_20230403)]
 #[test]
 fn wycheproof_nist_kw_tests() -> Result<(), botan::Error> {
     use wycheproof::keywrap::*;
@@ -529,7 +528,6 @@ fn wycheproof_mac_test(
     Ok(())
 }
 
-#[cfg(botan_ffi_20230403)]
 #[test]
 fn wycheproof_mac_with_nonce_tests() -> Result<(), botan::Error> {
     use wycheproof::mac_with_nonce::*;
@@ -543,7 +541,12 @@ fn wycheproof_mac_with_nonce_tests() -> Result<(), botan::Error> {
 
         for test in &test_group.tests {
             mac.set_key(&test.key)?;
-            mac.set_nonce(&test.nonce)?;
+            // Setting a nonce for a MAC requires Botan 3.0
+            match mac.set_nonce(&test.nonce) {
+                Ok(()) => {}
+                Err(e) if e.is_function_unavailable() => return Ok(()),
+                Err(e) => return Err(e),
+            }
             mac.update(&test.msg)?;
             let mut computed_tag = mac.finish()?;
 
@@ -955,7 +958,7 @@ fn wycheproof_eddsa_verify_tests() -> Result<(), botan::Error> {
     use wycheproof::eddsa::*;
 
     let is_botan2 = botan::Version::current()?.major == 2;
-    let supports_ed448 = cfg!(botan_ffi_20240408);
+    let supports_ed448 = botan::Version::supports_version(20240408);
 
     for test_name in TestName::all() {
         if test_name == TestName::Ed448 && !supports_ed448 {
@@ -1063,7 +1066,6 @@ fn wycheproof_xdh_tests() -> Result<(), botan::Error> {
         for test_group in &test_set.test_groups {
             for test in &test_group.tests {
                 let priv_key = continue_if_not_implemented!(match test_name {
-                    #[cfg(botan_ffi_20240408)]
                     TestName::X448 => botan::Privkey::load_x448(&test.private_key),
                     _ => botan::Privkey::load_x25519(&test.private_key),
                 });

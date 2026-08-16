@@ -82,7 +82,6 @@ impl MsgAuthCode {
         botan_call!(botan_mac_set_key, self.obj, key.as_ptr(), key.len())
     }
 
-    #[cfg(botan_ffi_20230403)]
     /// Set the nonce for the authentication code object
     ///
     /// Only a few MACs support this; currently only GMAC
@@ -93,6 +92,9 @@ impl MsgAuthCode {
     /// gmac.set_key(&vec![0; 16]).unwrap();
     /// gmac.set_nonce(&vec![0; 12]);
     /// ```
+    ///
+    /// This requires Botan 3.0 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn set_nonce(&mut self, nonce: &[u8]) -> Result<()> {
         botan_call!(botan_mac_set_nonce, self.obj, nonce.as_ptr(), nonce.len())
     }

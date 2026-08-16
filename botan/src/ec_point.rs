@@ -2,25 +2,22 @@ use crate::{MPI, RandomNumberGenerator, utils::*};
 use botan_sys::*;
 use core::ops::Add;
 
-#[cfg(botan_ffi_20260506)]
 use crate::EcGroup;
 
-#[cfg(botan_ffi_20260506)]
 #[derive(Debug)]
 /// An Integer modulo the prime group order of an elliptic curve
+///
+/// Creating this object requires Botan 3.12 or later; with older versions
+/// an error of type [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
 pub struct EcScalar {
     obj: botan_ec_scalar_t,
 }
 
-#[cfg(botan_ffi_20260506)]
 unsafe impl Sync for EcScalar {}
-#[cfg(botan_ffi_20260506)]
 unsafe impl Send for EcScalar {}
 
-#[cfg(botan_ffi_20260506)]
 botan_impl_drop!(EcScalar, botan_ec_scalar_destroy);
 
-#[cfg(botan_ffi_20260506)]
 impl EcScalar {
     pub(crate) fn handle(&self) -> botan_ec_scalar_t {
         self.obj
@@ -49,22 +46,20 @@ impl EcScalar {
     }
 }
 
-#[cfg(botan_ffi_20260506)]
 #[derive(Debug)]
 /// An elliptic curve point
+///
+/// Creating this object requires Botan 3.12 or later; with older versions
+/// an error of type [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
 pub struct EcPoint {
     obj: botan_ec_point_t,
 }
 
-#[cfg(botan_ffi_20260506)]
 unsafe impl Sync for EcPoint {}
-#[cfg(botan_ffi_20260506)]
 unsafe impl Send for EcPoint {}
 
-#[cfg(botan_ffi_20260506)]
 botan_impl_drop!(EcPoint, botan_ec_point_destroy);
 
-#[cfg(botan_ffi_20260506)]
 impl EcPoint {
     pub(crate) fn handle(&self) -> botan_ec_point_t {
         self.obj
@@ -135,41 +130,30 @@ impl EcPoint {
 
     /// Get the fixed length encoding of the affine x coordinate
     pub fn to_x_bytes(&self) -> Result<Vec<u8>> {
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_ec_point_view_x_bytes(self.obj, ctx, cb)
-        })
+        botan_view_vec!(botan_ec_point_view_x_bytes, self.obj)
     }
 
     /// Get the fixed length encoding of the affine y coordinate
     pub fn to_y_bytes(&self) -> Result<Vec<u8>> {
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_ec_point_view_y_bytes(self.obj, ctx, cb)
-        })
+        botan_view_vec!(botan_ec_point_view_y_bytes, self.obj)
     }
 
     /// Get the fixed length encoding of the affine x and y coordinates
     pub fn to_xy_bytes(&self) -> Result<Vec<u8>> {
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_ec_point_view_xy_bytes(self.obj, ctx, cb)
-        })
+        botan_view_vec!(botan_ec_point_view_xy_bytes, self.obj)
     }
 
     /// Get the fixed length SEC1 uncompressed encoding
     pub fn to_uncompressed(&self) -> Result<Vec<u8>> {
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_ec_point_view_uncompressed(self.obj, ctx, cb)
-        })
+        botan_view_vec!(botan_ec_point_view_uncompressed, self.obj)
     }
 
     /// Get the fixed length SEC1 compressed encoding
     pub fn to_compressed(&self) -> Result<Vec<u8>> {
-        call_botan_ffi_viewing_vec_u8(&|ctx, cb| unsafe {
-            botan_ec_point_view_compressed(self.obj, ctx, cb)
-        })
+        botan_view_vec!(botan_ec_point_view_compressed, self.obj)
     }
 }
 
-#[cfg(botan_ffi_20260506)]
 impl PartialEq for EcPoint {
     fn eq(&self, other: &Self) -> bool {
         self.is_equal(other)
@@ -177,10 +161,8 @@ impl PartialEq for EcPoint {
     }
 }
 
-#[cfg(botan_ffi_20260506)]
 impl Eq for EcPoint {}
 
-#[cfg(botan_ffi_20260506)]
 impl<'b> Add<&'b EcPoint> for &EcPoint {
     type Output = EcPoint;
 
@@ -190,7 +172,6 @@ impl<'b> Add<&'b EcPoint> for &EcPoint {
     }
 }
 
-#[cfg(botan_ffi_20260506)]
 impl Add<&EcPoint> for EcPoint {
     type Output = EcPoint;
 
@@ -199,7 +180,6 @@ impl Add<&EcPoint> for EcPoint {
     }
 }
 
-#[cfg(botan_ffi_20260506)]
 impl Add<EcPoint> for &EcPoint {
     type Output = EcPoint;
 
@@ -208,7 +188,6 @@ impl Add<EcPoint> for &EcPoint {
     }
 }
 
-#[cfg(botan_ffi_20260506)]
 impl Add<EcPoint> for EcPoint {
     type Output = EcPoint;
 

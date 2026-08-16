@@ -10,9 +10,6 @@
 #[macro_use]
 extern crate alloc;
 
-#[cfg(all(not(botan_ffi_20260303), not(feature = "std")))]
-compile_error!("Building this crate no_std requires Botan 3.11.0 or higher");
-
 extern crate botan_sys;
 
 macro_rules! botan_call {
@@ -21,7 +18,7 @@ macro_rules! botan_call {
         if rc == 0 {
             Ok(())
         } else {
-            Err(Error::from_rc(rc))
+            Err(Error::from_named_rc(core::stringify!($fn), rc))
         }
     }};
 }
@@ -33,7 +30,7 @@ macro_rules! botan_init {
         if rc == 0 {
             Ok(obj)
         } else {
-            Err(Error::from_rc(rc))
+            Err(Error::from_named_rc(core::stringify!($fn), rc))
         }
     }};
     ($fn:path, $($args:expr),*) => {{
@@ -42,7 +39,7 @@ macro_rules! botan_init {
         if rc == 0 {
             Ok(obj)
         } else {
-            Err(Error::from_rc(rc))
+            Err(Error::from_named_rc(core::stringify!($fn), rc))
         }
     }};
 }
@@ -57,7 +54,11 @@ macro_rules! botan_init_at {
         let rc = unsafe {
             $fn($($before,)* &mut obj $(, $after)*)
         };
-        if rc == 0 { Ok(obj) } else { Err(Error::from_rc(rc)) }
+        if rc == 0 {
+            Ok(obj)
+        } else {
+            Err(Error::from_named_rc(core::stringify!($fn), rc))
+        }
     }};
 }
 
@@ -67,7 +68,7 @@ macro_rules! botan_impl_drop {
             fn drop(&mut self) {
                 let rc = unsafe { $fn(self.obj) };
                 if rc != 0 {
-                    let err = Error::from_rc(rc);
+                    let err = Error::from_named_rc(core::stringify!($fn), rc);
                     panic!("{} failed: {}", core::stringify!($fn), err);
                 }
             }
@@ -80,7 +81,7 @@ macro_rules! botan_usize {
         let mut val = 0;
         let rc = unsafe { $fn($obj, &mut val) };
         if rc != 0 {
-            Err(Error::from_rc(rc))
+            Err(Error::from_named_rc(core::stringify!($fn), rc))
         } else {
             Ok(val)
         }
@@ -94,11 +95,31 @@ macro_rules! botan_usize3 {
         let mut val3 = 0;
         let rc = unsafe { $fn($obj, &mut val1, &mut val2, &mut val3) };
         if rc != 0 {
-            Err(Error::from_rc(rc))
+            Err(Error::from_named_rc(core::stringify!($fn), rc))
         } else {
             Ok((val1, val2, val3))
         }
     }};
+}
+
+/// `botan_view_vec!(func, args...)` invokes a Botan 3.0+ "view" function,
+/// which returns its output through a callback, and returns it as a `Vec<u8>`.
+/// The view context and callback are appended to the provided arguments.
+macro_rules! botan_view_vec {
+    ($fn:path $(, $args:expr)*) => {
+        crate::utils::call_botan_ffi_viewing_vec_u8(core::stringify!($fn), &|ctx, cb| unsafe {
+            $fn($($args,)* ctx, cb)
+        })
+    };
+}
+
+/// Like `botan_view_vec!` but for view functions returning a string
+macro_rules! botan_view_str {
+    ($fn:path $(, $args:expr)*) => {
+        crate::utils::call_botan_ffi_viewing_str_fn(core::stringify!($fn), &|ctx, cb| unsafe {
+            $fn($($args,)* ctx, cb)
+        })
+    };
 }
 
 macro_rules! botan_bool_in_rc {
@@ -108,7 +129,7 @@ macro_rules! botan_bool_in_rc {
         match rc {
             0 => Ok(false),
             1 => Ok(true),
-            e => Err(Error::from_rc(e)),
+            e => Err(Error::from_named_rc(core::stringify!($fn), e)),
         }
     }};
 }
@@ -163,14 +184,8 @@ pub use x509_cert::*;
 pub use x509_crl::*;
 pub use zfec::*;
 
-#[cfg(botan_ffi_20230403)]
 mod pk_ops_kem;
-
-#[cfg(botan_ffi_20230403)]
-pub use pk_ops_kem::*;
-
-#[cfg(botan_ffi_20260811)]
 mod spake2p;
 
-#[cfg(botan_ffi_20260811)]
+pub use pk_ops_kem::*;
 pub use spake2p::*;
