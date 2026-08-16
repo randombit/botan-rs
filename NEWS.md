@@ -16,6 +16,10 @@
 - `ErrorType` is now `#[non_exhaustive]` and gains the `LibraryNotLoaded` variant
 - The `no_std` build no longer requires Botan 3.11.0 at build time; instead
   relevant public key operations return an error at runtime with older versions
+- The per-key lock used to work around thread safety bugs in Botan versions
+  prior to 3.11.0 is now skipped for keys using algorithms known to be
+  unaffected (RSA, ECDSA, Ed25519, etc). In `no_std` builds, operations with
+  such keys now work with older versions of Botan.
 - `botan-sys` now declares every FFI function unconditionally, replacing functions
   not present in the detected headers with stubs which return an error.
 - Add support for SPAKE2+ added in Botan 3.13
