@@ -36,14 +36,18 @@ impl Cipher {
     /// ```
     /// let aes_gcm = botan::Cipher::new("AES-128/GCM", botan::CipherDirection::Encrypt).unwrap();
     /// ```
-    pub fn new(name: &str, direction: CipherDirection) -> Result<Cipher> {
+    pub fn new<A: crate::CipherAlgorithmIdentifier>(
+        name: A,
+        direction: CipherDirection,
+    ) -> Result<Cipher> {
         let mut flag = 0u32;
 
         if direction == CipherDirection::Decrypt {
             flag |= 1u32;
         };
 
-        let obj = botan_init!(botan_cipher_init, make_cstr(name)?.as_ptr(), flag)?;
+        let name = name.botan_name();
+        let obj = botan_init!(botan_cipher_init, make_cstr(&name)?.as_ptr(), flag)?;
 
         let tag_length = botan_usize!(botan_cipher_get_tag_length, obj)?;
         let update_granularity = botan_usize!(botan_cipher_get_update_granularity, obj)?;

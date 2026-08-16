@@ -20,8 +20,9 @@ impl RandomNumberGenerator {
     /// // This is just for demonstration, use RandomNumberGenerator::new_userspace() instead.
     /// let specific_rng = botan::RandomNumberGenerator::new_of_type("user").unwrap();
     /// ```
-    pub fn new_of_type(typ: &str) -> Result<RandomNumberGenerator> {
-        let typ = make_cstr(typ)?;
+    pub fn new_of_type<T: crate::RngTypeIdentifier>(typ: T) -> Result<RandomNumberGenerator> {
+        let typ = typ.botan_name();
+        let typ = make_cstr(&typ)?;
         let obj = botan_init!(botan_rng_init, typ.as_ptr())?;
         Ok(RandomNumberGenerator { obj })
     }
@@ -37,7 +38,7 @@ impl RandomNumberGenerator {
     /// let userspace_rng = botan::RandomNumberGenerator::new_userspace().unwrap();
     /// ```
     pub fn new_userspace() -> Result<RandomNumberGenerator> {
-        RandomNumberGenerator::new_of_type("user")
+        RandomNumberGenerator::new_of_type(crate::RngType::User)
     }
 
     /// Create a new reference to the system PRNG
@@ -47,7 +48,7 @@ impl RandomNumberGenerator {
     /// let system_rng = botan::RandomNumberGenerator::new_system().unwrap();
     /// ```
     pub fn new_system() -> Result<RandomNumberGenerator> {
-        RandomNumberGenerator::new_of_type("system")
+        RandomNumberGenerator::new_of_type(crate::RngType::System)
     }
 
     /// Create a new reference to the ESDM PRNG (fully seeded)
@@ -60,7 +61,7 @@ impl RandomNumberGenerator {
     /// let esdm_rng = botan::RandomNumberGenerator::new_esdm().unwrap();
     /// ```
     pub fn new_esdm() -> Result<RandomNumberGenerator> {
-        RandomNumberGenerator::new_of_type("esdm-full")
+        RandomNumberGenerator::new_of_type(crate::RngType::EsdmFull)
     }
 
     /// Create a new reference to the ESDM PRNG (with prediction resistance)
@@ -73,7 +74,7 @@ impl RandomNumberGenerator {
     /// let esdm_rng = botan::RandomNumberGenerator::new_esdm_pr().unwrap();
     /// ```
     pub fn new_esdm_pr() -> Result<RandomNumberGenerator> {
-        RandomNumberGenerator::new_of_type("esdm-pr")
+        RandomNumberGenerator::new_of_type(crate::RngType::EsdmPr)
     }
 
     /// Create a new reference to the Jitter RNG
@@ -86,7 +87,7 @@ impl RandomNumberGenerator {
     /// let jitter_rng = botan::RandomNumberGenerator::new_jitter().unwrap();
     /// ```
     pub fn new_jitter() -> Result<RandomNumberGenerator> {
-        RandomNumberGenerator::new_of_type("jitter")
+        RandomNumberGenerator::new_of_type(crate::RngType::Jitter)
     }
 
     /// Create a new reference to an RNG of some arbitrary type

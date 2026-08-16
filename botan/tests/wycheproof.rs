@@ -707,7 +707,7 @@ fn wycheproof_rsa_pkcs1_verify_tests() -> Result<(), botan::Error> {
 
             let mut verifier = continue_if_not_implemented!(botan::Verifier::new(
                 &key,
-                &format!("EMSA_PKCS1({hash})")
+                format!("EMSA_PKCS1({hash})")
             ));
 
             for test in &test_group.tests {
@@ -813,11 +813,11 @@ fn wycheproof_dsa_verify_tests() -> Result<(), botan::Error> {
                 // Has to be inside the loop to work around the bug addressed in
                 // https://github.com/randombit/botan/pull/3333
                 let mut verifier = continue_if_not_implemented!(if is_ieee {
-                    botan::Verifier::new(&key, &format!("EMSA1({hash})"))
+                    botan::Verifier::new(&key, format!("EMSA1({hash})"))
                 } else {
                     botan::Verifier::new_with_der_formatted_signatures(
                         &key,
-                        &format!("EMSA1({hash})"),
+                        format!("EMSA1({hash})"),
                     )
                 });
 
@@ -911,7 +911,7 @@ fn wycheproof_ecdsa_verify_tests() -> Result<(), botan::Error> {
             let key = continue_if_pk_unavailable!(botan::Pubkey::load_der(&test_group.der));
 
             let mut verifier_ieee =
-                continue_if_not_implemented!(botan::Verifier::new(&key, &format!("EMSA1({hash})")));
+                continue_if_not_implemented!(botan::Verifier::new(&key, format!("EMSA1({hash})")));
 
             for test in &test_group.tests {
                 let accept = if is_ieee {
@@ -922,7 +922,7 @@ fn wycheproof_ecdsa_verify_tests() -> Result<(), botan::Error> {
                     // https://github.com/randombit/botan/pull/3333
                     let mut verifier_der = botan::Verifier::new_with_der_formatted_signatures(
                         &key,
-                        &format!("EMSA1({hash})"),
+                        format!("EMSA1({hash})"),
                     )?;
 
                     verifier_der.update(&test.msg)?;

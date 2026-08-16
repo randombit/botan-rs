@@ -28,8 +28,9 @@ botan_impl_drop!(Signer, botan_pk_op_sign_destroy);
 
 impl Signer {
     /// Create a new signature operator
-    pub fn new(key: &Privkey, padding: &str) -> Result<Signer> {
-        let padding = make_cstr(padding)?;
+    pub fn new<P: crate::SignatureParamsIdentifier>(key: &Privkey, padding: P) -> Result<Signer> {
+        let padding = padding.botan_name();
+        let padding = make_cstr(&padding)?;
         let obj = botan_init!(
             botan_pk_op_sign_create,
             key.handle(),
@@ -41,8 +42,12 @@ impl Signer {
     }
 
     /// Create a new signature operator that outputs DER-formatted signatures
-    pub fn new_with_der_formatted_signatures(key: &Privkey, padding: &str) -> Result<Signer> {
-        let padding = make_cstr(padding)?;
+    pub fn new_with_der_formatted_signatures<P: crate::SignatureParamsIdentifier>(
+        key: &Privkey,
+        padding: P,
+    ) -> Result<Signer> {
+        let padding = padding.botan_name();
+        let padding = make_cstr(&padding)?;
         let obj = botan_init!(
             botan_pk_op_sign_create,
             key.handle(),
@@ -85,8 +90,12 @@ botan_impl_drop!(Decryptor, botan_pk_op_decrypt_destroy);
 
 impl Decryptor {
     /// Create a new decryption object
-    pub fn new(key: &Privkey, padding: &str) -> Result<Decryptor> {
-        let padding = make_cstr(padding)?;
+    pub fn new<P: crate::EncryptionParamsIdentifier>(
+        key: &Privkey,
+        padding: P,
+    ) -> Result<Decryptor> {
+        let padding = padding.botan_name();
+        let padding = make_cstr(&padding)?;
         let obj = botan_init!(
             botan_pk_op_decrypt_create,
             key.handle(),
@@ -126,8 +135,9 @@ botan_impl_drop!(Verifier, botan_pk_op_verify_destroy);
 
 impl Verifier {
     /// Create a new verifier object
-    pub fn new(key: &Pubkey, padding: &str) -> Result<Verifier> {
-        let padding = make_cstr(padding)?;
+    pub fn new<P: crate::SignatureParamsIdentifier>(key: &Pubkey, padding: P) -> Result<Verifier> {
+        let padding = padding.botan_name();
+        let padding = make_cstr(&padding)?;
         let obj = botan_init!(
             botan_pk_op_verify_create,
             key.handle(),
@@ -138,8 +148,12 @@ impl Verifier {
     }
 
     /// Create a new verifier object
-    pub fn new_with_der_formatted_signatures(key: &Pubkey, padding: &str) -> Result<Verifier> {
-        let padding = make_cstr(padding)?;
+    pub fn new_with_der_formatted_signatures<P: crate::SignatureParamsIdentifier>(
+        key: &Pubkey,
+        padding: P,
+    ) -> Result<Verifier> {
+        let padding = padding.botan_name();
+        let padding = make_cstr(&padding)?;
         let obj = botan_init!(
             botan_pk_op_verify_create,
             key.handle(),
@@ -192,8 +206,12 @@ botan_impl_drop!(Encryptor, botan_pk_op_encrypt_destroy);
 
 impl Encryptor {
     /// Create a new public key encryptor object
-    pub fn new(key: &Pubkey, padding: &str) -> Result<Encryptor> {
-        let padding = make_cstr(padding)?;
+    pub fn new<P: crate::EncryptionParamsIdentifier>(
+        key: &Pubkey,
+        padding: P,
+    ) -> Result<Encryptor> {
+        let padding = padding.botan_name();
+        let padding = make_cstr(&padding)?;
         let obj = botan_init!(
             botan_pk_op_encrypt_create,
             key.handle(),
@@ -241,8 +259,9 @@ botan_impl_drop!(KeyAgreement, botan_pk_op_key_agreement_destroy);
 
 impl KeyAgreement {
     /// Create a new key agreement operator
-    pub fn new(key: &Privkey, kdf: &str) -> Result<KeyAgreement> {
-        let kdf = make_cstr(kdf)?;
+    pub fn new<K: crate::KdfAlgorithmIdentifier>(key: &Privkey, kdf: K) -> Result<KeyAgreement> {
+        let kdf = kdf.botan_name();
+        let kdf = make_cstr(&kdf)?;
         let obj = botan_init!(
             botan_pk_op_key_agreement_create,
             key.handle(),

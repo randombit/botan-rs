@@ -33,8 +33,13 @@ impl HOTP {
     /// ```
     /// let hotp = botan::HOTP::new(&[1,2,3,4], "SHA-1", 6);
     /// ```
-    pub fn new(key: &[u8], hash_algo: &str, digits: usize) -> Result<HOTP> {
-        let hash_algo = make_cstr(hash_algo)?;
+    pub fn new<A: crate::HashAlgorithmIdentifier>(
+        key: &[u8],
+        hash_algo: A,
+        digits: usize,
+    ) -> Result<HOTP> {
+        let hash_algo = hash_algo.botan_name();
+        let hash_algo = make_cstr(&hash_algo)?;
 
         let obj = botan_init!(
             botan_hotp_init,
@@ -94,8 +99,14 @@ impl TOTP {
     /// ```
     /// let totp = botan::TOTP::new(&[1,2,3,4], "SHA-1", 6, 30);
     /// ```
-    pub fn new(key: &[u8], hash_algo: &str, digits: usize, time_step: usize) -> Result<TOTP> {
-        let hash_algo = make_cstr(hash_algo)?;
+    pub fn new<A: crate::HashAlgorithmIdentifier>(
+        key: &[u8],
+        hash_algo: A,
+        digits: usize,
+        time_step: usize,
+    ) -> Result<TOTP> {
+        let hash_algo = hash_algo.botan_name();
+        let hash_algo = make_cstr(&hash_algo)?;
 
         let obj = botan_init!(
             botan_totp_init,

@@ -146,9 +146,10 @@ impl Certificate {
     }
 
     /// Return the fingerprint of this certificate
-    pub fn fingerprint(&self, hash: &str) -> Result<Vec<u8>> {
+    pub fn fingerprint<A: crate::HashAlgorithmIdentifier>(&self, hash: A) -> Result<Vec<u8>> {
         let fprint_len = 128;
-        let hash = make_cstr(hash)?;
+        let hash = hash.botan_name();
+        let hash = make_cstr(&hash)?;
         call_botan_ffi_returning_vec_u8(fprint_len, &|out_buf, out_len| unsafe {
             botan_x509_cert_get_fingerprint(self.obj, hash.as_ptr(), out_buf, out_len)
         })

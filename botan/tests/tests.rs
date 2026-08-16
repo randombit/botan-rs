@@ -109,6 +109,692 @@ fn test_hash() -> Result<(), botan::Error> {
 }
 
 #[test]
+fn test_algorithm_identifiers() -> Result<(), botan::Error> {
+    let blake2b = botan::HashAlgorithm::Blake2b(256);
+    assert_eq!(blake2b.botan_name(), "BLAKE2b(256)");
+
+    let hmac = botan::MacAlgorithm::Hmac(botan::HashAlgorithm::Sha256);
+    assert_eq!(hmac.botan_name(), "HMAC(SHA-256)");
+
+    let kmac = botan::MacAlgorithm::Kmac128(256);
+    assert_eq!(kmac.botan_name(), "KMAC-128(256)");
+
+    let gcm = botan::CipherAlgorithm::Gcm(botan::BlockCipherAlgorithm::Aes128, Some(16));
+    assert_eq!(gcm.botan_name(), "AES-128/GCM(16)");
+
+    let ctr = botan::StreamCipherAlgorithm::CtrBe(botan::BlockCipherAlgorithm::Aes128, None);
+    assert_eq!(ctr.botan_name(), "CTR-BE(AES-128)");
+
+    let ctr32 = botan::StreamCipherAlgorithm::CtrBe(botan::BlockCipherAlgorithm::Aes128, Some(4));
+    assert_eq!(ctr32.botan_name(), "CTR-BE(AES-128,4)");
+
+    let rc4 = botan::StreamCipherAlgorithm::Rc4(Some(256));
+    assert_eq!(rc4.botan_name(), "RC4(256)");
+    assert_eq!(botan::StreamCipherAlgorithm::Rc4(None).botan_name(), "RC4");
+
+    assert_eq!(
+        botan::StreamCipherAlgorithm::ChaCha8.botan_name(),
+        "ChaCha(8)"
+    );
+    assert_eq!(
+        botan::StreamCipherAlgorithm::ChaCha12.botan_name(),
+        "ChaCha(12)"
+    );
+
+    assert_eq!(botan::RngType::Hwrng.botan_name(), "hwrng");
+
+    let cbc = botan::CipherAlgorithm::Cbc(botan::BlockCipherAlgorithm::Aes128, None);
+    assert_eq!(cbc.botan_name(), "AES-128/CBC");
+
+    let cbc_cts = botan::CipherAlgorithm::Cbc(
+        botan::BlockCipherAlgorithm::Aes128,
+        Some(botan::CipherPadding::Cts),
+    );
+    assert_eq!(cbc_cts.botan_name(), "AES-128/CBC/CTS");
+
+    let ccm = botan::CipherAlgorithm::Ccm(botan::BlockCipherAlgorithm::Aes128, None, None);
+    assert_eq!(ccm.botan_name(), "AES-128/CCM");
+
+    let ccm_tag = botan::CipherAlgorithm::Ccm(botan::BlockCipherAlgorithm::Aes128, Some(8), None);
+    assert_eq!(ccm_tag.botan_name(), "AES-128/CCM(8)");
+
+    let ccm_l = botan::CipherAlgorithm::Ccm(botan::BlockCipherAlgorithm::Aes128, None, Some(2));
+    assert_eq!(ccm_l.botan_name(), "AES-128/CCM(16,2)");
+
+    let ccm_tag_l =
+        botan::CipherAlgorithm::Ccm(botan::BlockCipherAlgorithm::Aes128, Some(8), Some(2));
+    assert_eq!(ccm_tag_l.botan_name(), "AES-128/CCM(8,2)");
+
+    let gcm_siv = botan::CipherAlgorithm::GcmSiv(botan::BlockCipherAlgorithm::Aes256);
+    assert_eq!(gcm_siv.botan_name(), "AES-256/GCM-SIV");
+
+    let ascon = botan::CipherAlgorithm::AsconAead128;
+    assert_eq!(ascon.botan_name(), "Ascon-AEAD128");
+
+    let lion = botan::BlockCipherAlgorithm::Arbitrary("Lion(SHA-1,RC4,64)".to_string());
+    assert_eq!(lion.botan_name(), "Lion(SHA-1,RC4,64)");
+
+    let pbkdf2_cmac = botan::PasswordHashAlgorithm::Pbkdf2Mac(botan::MacAlgorithm::Cmac(
+        botan::BlockCipherAlgorithm::Blowfish,
+    ));
+    assert_eq!(pbkdf2_cmac.botan_name(), "PBKDF2(CMAC(Blowfish))");
+
+    let pkcs12 = botan::PasswordHashAlgorithm::Pkcs12Kdf(botan::HashAlgorithm::Sha256, 1);
+    assert_eq!(pkcs12.botan_name(), "PKCS12-KDF(SHA-256,1)");
+
+    let hmac_sha256 = botan::MacAlgorithm::Hmac(botan::HashAlgorithm::Sha256);
+
+    assert_eq!(
+        botan::KdfAlgorithm::HkdfMac(botan::MacAlgorithm::Cmac(
+            botan::BlockCipherAlgorithm::Aes128
+        ))
+        .botan_name(),
+        "HKDF(CMAC(AES-128))"
+    );
+    assert_eq!(
+        botan::KdfAlgorithm::Tls12Prf(botan::HashAlgorithm::Sha256).botan_name(),
+        "TLS-12-PRF(SHA-256)"
+    );
+    assert_eq!(
+        botan::KdfAlgorithm::Tls12PrfMac(hmac_sha256.clone()).botan_name(),
+        "TLS-12-PRF(HMAC(SHA-256))"
+    );
+    assert_eq!(
+        botan::KdfAlgorithm::Sp80056cHash(botan::HashAlgorithm::Sha256).botan_name(),
+        "SP800-56C(SHA-256)"
+    );
+    assert_eq!(
+        botan::KdfAlgorithm::Sp800108Counter(hmac_sha256.clone(), None, None).botan_name(),
+        "SP800-108-Counter(HMAC(SHA-256))"
+    );
+    assert_eq!(
+        botan::KdfAlgorithm::Sp800108Counter(hmac_sha256.clone(), Some(8), None).botan_name(),
+        "SP800-108-Counter(HMAC(SHA-256),8)"
+    );
+    assert_eq!(
+        botan::KdfAlgorithm::Sp800108Counter(hmac_sha256.clone(), None, Some(64)).botan_name(),
+        "SP800-108-Counter(HMAC(SHA-256),32,64)"
+    );
+    assert_eq!(
+        botan::KdfAlgorithm::Sp800108Counter(hmac_sha256, Some(8), Some(64)).botan_name(),
+        "SP800-108-Counter(HMAC(SHA-256),8,64)"
+    );
+
+    assert_eq!(
+        botan::Pkcs8Kdf::Pbkdf2(botan::HashAlgorithm::Sha512).botan_name(),
+        "SHA-512"
+    );
+    assert_eq!(botan::Pkcs8Kdf::Scrypt.botan_name(), "Scrypt");
+
+    Ok(())
+}
+
+#[test]
+fn test_hash_algo_runtime() -> Result<(), botan::Error> {
+    let hash = skip_if_not_implemented!(botan::HashFunction::new(botan::HashAlgorithm::Sha384));
+    assert_eq!(hash.algo_name()?, "SHA-384");
+    Ok(())
+}
+
+#[test]
+fn test_mac_algo_runtime() -> Result<(), botan::Error> {
+    let mac = skip_if_not_implemented!(botan::MsgAuthCode::new(botan::MacAlgorithm::Hmac(
+        botan::HashAlgorithm::Sha384
+    )));
+    assert_eq!(mac.algo_name()?, "HMAC(SHA-384)");
+    Ok(())
+}
+
+#[test]
+fn test_block_cipher_algo_runtime() -> Result<(), botan::Error> {
+    let block =
+        skip_if_not_implemented!(botan::BlockCipher::new(botan::BlockCipherAlgorithm::Aes128));
+    assert_eq!(block.algo_name()?, "AES-128");
+    Ok(())
+}
+
+#[test]
+fn test_gcm_algo_runtime() -> Result<(), botan::Error> {
+    let cipher = skip_if_not_implemented!(botan::Cipher::new(
+        botan::CipherAlgorithm::Gcm(botan::BlockCipherAlgorithm::Aes128, None),
+        botan::CipherDirection::Encrypt,
+    ));
+    assert_eq!(cipher.algo_name()?, "AES-128/GCM(16)");
+    Ok(())
+}
+
+#[test]
+fn test_cbc_algo_runtime() -> Result<(), botan::Error> {
+    let cipher = skip_if_not_implemented!(botan::Cipher::new(
+        botan::CipherAlgorithm::Cbc(botan::BlockCipherAlgorithm::Aes128, None),
+        botan::CipherDirection::Encrypt,
+    ));
+    assert_eq!(cipher.algo_name()?, "AES-128/CBC/PKCS7");
+    Ok(())
+}
+
+#[test]
+fn test_ccm_algo_runtime() -> Result<(), botan::Error> {
+    let cipher = skip_if_not_implemented!(botan::Cipher::new(
+        botan::CipherAlgorithm::Ccm(botan::BlockCipherAlgorithm::Aes128, Some(8), Some(2)),
+        botan::CipherDirection::Encrypt,
+    ));
+    assert_eq!(cipher.algo_name()?, "AES-128/CCM(8,2)");
+    Ok(())
+}
+
+#[test]
+fn test_ctr_algo_runtime() -> Result<(), botan::Error> {
+    let cipher = skip_if_not_implemented!(botan::Cipher::new(
+        botan::CipherAlgorithm::CtrBe(botan::BlockCipherAlgorithm::Aes128, Some(4)),
+        botan::CipherDirection::Encrypt,
+    ));
+    assert_eq!(cipher.algo_name()?, "CTR-BE(AES-128,4)");
+    Ok(())
+}
+
+#[test]
+fn test_chacha_algo_runtime() -> Result<(), botan::Error> {
+    let cipher = skip_if_not_implemented!(botan::Cipher::new(
+        botan::CipherAlgorithm::Stream(botan::StreamCipherAlgorithm::ChaCha12),
+        botan::CipherDirection::Encrypt,
+    ));
+    assert_eq!(cipher.algo_name()?, "ChaCha(12)");
+    Ok(())
+}
+
+#[test]
+fn test_ascon_algo_runtime() -> Result<(), botan::Error> {
+    let cipher = skip_if_not_implemented!(botan::Cipher::new(
+        botan::CipherAlgorithm::AsconAead128,
+        botan::CipherDirection::Encrypt,
+    ));
+    assert_eq!(cipher.algo_name()?, "Ascon-AEAD128");
+    Ok(())
+}
+
+#[test]
+fn test_gcm_siv_algo_runtime() -> Result<(), botan::Error> {
+    let cipher = skip_if_not_implemented!(botan::Cipher::new(
+        botan::CipherAlgorithm::GcmSiv(botan::BlockCipherAlgorithm::Aes256),
+        botan::CipherDirection::Encrypt,
+    ));
+    assert_eq!(cipher.algo_name()?, "AES-256/GCM-SIV");
+    Ok(())
+}
+
+#[test]
+fn test_kdf_algo_runtime() -> Result<(), botan::Error> {
+    let salt = botan::hex_decode("000102030405060708090A0B0C")?;
+    let label = botan::hex_decode("F0F1F2F3F4F5F6F7F8F9")?;
+    let secret = botan::hex_decode("0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B")?;
+    let derived = skip_if_not_implemented!(botan::kdf(
+        botan::KdfAlgorithm::Hkdf(botan::HashAlgorithm::Sha256),
+        42,
+        &secret,
+        &salt,
+        &label,
+    ));
+    assert_eq!(derived.len(), 42);
+
+    // The one-width form of SP800-108
+    let derived = skip_if_not_implemented!(botan::kdf(
+        botan::KdfAlgorithm::Sp800108Counter(
+            botan::MacAlgorithm::Hmac(botan::HashAlgorithm::Sha256),
+            Some(8),
+            None
+        ),
+        32,
+        &secret,
+        &salt,
+        &label,
+    ));
+    assert_eq!(derived.len(), 32);
+
+    Ok(())
+}
+
+#[test]
+fn test_pbkdf_algo_runtime() -> Result<(), botan::Error> {
+    let salt = botan::hex_decode("000102030405060708090A0B0C")?;
+    let pbkdf = skip_if_not_implemented!(botan::pbkdf(
+        botan::PasswordHashAlgorithm::Pbkdf2(botan::HashAlgorithm::Sha256),
+        16,
+        "passphrase",
+        &salt,
+        10000,
+    ));
+    assert_eq!(pbkdf.len(), 16);
+
+    let pbkdf = skip_if_not_implemented!(botan::pbkdf(
+        botan::PasswordHashAlgorithm::Pbkdf2Mac(botan::MacAlgorithm::Hmac(
+            botan::HashAlgorithm::Sha512,
+        )),
+        16,
+        "passphrase",
+        &salt,
+        10000,
+    ));
+    assert_eq!(pbkdf.len(), 16);
+
+    Ok(())
+}
+
+#[test]
+fn test_pkcs12_kdf_algo_runtime() -> Result<(), botan::Error> {
+    let salt = botan::hex_decode("000102030405060708090A0B0C")?;
+    let pkcs12 = botan::PasswordHashAlgorithm::Pkcs12Kdf(botan::HashAlgorithm::Sha256, 1);
+    let key = skip_if_not_implemented!(botan::derive_key_from_password(
+        pkcs12,
+        16,
+        "passphrase",
+        &salt,
+        1000,
+        0,
+        0
+    ));
+    assert_eq!(key.len(), 16);
+    Ok(())
+}
+
+#[test]
+fn test_pkcs8_kdf_runtime() -> Result<(), botan::Error> {
+    let mut rng = botan::RandomNumberGenerator::new_userspace()?;
+    let key = skip_if_not_implemented!(botan::Privkey::create(
+        botan::PublicKeyAlgorithm::Ecdsa,
+        botan::EcGroupId::Secp256r1,
+        &mut rng
+    ));
+
+    let pem = skip_if_not_implemented!(key.pem_encode_encrypted_with_options(
+        "passphrase",
+        botan::CipherAlgorithm::Cbc(botan::BlockCipherAlgorithm::Aes256, None),
+        botan::Pkcs8Kdf::Pbkdf2(botan::HashAlgorithm::Sha512),
+        10000,
+        &mut rng
+    ));
+    let loaded = botan::Privkey::load_encrypted_pem(&pem, "passphrase")?;
+    assert_eq!(loaded.algo_name()?, "ECDSA");
+
+    let pem = skip_if_not_implemented!(key.pem_encode_encrypted_with_options(
+        "passphrase",
+        botan::CipherAlgorithm::Cbc(botan::BlockCipherAlgorithm::Aes256, None),
+        botan::Pkcs8Kdf::Scrypt,
+        8192,
+        &mut rng
+    ));
+    let loaded = botan::Privkey::load_encrypted_pem(&pem, "passphrase")?;
+    assert_eq!(loaded.algo_name()?, "ECDSA");
+
+    Ok(())
+}
+
+#[test]
+fn test_signature_params() -> Result<(), botan::Error> {
+    use botan::SignatureParamsIdentifier;
+    use botan::{HashAlgorithm, PublicKeyAlgorithm, SignatureParams};
+
+    // Botan 2 requires the EMSA1 spelling for hash parameterized schemes
+    let expected_hash_padding = if botan::Version::current()?.major == 2 {
+        "EMSA1(SHA-256)"
+    } else {
+        "SHA-256"
+    };
+    assert_eq!(
+        SignatureParams::Hash(HashAlgorithm::Sha256).botan_name(),
+        expected_hash_padding
+    );
+    assert_eq!(
+        SignatureParams::RsaPss {
+            hash: HashAlgorithm::Sha256,
+            salt_len: None
+        }
+        .botan_name(),
+        "PSS(SHA-256)"
+    );
+    assert_eq!(
+        SignatureParams::RsaPss {
+            hash: HashAlgorithm::Sha256,
+            salt_len: Some(32)
+        }
+        .botan_name(),
+        "PSS(SHA-256,MGF1,32)"
+    );
+    assert_eq!(
+        SignatureParams::RsaPssRaw {
+            hash: HashAlgorithm::Sha512,
+            salt_len: Some(64)
+        }
+        .botan_name(),
+        "PSS_Raw(SHA-512,MGF1,64)"
+    );
+    assert_eq!(
+        SignatureParams::RsaPkcs1v15(HashAlgorithm::Sha384).botan_name(),
+        "PKCS1v15(SHA-384)"
+    );
+    assert_eq!(
+        SignatureParams::RsaPkcs1v15Raw(None).botan_name(),
+        "PKCS1v15(Raw)"
+    );
+    assert_eq!(
+        SignatureParams::RsaPkcs1v15Raw(Some(HashAlgorithm::Sha256)).botan_name(),
+        "PKCS1v15(Raw,SHA-256)"
+    );
+    assert_eq!(
+        SignatureParams::RsaX931(HashAlgorithm::Sha256).botan_name(),
+        "X9.31(SHA-256)"
+    );
+    assert_eq!(SignatureParams::Raw(None).botan_name(), "Raw");
+    assert_eq!(
+        SignatureParams::Raw(Some(HashAlgorithm::Sha256)).botan_name(),
+        "Raw(SHA-256)"
+    );
+    assert_eq!(
+        SignatureParams::Sm2 {
+            user_id: "user@example.com".to_string(),
+            hash: None
+        }
+        .botan_name(),
+        "user@example.com"
+    );
+    assert_eq!(
+        SignatureParams::Sm2 {
+            user_id: "user@example.com".to_string(),
+            hash: Some(HashAlgorithm::Sm3)
+        }
+        .botan_name(),
+        "user@example.com,SM3"
+    );
+    assert_eq!(SignatureParams::Deterministic.botan_name(), "Deterministic");
+    assert_eq!(SignatureParams::Randomized.botan_name(), "Randomized");
+    assert_eq!(SignatureParams::Ed25519ph.botan_name(), "Ed25519ph");
+    assert_eq!(SignatureParams::Ed448ph.botan_name(), "Ed448ph");
+    assert_eq!(None::<SignatureParams>.botan_name(), "");
+
+    assert_eq!(PublicKeyAlgorithm::MlKem.botan_name(), "ML-KEM");
+    assert_eq!(PublicKeyAlgorithm::MlDsa.botan_name(), "ML-DSA");
+    assert_eq!(PublicKeyAlgorithm::SlhDsa.botan_name(), "SLH-DSA");
+    assert_eq!(PublicKeyAlgorithm::FrodoKem.botan_name(), "FrodoKEM");
+    assert_eq!(
+        PublicKeyAlgorithm::ClassicMcEliece.botan_name(),
+        "ClassicMcEliece"
+    );
+    assert_eq!(PublicKeyAlgorithm::HssLms.botan_name(), "HSS-LMS");
+    assert_eq!(PublicKeyAlgorithm::Xmss.botan_name(), "XMSS");
+
+    Ok(())
+}
+
+#[test]
+fn test_signature_params_ecdsa() -> Result<(), botan::Error> {
+    let msg = [1u8, 23, 84, 224];
+    let mut rng = botan::RandomNumberGenerator::new_userspace()?;
+
+    let ecdsa_key = skip_if_not_implemented!(botan::Privkey::create(
+        botan::PublicKeyAlgorithm::Ecdsa,
+        botan::EcGroupId::Secp256r1,
+        &mut rng,
+    ));
+    // Passing a HashAlgorithm directly as the signature parameters
+    let sig = ecdsa_key.sign(&msg, botan::HashAlgorithm::Sha256, &mut rng)?;
+
+    assert!(ecdsa_key.pubkey()?.verify(
+        &msg,
+        &sig,
+        botan::SignatureParams::Hash(botan::HashAlgorithm::Sha256)
+    )?);
+
+    Ok(())
+}
+
+#[test]
+fn test_signature_params_rsa_pss() -> Result<(), botan::Error> {
+    let msg = [1u8, 23, 84, 224];
+    let mut rng = botan::RandomNumberGenerator::new_userspace()?;
+
+    let rsa_key = skip_if_not_implemented!(botan::Privkey::create(
+        botan::PublicKeyAlgorithm::Rsa,
+        2048u32,
+        &mut rng
+    ));
+    let pss = botan::SignatureParams::RsaPss {
+        hash: botan::HashAlgorithm::Sha256,
+        salt_len: Some(32),
+    };
+    // The PSS padding is independent of RSA itself
+    let sig = skip_if_not_implemented!(rsa_key.sign(&msg, &pss, &mut rng));
+    assert!(rsa_key.pubkey()?.verify(&msg, &sig, &pss)?);
+    Ok(())
+}
+
+#[test]
+fn test_signature_params_ed25519() -> Result<(), botan::Error> {
+    let msg = [1u8, 23, 84, 224];
+    let mut rng = botan::RandomNumberGenerator::new_userspace()?;
+
+    // Pure signing takes no parameters
+    let ed_key = skip_if_not_implemented!(botan::Privkey::create(
+        botan::PublicKeyAlgorithm::Ed25519,
+        "",
+        &mut rng
+    ));
+    let sig = ed_key.sign(&msg, None, &mut rng)?;
+    assert!(ed_key.pubkey()?.verify(&msg, &sig, None)?);
+
+    let sig = ed_key.sign(&msg, botan::SignatureParams::Ed25519ph, &mut rng)?;
+    assert!(
+        ed_key
+            .pubkey()?
+            .verify(&msg, &sig, botan::SignatureParams::Ed25519ph)?
+    );
+    Ok(())
+}
+
+#[test]
+fn test_signature_params_ml_dsa() -> Result<(), botan::Error> {
+    let msg = [1u8, 23, 84, 224];
+    let mut rng = botan::RandomNumberGenerator::new_userspace()?;
+
+    let key = skip_if_not_implemented!(botan::Privkey::create(
+        botan::PublicKeyAlgorithm::MlDsa,
+        botan::MlDsaParams::MlDsa6x5,
+        &mut rng,
+    ));
+    let sig = key.sign(&msg, botan::SignatureParams::Deterministic, &mut rng)?;
+    assert!(key.pubkey()?.verify(&msg, &sig, None)?);
+    Ok(())
+}
+
+#[test]
+fn test_encryption_params() -> Result<(), botan::Error> {
+    use botan::EncryptionParamsIdentifier;
+    use botan::{EncryptionParams, HashAlgorithm};
+
+    assert_eq!(
+        EncryptionParams::RsaOaep {
+            hash: HashAlgorithm::Sha256,
+            mgf1_hash: None,
+            label: None
+        }
+        .botan_name(),
+        "OAEP(SHA-256,MGF1)"
+    );
+    assert_eq!(
+        EncryptionParams::RsaOaep {
+            hash: HashAlgorithm::Sha256,
+            mgf1_hash: Some(HashAlgorithm::Sha512),
+            label: None
+        }
+        .botan_name(),
+        "OAEP(SHA-256,MGF1(SHA-512))"
+    );
+    assert_eq!(
+        EncryptionParams::RsaOaep {
+            hash: HashAlgorithm::Sha256,
+            mgf1_hash: None,
+            label: Some("label".to_string())
+        }
+        .botan_name(),
+        "OAEP(SHA-256,MGF1,label)"
+    );
+    assert_eq!(
+        EncryptionParams::RsaOaep {
+            hash: HashAlgorithm::Sha256,
+            mgf1_hash: Some(HashAlgorithm::Sha512),
+            label: Some("label".to_string())
+        }
+        .botan_name(),
+        "OAEP(SHA-256,MGF1(SHA-512),label)"
+    );
+    assert_eq!(EncryptionParams::RsaPkcs1v15.botan_name(), "PKCS1v15");
+    assert_eq!(EncryptionParams::Raw.botan_name(), "Raw");
+    assert_eq!(
+        EncryptionParams::Sm2(HashAlgorithm::Sm3).botan_name(),
+        "SM3"
+    );
+    assert_eq!(None::<EncryptionParams>.botan_name(), "");
+
+    Ok(())
+}
+
+#[test]
+fn test_encryption_params_rsa_oaep() -> Result<(), botan::Error> {
+    let msg = [1u8, 23, 84, 224];
+    let mut rng = botan::RandomNumberGenerator::new_userspace()?;
+
+    // OAEP with a label; decryption must use the same label
+    let rsa_key = skip_if_not_implemented!(botan::Privkey::create(
+        botan::PublicKeyAlgorithm::Rsa,
+        2048u32,
+        &mut rng
+    ));
+    let oaep = botan::EncryptionParams::RsaOaep {
+        hash: botan::HashAlgorithm::Sha256,
+        mgf1_hash: None,
+        label: Some("label".to_string()),
+    };
+    // The OAEP padding is independent of RSA itself
+    let ctext = skip_if_not_implemented!(rsa_key.pubkey()?.encrypt(&msg, &oaep, &mut rng));
+    assert_eq!(rsa_key.decrypt(&ctext, &oaep)?, msg);
+
+    let wrong_label = botan::EncryptionParams::RsaOaep {
+        hash: botan::HashAlgorithm::Sha256,
+        mgf1_hash: None,
+        label: Some("wrong".to_string()),
+    };
+    assert!(rsa_key.decrypt(&ctext, &wrong_label).is_err());
+    Ok(())
+}
+
+#[test]
+fn test_encryption_params_sm2() -> Result<(), botan::Error> {
+    let msg = [1u8, 23, 84, 224];
+    let mut rng = botan::RandomNumberGenerator::new_userspace()?;
+
+    // SM2 encryption, with an explicit hash and with the SM3 default
+    let sm2_key = skip_if_not_implemented!(botan::Privkey::create(
+        botan::PublicKeyAlgorithm::Sm2,
+        botan::EcGroupId::Sm2p256v1,
+        &mut rng,
+    ));
+    let ctext = sm2_key.pubkey()?.encrypt(
+        &msg,
+        botan::EncryptionParams::Sm2(botan::HashAlgorithm::Sha256),
+        &mut rng,
+    )?;
+    assert_eq!(
+        sm2_key.decrypt(
+            &ctext,
+            botan::EncryptionParams::Sm2(botan::HashAlgorithm::Sha256)
+        )?,
+        msg
+    );
+
+    let ctext = sm2_key.pubkey()?.encrypt(&msg, None, &mut rng)?;
+    assert_eq!(sm2_key.decrypt(&ctext, None)?, msg);
+
+    Ok(())
+}
+
+#[test]
+fn test_keygen_params() -> Result<(), botan::Error> {
+    use botan::KeyGenParamsIdentifier;
+
+    assert_eq!(botan::EcGroupId::Secp521r1.botan_name(), "secp521r1");
+    assert_eq!(
+        botan::EcGroupId::Brainpool256r1.botan_name(),
+        "brainpool256r1"
+    );
+    assert_eq!(botan::DlGroup::ModpIetf2048.botan_name(), "modp/ietf/2048");
+    assert_eq!(
+        botan::DlGroup::FfdheIetf4096.botan_name(),
+        "ffdhe/ietf/4096"
+    );
+    assert_eq!(botan::MlKemParams::MlKem1024.botan_name(), "ML-KEM-1024");
+    assert_eq!(botan::MlDsaParams::MlDsa8x7.botan_name(), "ML-DSA-8x7");
+    assert_eq!(
+        botan::SlhDsaParams::Sha2_128s.botan_name(),
+        "SLH-DSA-SHA2-128s"
+    );
+    assert_eq!(
+        botan::SlhDsaParams::Shake256f.botan_name(),
+        "SLH-DSA-SHAKE-256f"
+    );
+    assert_eq!(
+        botan::FrodoKemParams::EFrodo640Shake.botan_name(),
+        "eFrodoKEM-640-SHAKE"
+    );
+    assert_eq!(
+        botan::ClassicMcElieceParams::P6960119pcf.botan_name(),
+        "ClassicMcEliece_6960119pcf"
+    );
+    assert_eq!(
+        botan::XmssParams::Shake256_10_192.botan_name(),
+        "XMSS-SHAKE256_10_192"
+    );
+    assert_eq!(2048u32.botan_name(), "2048");
+
+    Ok(())
+}
+
+#[test]
+fn test_keygen_params_dh() -> Result<(), botan::Error> {
+    let mut rng = botan::RandomNumberGenerator::new_userspace()?;
+    let dh_key = skip_if_not_implemented!(botan::Privkey::create(
+        botan::PublicKeyAlgorithm::Dh,
+        botan::DlGroup::ModpIetf2048,
+        &mut rng,
+    ));
+    assert_eq!(dh_key.algo_name()?, "DH");
+    Ok(())
+}
+
+#[test]
+fn test_keygen_params_ml_kem() -> Result<(), botan::Error> {
+    let mut rng = botan::RandomNumberGenerator::new_userspace()?;
+    let key = skip_if_not_implemented!(botan::Privkey::create(
+        botan::PublicKeyAlgorithm::MlKem,
+        botan::MlKemParams::MlKem768,
+        &mut rng,
+    ));
+    assert_eq!(key.algo_name()?, "ML-KEM");
+    Ok(())
+}
+
+#[test]
+fn test_keygen_params_slh_dsa() -> Result<(), botan::Error> {
+    let mut rng = botan::RandomNumberGenerator::new_userspace()?;
+    let key = skip_if_not_implemented!(botan::Privkey::create(
+        botan::PublicKeyAlgorithm::SlhDsa,
+        botan::SlhDsaParams::Shake128f,
+        &mut rng,
+    ));
+    let sig = key.sign(&[1, 2, 3], None, &mut rng)?;
+    assert!(key.pubkey()?.verify(&[1, 2, 3], &sig, None)?);
+    Ok(())
+}
+
+#[test]
 fn test_mac() -> Result<(), botan::Error> {
     let mut mac = skip_if_not_implemented!(botan::MsgAuthCode::new("HMAC(SHA-384)"));
 
