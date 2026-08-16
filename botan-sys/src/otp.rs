@@ -6,7 +6,7 @@ pub type botan_hotp_t = *mut botan_hotp_struct;
 pub enum botan_totp_struct {}
 pub type botan_totp_t = *mut botan_totp_struct;
 
-unsafe extern "C" {
+botan_ffi_functions! {
 
     pub fn botan_hotp_init(
         hotp: *mut botan_hotp_t,

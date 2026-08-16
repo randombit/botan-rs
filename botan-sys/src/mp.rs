@@ -1,6 +1,5 @@
 use crate::ffi_types::c_int;
 
-#[cfg(botan_ffi_20250506)]
 use crate::ffi_types::{botan_view_bin_fn, botan_view_ctx, botan_view_str_fn};
 
 use crate::ffi_types::c_char;
@@ -9,7 +8,7 @@ use crate::rng::botan_rng_t;
 pub enum botan_mp_struct {}
 pub type botan_mp_t = *mut botan_mp_struct;
 
-unsafe extern "C" {
+botan_ffi_functions! {
 
     pub fn botan_mp_init(mp: *mut botan_mp_t) -> c_int;
     pub fn botan_mp_destroy(mp: botan_mp_t) -> c_int;
@@ -80,11 +79,11 @@ unsafe extern "C" {
     pub fn botan_mp_set_bit(n: botan_mp_t, bit: usize) -> c_int;
     pub fn botan_mp_clear_bit(n: botan_mp_t, bit: usize) -> c_int;
 
-    #[cfg(botan_ffi_20250506)]
+    #[cfg(botan_ffi_20250829)]
     pub fn botan_mp_view_hex(mp: botan_mp_t, ctx: botan_view_ctx, view: botan_view_str_fn)
     -> c_int;
 
-    #[cfg(botan_ffi_20250506)]
+    #[cfg(botan_ffi_20250829)]
     pub fn botan_mp_view_str(
         mp: botan_mp_t,
         radix: u8,

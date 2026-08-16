@@ -4,12 +4,14 @@ use crate::rng::botan_rng_t;
 pub enum botan_srp6_server_session_struct {}
 pub type botan_srp6_server_session_t = *mut botan_srp6_server_session_struct;
 
-#[cfg(botan_ffi_20230403)]
-unsafe extern "C" {
+botan_ffi_functions! {
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_srp6_server_session_init(srp6: *mut botan_srp6_server_session_t) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_srp6_server_session_destroy(srp6: botan_srp6_server_session_t) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_srp6_server_session_step1(
         srp6: botan_srp6_server_session_t,
         verifier: *const u8,
@@ -21,6 +23,7 @@ unsafe extern "C" {
         B_pub_len: *mut usize,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_srp6_server_session_step2(
         srp6: botan_srp6_server_session_t,
         A: *const u8,
@@ -29,6 +32,7 @@ unsafe extern "C" {
         key_len: *mut usize,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_srp6_generate_verifier(
         identifier: *const c_char,
         password: *const c_char,
@@ -40,6 +44,7 @@ unsafe extern "C" {
         verifier_len: *mut usize,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_srp6_client_agree(
         username: *const c_char,
         password: *const c_char,
@@ -56,5 +61,6 @@ unsafe extern "C" {
         K_len: *mut usize,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230403)]
     pub fn botan_srp6_group_size(group_id: *const c_char, group_p_bytes: *mut usize) -> c_int;
 }

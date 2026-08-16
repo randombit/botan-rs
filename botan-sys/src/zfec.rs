@@ -1,4 +1,4 @@
-unsafe extern "C" {
+botan_ffi_functions! {
 
     #[cfg(botan_ffi_20230403)]
     pub fn botan_zfec_encode(

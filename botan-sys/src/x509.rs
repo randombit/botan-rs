@@ -3,10 +3,8 @@ use crate::ffi_types::*;
 use crate::pubkey::{botan_privkey_t, botan_pubkey_t};
 use crate::rng::botan_rng_t;
 
-#[cfg(botan_ffi_20260303)]
 use crate::mp::botan_mp_t;
 
-#[cfg(botan_ffi_20260303)]
 use crate::oid::botan_asn1_oid_t;
 
 pub enum botan_x509_cert_struct {}
@@ -15,14 +13,10 @@ pub type botan_x509_cert_t = *mut botan_x509_cert_struct;
 pub enum botan_x509_crl_struct {}
 pub type botan_x509_crl_t = *mut botan_x509_crl_struct;
 
-#[cfg(botan_ffi_20260303)]
 pub enum botan_x509_crl_entry_struct {}
-#[cfg(botan_ffi_20260303)]
 pub type botan_x509_crl_entry_t = *mut botan_x509_crl_entry_struct;
 
-#[cfg(botan_ffi_20260303)]
 pub enum botan_x509_general_name_struct {}
-#[cfg(botan_ffi_20260303)]
 pub type botan_x509_general_name_t = *mut botan_x509_general_name_struct;
 
 #[repr(u32)]
@@ -40,7 +34,6 @@ pub enum X509KeyConstraints {
     DECIPHER_ONLY = 128,
 }
 
-#[cfg(botan_ffi_20260303)]
 #[repr(i32)]
 pub enum X509ValueType {
     BOTAN_X509_SERIAL_NUMBER = 0,
@@ -59,7 +52,6 @@ pub enum X509ValueType {
     BOTAN_X509_CA_ISSUERS_URLS = 402,
 }
 
-#[cfg(botan_ffi_20260303)]
 #[repr(i32)]
 pub enum X509GeneralNameType {
     BOTAN_X509_OTHER_NAME = 0,
@@ -70,7 +62,6 @@ pub enum X509GeneralNameType {
     BOTAN_X509_IP_ADDRESS = 7,
 }
 
-#[cfg(botan_ffi_20260303)]
 #[repr(i32)]
 pub enum X509CrlReasonCode {
     BOTAN_CRL_ENTRY_UNSPECIFIED = 0,
@@ -85,7 +76,6 @@ pub enum X509CrlReasonCode {
     BOTAN_CRL_ENTRY_AA_COMPROMISE = 10,
 }
 
-#[cfg(botan_ffi_20260303)]
 impl TryFrom<i32> for X509CrlReasonCode {
     type Error = ();
 
@@ -106,7 +96,7 @@ impl TryFrom<i32> for X509CrlReasonCode {
     }
 }
 
-unsafe extern "C" {
+botan_ffi_functions! {
     pub fn botan_x509_cert_load(
         cert_obj: *mut botan_x509_cert_t,
         cert: *const u8,
@@ -368,7 +358,7 @@ unsafe extern "C" {
         reference_time: u64,
     ) -> c_int;
 
-    pub fn botan_x509_cert_validation_status(code: c_int) -> *const c_char;
+    pub fn botan_x509_cert_validation_status(code: c_int) -> *const c_char = core::ptr::null();
 
     #[cfg(botan_ffi_20260811)]
     pub fn botan_x509_ext_ip_addr_blocks_get_counts(

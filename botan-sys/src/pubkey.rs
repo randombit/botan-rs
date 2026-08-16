@@ -3,10 +3,8 @@ use crate::ffi_types::*;
 use crate::mp::botan_mp_t;
 use crate::rng::botan_rng_t;
 
-#[cfg(botan_ffi_20250506)]
 use crate::{botan_asn1_oid_t, botan_ec_group_t};
 
-#[cfg(botan_ffi_20260506)]
 use crate::botan_ec_scalar_t;
 
 pub enum botan_pubkey_struct {}
@@ -15,7 +13,7 @@ pub type botan_pubkey_t = *mut botan_pubkey_struct;
 pub enum botan_privkey_struct {}
 pub type botan_privkey_t = *mut botan_privkey_struct;
 
-unsafe extern "C" {
+botan_ffi_functions! {
     pub fn botan_privkey_create(
         key: *mut botan_privkey_t,
         algo_name: *const c_char,
@@ -300,7 +298,7 @@ unsafe extern "C" {
         key: botan_pubkey_t,
     ) -> c_int;
 
-    #[cfg(botan_ffi_20250506)]
+    #[cfg(botan_ffi_20250829)]
     pub fn botan_pubkey_load_ecdsa_sec1(
         key: *mut botan_pubkey_t,
         sec1: *const u8,
@@ -308,7 +306,7 @@ unsafe extern "C" {
         curve_name: *const c_char,
     ) -> c_int;
 
-    #[cfg(botan_ffi_20250506)]
+    #[cfg(botan_ffi_20250829)]
     pub fn botan_pubkey_load_ecdh_sec1(
         key: *mut botan_pubkey_t,
         sec1: *const u8,
@@ -316,7 +314,7 @@ unsafe extern "C" {
         curve_name: *const c_char,
     ) -> c_int;
 
-    #[cfg(botan_ffi_20250506)]
+    #[cfg(botan_ffi_20250829)]
     pub fn botan_pubkey_load_sm2_sec1(
         key: *mut botan_pubkey_t,
         sec1: *const u8,
@@ -326,22 +324,26 @@ unsafe extern "C" {
 
     // botan_privkey_create_mceliece intentionally omitted
 
-    #[cfg(botan_ffi_20230403)]
+    #[cfg(botan_ffi_20231009)]
     pub fn botan_pubkey_ecc_key_used_explicit_encoding(key: botan_pubkey_t) -> c_int;
 
+    #[cfg(botan_ffi_20230711)]
     pub fn botan_privkey_load_kyber(
         key: *mut botan_privkey_t,
         privkey: *const u8,
         key_len: usize,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20230711)]
     pub fn botan_pubkey_load_kyber(
         key: *mut botan_pubkey_t,
         pubkey: *const u8,
         key_len: usize,
     ) -> c_int;
 
-    #[cfg(botan_ffi_20230403)]
+    // Added in Botan 3.6, which did not bump the FFI version; the first
+    // FFI version that guarantees availability is 20250506 (Botan 3.8)
+    #[cfg(botan_ffi_20250506)]
     pub fn botan_pubkey_view_raw(
         key: botan_pubkey_t,
         view_ctx: botan_view_ctx,
@@ -362,7 +364,9 @@ unsafe extern "C" {
         view_fn: botan_view_str_fn,
     ) -> c_int;
 
-    #[cfg(botan_ffi_20230403)]
+    // Added in Botan 3.6, which did not bump the FFI version; the first
+    // FFI version that guarantees availability is 20250506 (Botan 3.8)
+    #[cfg(botan_ffi_20250506)]
     pub fn botan_privkey_view_raw(
         key: botan_privkey_t,
         view_ctx: botan_view_ctx,

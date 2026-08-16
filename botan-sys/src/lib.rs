@@ -2,6 +2,9 @@
 #![allow(non_camel_case_types)]
 #![allow(unused_imports)]
 
+#[macro_use]
+mod macros;
+
 mod block;
 mod cipher;
 mod ec_group;
@@ -30,14 +33,11 @@ mod zfec;
 pub mod ffi_types {
     pub use core::ffi::{c_char, c_int, c_uint, c_void};
 
-    #[cfg(botan_ffi_20230403)]
     pub type botan_view_ctx = *mut c_void;
 
-    #[cfg(botan_ffi_20230403)]
     pub type botan_view_bin_fn =
         extern "C" fn(view_ctx: botan_view_ctx, data: *const u8, len: usize) -> c_int;
 
-    #[cfg(botan_ffi_20230403)]
     pub type botan_view_str_fn =
         extern "C" fn(view_ctx: botan_view_ctx, data: *const c_char, len: usize) -> c_int;
 }
@@ -66,3 +66,12 @@ pub use version::*;
 pub use x509::*;
 pub use xof::*;
 pub use zfec::*;
+
+/// Returns a description of why the Botan library could not be loaded
+///
+/// This is only ever `Some` when the `dynamic-loading` feature is enabled and
+/// loading the Botan shared library failed; in the linked build modes it
+/// always returns `None`.
+pub fn last_load_error() -> Option<&'static str> {
+    None
+}

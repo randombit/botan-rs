@@ -3,7 +3,7 @@ use crate::ffi_types::{c_char, c_int};
 pub enum botan_mac_struct {}
 pub type botan_mac_t = *mut botan_mac_struct;
 
-unsafe extern "C" {
+botan_ffi_functions! {
 
     pub fn botan_mac_init(mac: *mut botan_mac_t, mac_name: *const c_char, flags: u32) -> c_int;
 
