@@ -7,13 +7,16 @@ for linking to it.
 A high level Rust interface built on these declarations is included in the
 [botan](https://crates.io/crates/botan) crate.
 
-This crate is always `no_std`
+This crate is `no_std` unless the `dynamic-loading` feature is used.
 
 ## Features
 
 * `vendored`: Build against the `botan-src` crate
 * `static`: Statically link the library. This is always used if `vendored` is set
 * `pkg-config`: Use `pkg-config` instead of probing to find the library
+* `dynamic-loading`: Do not link to Botan; instead load the shared library at
+  runtime and resolve each function on first use. Requires `std`, and cannot
+  be combined with `vendored` or `static`. See `botan_sys::load_library`.
 
 ## Availability of functions
 
@@ -29,6 +32,12 @@ present, and handle unavailable functionality at runtime.
 Internally the crate detects which version of the FFI interface the headers
 declare and enables `#[cfg(botan_ffi_YYYYMMDD)]` for each supported version;
 these cfgs are not visible to dependent crates.
+
+With the `dynamic-loading` feature there is no build time detection at all;
+each function is a wrapper which resolves the symbol from the loaded library
+on first use, returning `BOTAN_FFI_ERROR_FUNCTION_NOT_AVAILABLE` if the
+library does not export it, or `BOTAN_FFI_ERROR_LIBRARY_NOT_LOADED` if no
+library could be loaded.
 
 ## Environment Variables
 

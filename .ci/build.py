@@ -24,6 +24,9 @@ def compute_features(features, for_who):
     if 'vendored' in features:
         feat.append('vendored')
 
+    if 'dynamic' in features:
+        feat.append('dynamic-loading')
+
     if for_who == 'lib' and 'no-std' not in features:
         feat.append('std')
 
@@ -63,7 +66,7 @@ def main(args = None):
             os.environ["SCCACHE_MAXSIZE"] = "2G"
 
     KNOWN_TOOLCHAINS = ['stable', 'nightly', '1.85.1']
-    KNOWN_FEATURES = ['vendored', 'git', 'no-std', 'minimized']
+    KNOWN_FEATURES = ['vendored', 'git', 'no-std', 'minimized', 'dynamic']
 
     toolchain = args[1]
 
@@ -99,6 +102,14 @@ def main(args = None):
 
     if 'vendored' in features and 'git' in features:
         print("ERROR: Incompatible features vendored and git")
+        return 1
+
+    if 'dynamic' in features and 'vendored' in features:
+        print("ERROR: Incompatible features dynamic and vendored")
+        return 1
+
+    if 'dynamic' in features and 'no-std' in features:
+        print("ERROR: Feature dynamic requires std")
         return 1
 
     if 'minimized' in features and 'git' not in features:
@@ -149,7 +160,13 @@ def main(args = None):
         os.environ["RUSTDOCFLAGS"] = "-D warnings -L/opt/homebrew/lib"
         os.environ["DYLD_LIBRARY_PATH"] = homebrew_dir
     elif os.access('/usr/bin/apt-get', os.R_OK):
-        run_command(['sudo', 'apt-get', 'install', 'libbotan-2-dev'])
+        if 'dynamic' in features:
+            # With dynamic loading no headers are needed to build, and the
+            # library is located at runtime; install only the runtime package
+            # to verify this
+            run_command(['sudo', 'apt-get', 'install', 'libbotan-2-19'])
+        else:
+            run_command(['sudo', 'apt-get', 'install', 'libbotan-2-dev'])
 
     run_command(['rustc', '--version'])
 

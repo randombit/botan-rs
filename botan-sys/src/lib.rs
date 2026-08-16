@@ -2,8 +2,35 @@
 #![allow(non_camel_case_types)]
 #![allow(unused_imports)]
 
+//! FFI declarations for the Botan cryptography library
+//!
+//! By default (and with the `static` or `vendored` features) this crate links
+//! against the Botan library and detects at build time which functions the
+//! installed headers declare. Functions the headers predate are replaced by
+//! stubs returning [`BOTAN_FFI_ERROR_FUNCTION_NOT_AVAILABLE`].
+//!
+//! With the `dynamic-loading` feature the crate does not link against Botan;
+//! the shared library is loaded at runtime (see `load_library`) and every
+//! function is resolved on first use, so the set of available functions is
+//! determined entirely by the library found at runtime.
+
+#[cfg(feature = "dynamic-loading")]
+extern crate std;
+
+#[cfg(all(
+    feature = "dynamic-loading",
+    any(feature = "vendored", feature = "static")
+))]
+compile_error!("The dynamic-loading feature cannot be combined with vendored or static linking");
+
 #[macro_use]
 mod macros;
+
+#[cfg(feature = "dynamic-loading")]
+mod loader;
+
+#[cfg(feature = "dynamic-loading")]
+pub use loader::{LoadError, last_load_error, load_library, loaded_library_name};
 
 mod block;
 mod cipher;
@@ -72,6 +99,7 @@ pub use zfec::*;
 /// This is only ever `Some` when the `dynamic-loading` feature is enabled and
 /// loading the Botan shared library failed; in the linked build modes it
 /// always returns `None`.
+#[cfg(not(feature = "dynamic-loading"))]
 pub fn last_load_error() -> Option<&'static str> {
     None
 }

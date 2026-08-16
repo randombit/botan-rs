@@ -43,6 +43,10 @@ The following features are supported:
   provided Botan dependency.
 * `pkg-config`: Enable finding a non-vendored, externally provided
   Botan with pkg-config. Can be used in combination with `static`.
+* `dynamic-loading`: Instead of linking to Botan at build time, load the
+  Botan shared library at runtime (using `dlopen`/`LoadLibrary`) and resolve
+  each function on first use. See below. Requires `std`, and cannot be
+  combined with `vendored` or `static`.
 
 Availability Of Newer APIs
 --------------------------
@@ -60,3 +64,18 @@ used to check the version of the library in use at runtime.
 When building against a system installed Botan, `botan-sys` detects at build
 time which functions the headers declare; functions the headers predate are
 replaced by stubs which return the error above.
+
+Dynamic Loading
+---------------
+
+With the `dynamic-loading` feature, no Botan installation is required to build
+the crate, and the resulting binary has no link time dependency on Botan.
+Instead the shared library (`libbotan-3.so.N`, `libbotan-3.dylib`,
+`botan-3.dll`, or the Botan 2 equivalents) is searched for and loaded the first
+time it is needed, or `botan::load_library` can be called first to specify
+exactly which library to use. Every FFI function is resolved on first use, so
+the set of available functionality is determined entirely by the library found
+at runtime: an application built against this crate can pick up newer Botan
+features simply by being run against a newer library, and continues to work
+(returning `NotImplemented` for newer features) against an older one. If no
+usable library can be found, operations fail with `ErrorType::LibraryNotLoaded`.

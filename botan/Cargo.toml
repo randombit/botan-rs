@@ -27,7 +27,13 @@ std = []
 vendored = ["botan-sys/vendored"]
 static = ["botan-sys/static"]
 pkg-config = ["botan-sys/pkg-config"]
+dynamic-loading = ["botan-sys/dynamic-loading", "std"]
 rand = ["dep:rand_core"]
+
+# Build the docs with dynamic loading enabled so that its API is documented
+# (and no Botan installation is needed to build the docs)
+[package.metadata.docs.rs]
+features = ["dynamic-loading"]
 
 [lints.clippy]
 # introduced because of from_str

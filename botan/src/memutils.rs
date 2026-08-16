@@ -4,6 +4,13 @@ use botan_sys::*;
 /// Const time comparison
 ///
 /// Compare two arrays without leaking side channel information
+///
+/// # Panics
+///
+/// Panics if the Botan library is not available, which is only possible
+/// when using dynamic loading and no library could be loaded. This function
+/// has no way of reporting an error, and silently returning an incorrect
+/// result would be worse.
 #[must_use]
 pub fn const_time_compare<T: Copy>(a: &[T], b: &[T]) -> bool {
     if a.len() != b.len() {
@@ -15,16 +22,37 @@ pub fn const_time_compare<T: Copy>(a: &[T], b: &[T]) -> bool {
         botan_constant_time_compare(a.as_ptr() as *const u8, b.as_ptr() as *const u8, bytes)
     };
 
-    rc == 0
+    // Returns 0 if equal, -1 if not; anything else means the call itself failed
+    match rc {
+        0 => true,
+        -1 => false,
+        rc => panic!(
+            "botan_constant_time_compare failed: {}",
+            Error::from_named_rc("botan_constant_time_compare", rc)
+        ),
+    }
 }
 
 /// Securely zeroize memory
 ///
 /// Write zeros to the array (eg to clear out a key) in a way that is
 /// unlikely to be removed by the compiler.
+///
+/// # Panics
+///
+/// Panics if the Botan library is not available, which is only possible
+/// when using dynamic loading and no library could be loaded. This function
+/// has no way of reporting an error, and silently leaving the memory
+/// unscrubbed would be worse.
 pub fn scrub_mem<T: Copy>(a: &mut [T]) {
     let bytes = mem::size_of_val(a);
-    unsafe { botan_scrub_mem(a.as_mut_ptr() as *mut c_void, bytes) };
+    let rc = unsafe { botan_scrub_mem(a.as_mut_ptr() as *mut c_void, bytes) };
+    if rc != 0 {
+        panic!(
+            "botan_scrub_mem failed: {}",
+            Error::from_named_rc("botan_scrub_mem", rc)
+        );
+    }
 }
 
 /// Hex encode some data

@@ -1,11 +1,14 @@
 ## 0.14.0 Not Yet Released
 
 - Minor version bump due to changes to `ErrorType`
-
 - All APIs are available no matter what version of Botan the crate builds against.
   If an older library is in use, the API will fail with `NotImplemented`; the
   new `Error::is_function_unavailable` distinguishes this from functionality
   compiled out of the library.
+- Add the `dynamic-loading` feature, which loads the Botan shared library at
+  runtime rather than linking to it. No Botan installation is needed to build,
+  and the available functionality is determined by the library found at
+  runtime. See `botan::load_library`.
 - `ErrorType` is now `#[non_exhaustive]` and gains the `LibraryNotLoaded` variant
 - The `no_std` build no longer requires Botan 3.11.0 at build time; instead
   relevant public key operations return an error at runtime with older versions
