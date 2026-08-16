@@ -175,11 +175,25 @@ fn find_botan_include_dir() -> std::path::PathBuf {
 
     #[cfg(not(feature = "pkg-config"))]
     {
-        if let Some(dir) = env_var("BOTAN_INCLUDE_DIR") {
-            return dir.into();
+        fn find_in_basedir(basedir: PathBuf) -> Option<PathBuf> {
+            for major_version in [3, 2] {
+                let dir = PathBuf::from(format!("botan-{major_version}"));
+                let inc_dir = basedir.join(dir.clone());
+                if inc_dir.exists() {
+                    return Some(inc_dir);
+                }
+            }
+            None
         }
 
-        fn possible_header_locations() -> Vec<std::path::PathBuf> {
+        if let Some(dir) = env_var("BOTAN_INCLUDE_DIR") {
+            let Some(dir) = find_in_basedir(dir.into()) else {
+                panic!("BOTAN_INCLUDE_DIR does not point to a valid location");
+            };
+            return dir;
+        }
+
+        fn possible_header_locations() -> Vec<PathBuf> {
             let dirs = [
                 "/opt/homebrew/include",
                 "/usr/local/include",
@@ -198,13 +212,9 @@ fn find_botan_include_dir() -> std::path::PathBuf {
             paths
         }
 
-        for major_version in [3, 2] {
-            let dir = PathBuf::from(format!("botan-{major_version}"));
-            for basedir in possible_header_locations() {
-                let inc_dir = basedir.join(dir.clone());
-                if inc_dir.exists() {
-                    return inc_dir;
-                }
+        for basedir in possible_header_locations() {
+            if let Some(dir) = find_in_basedir(basedir) {
+                return dir;
             }
         }
 
