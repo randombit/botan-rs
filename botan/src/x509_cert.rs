@@ -1,3 +1,6 @@
+#[cfg(botan_ffi_20260811)]
+use core::net::{Ipv4Addr, Ipv6Addr};
+
 use crate::{CRL, utils::*};
 use botan_sys::*;
 
@@ -387,6 +390,159 @@ impl Certificate {
         // Return logic is inverted for this function
         let r = botan_bool_in_rc!(botan_x509_cert_allowed_usage, self.obj, usage_bit as u32)?;
         Ok(!r)
+    }
+
+    /// Get values from the IP Address Blocks extension.
+    /// If the extension is not present, this will return `Err`.
+    ///
+    /// Returns all values in the extension, in the form of (v4, v6).
+    /// Each contains a vec of families. Each family is a tuple (SAFI, ranges).
+    /// Both SAFI and the ranges may be `None`, if ranges is `None` the family was marked as "inherit".
+    /// The ranges are vecs of (min address, max address) tuples.
+    #[cfg(botan_ffi_20260811)]
+    #[allow(clippy::type_complexity)]
+    pub fn ext_ip_addr_blocks(
+        &self,
+    ) -> Result<(
+        Vec<(Option<u8>, Option<Vec<(Ipv4Addr, Ipv4Addr)>>)>,
+        Vec<(Option<u8>, Option<Vec<(Ipv6Addr, Ipv6Addr)>>)>,
+    )> {
+        let mut v4_count = 0;
+        let mut v6_count = 0;
+        botan_call!(
+            botan_x509_ext_ip_addr_blocks_get_counts,
+            self.obj,
+            &mut v4_count,
+            &mut v6_count
+        )?;
+
+        let mut v4 = Vec::with_capacity(v4_count);
+        let mut v6 = Vec::with_capacity(v6_count);
+
+        for (ipv6, stop) in [(false, v4_count), (true, v6_count)] {
+            for i in 0..stop {
+                let size = if ipv6 { 16 } else { 4 };
+
+                let mut has_safi = 0;
+                let mut safi = 0;
+                let mut present = 0;
+                let mut count = 0;
+                botan_call!(
+                    botan_x509_ext_ip_addr_blocks_get_family,
+                    self.obj,
+                    ipv6.into(),
+                    i,
+                    &mut has_safi,
+                    &mut safi,
+                    &mut present,
+                    &mut count
+                )?;
+                let safi = if has_safi == 1 { Some(safi) } else { None };
+
+                let mut ranges = None;
+                if present == 1 {
+                    let mut rg = Vec::with_capacity(count);
+                    for entry in 0..count {
+                        let (min, max) = call_botan_ffi_returning_vec_pair(
+                            size,
+                            size,
+                            &|min, _, max, out_len| unsafe {
+                                botan_x509_ext_ip_addr_blocks_get_address(
+                                    self.obj,
+                                    ipv6.into(),
+                                    i,
+                                    entry,
+                                    min,
+                                    max,
+                                    out_len,
+                                )
+                            },
+                        )?;
+                        rg.push((min, max))
+                    }
+                    ranges = Some(rg);
+                }
+
+                fn map_ranges<T, F>(
+                    ranges: Option<Vec<(Vec<u8>, Vec<u8>)>>,
+                    f: F,
+                ) -> Option<Vec<(T, T)>>
+                where
+                    F: Fn(Vec<u8>) -> T,
+                {
+                    ranges.map(|ranges| ranges.into_iter().map(|(lo, hi)| (f(lo), f(hi))).collect())
+                }
+
+                if ipv6 {
+                    v6.push((
+                        safi,
+                        map_ranges(ranges, |v| Ipv6Addr::from(<[u8; 16]>::try_from(v).unwrap())),
+                    ));
+                } else {
+                    v4.push((
+                        safi,
+                        map_ranges(ranges, |v| Ipv4Addr::from(<[u8; 4]>::try_from(v).unwrap())),
+                    ))
+                }
+            }
+        }
+
+        Ok((v4, v6))
+    }
+
+    #[cfg(botan_ffi_20260811)]
+    fn ext_as_blocks_impl(&self, asnum: bool) -> Result<Option<Vec<(u32, u32)>>> {
+        let mut present = 0;
+        let mut count = 0;
+        botan_call!(
+            botan_x509_ext_as_blocks_get_info,
+            self.obj,
+            asnum.into(),
+            &mut present,
+            &mut count
+        )?;
+        if present == 0 {
+            return Ok(None);
+        }
+
+        let mut values = Vec::with_capacity(count);
+        for i in 0..count {
+            let mut min = 0;
+            let mut max = 0;
+            botan_call!(
+                botan_x509_ext_as_blocks_get_entry_at,
+                self.obj,
+                asnum.into(),
+                i,
+                &mut min,
+                &mut max
+            )?;
+            values.push((min, max));
+        }
+
+        Ok(Some(values))
+    }
+
+    /// Get values from the AS Blocks extension.
+    /// If the extension is not present or AS numbers are not present in the extension, this will return `Err`.
+    ///
+    /// Returns all AS numbers contained in the extension.
+    /// Each tuple in the vector are the minimum and maximum values of a range respectively.
+    /// If AS numbers are marked as "inherit", `None` is returned instead.
+    #[cfg(botan_ffi_20260811)]
+    pub fn ext_as_blocks_asnum(&self) -> Result<Option<Vec<(u32, u32)>>> {
+        self.ext_as_blocks_impl(true)
+    }
+
+    /// Get values from the AS Blocks extension.
+    /// If the extension is not present or RDIs are not present in the extension, this will return `Err`.
+    ///
+    /// Returns all RDIs contained in the extension.
+    /// Each tuple in the vector are the minimum and maximum values of a range respectively.
+    /// If RDIs are marked as "inherit", `None` is returned instead.
+    #[cfg(botan_ffi_20260811)]
+    pub fn ext_as_blocks_rdi(&self) -> Result<Option<Vec<(u32, u32)>>> {
+        self.ext_as_blocks_impl(false)
     }
 
     /// Attempt to verify this certificate
