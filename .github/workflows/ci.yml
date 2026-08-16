@@ -8,7 +8,7 @@ on:
 
 jobs:
   rustfmt:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     steps:
       - uses: dtolnay/rust-toolchain@master
@@ -20,10 +20,10 @@ jobs:
 
       - run: cargo fmt -- --check
   clippy:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     steps:
-      - run: sudo apt-get -qq install libbotan-2-dev
+      - run: sudo apt-get -qq install libbotan-3-dev
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
@@ -35,7 +35,7 @@ jobs:
       - run: cargo +nightly clippy --all-targets -- --deny warnings
       - run: cargo +nightly clippy --all-targets --features dynamic-loading -- --deny warnings
   ci:
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.os }}
 
     env:
         RUST_BACKTRACE: 1
@@ -43,29 +43,51 @@ jobs:
     strategy:
       fail-fast: false
 
+      # Builds that use the system Botan (no git/vendored feature) test
+      # whichever Botan the distribution provides: Ubuntu 24.04 is the last
+      # release shipping Botan 2 (2.19), while Ubuntu 26.04 ships Botan 3
+      # (3.10), so such builds are run on both. Everything else runs on
+      # Ubuntu 26.04.
       matrix:
         include:
           - toolchain: stable
+            os: ubuntu-24.04
+          - toolchain: stable
+            os: ubuntu-26.04
           - toolchain: stable
             features: no-std+git
+            os: ubuntu-26.04
           - toolchain: stable
             features: git
+            os: ubuntu-26.04
           - toolchain: stable
             features: git+minimized
+            os: ubuntu-26.04
           - toolchain: stable
             features: vendored
+            os: ubuntu-26.04
           - toolchain: stable
             features: dynamic
+            os: ubuntu-24.04
+          - toolchain: stable
+            features: dynamic
+            os: ubuntu-26.04
           - toolchain: stable
             features: dynamic+git
+            os: ubuntu-26.04
           - toolchain: 1.85.1 # MSRV no-std
             features: no-std+git
+            os: ubuntu-26.04
           - toolchain: 1.85.1 # MSRV
+            os: ubuntu-24.04
           - toolchain: 1.85.1 # MSRV dynamic loading
             features: dynamic
+            os: ubuntu-24.04
           - toolchain: nightly
+            os: ubuntu-24.04
           - toolchain: nightly
             features: no-std+git
+            os: ubuntu-26.04
 
     steps:
       - run: sudo apt-get -qq install ccache
@@ -74,9 +96,9 @@ jobs:
         with:
             path: |
               ~/.cache/ccache
-            key: linux-x86_64-${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
+            key: ${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
             restore-keys: |
-               linux-x86_64-${{ matrix.toolchain }}-${{ matrix.features }}
+               ${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.features }}
       - uses: dtolnay/rust-toolchain@master
         with:
           target: ${{ matrix.target }}
@@ -84,7 +106,7 @@ jobs:
       - run: ./.ci/build.py ${{ matrix.toolchain }} ${{ matrix.features }}
 
   ci_arm:
-    runs-on: ubuntu-24.04-arm
+    runs-on: ${{ matrix.os }}
 
     env:
         RUST_BACKTRACE: 1
@@ -92,14 +114,21 @@ jobs:
     strategy:
       fail-fast: false
 
+      # See the comment on the ci job regarding the OS selection
       matrix:
         include:
           - toolchain: stable
+            os: ubuntu-24.04-arm
+          - toolchain: stable
+            os: ubuntu-26.04-arm
           - toolchain: stable
             features: git
+            os: ubuntu-26.04-arm
           - toolchain: stable
             features: dynamic
+            os: ubuntu-24.04-arm
           - toolchain: nightly
+            os: ubuntu-24.04-arm
 
     steps:
       - run: sudo apt-get -qq install ccache
@@ -108,9 +137,9 @@ jobs:
         with:
             path: |
               ~/.cache/ccache
-            key: linux-aarch64-${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
+            key: ${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.features }}-${{ github.run_id }}
             restore-keys: |
-               linux-aarch64-${{ matrix.toolchain }}-${{ matrix.features }}
+               ${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.features }}
       - uses: dtolnay/rust-toolchain@master
         with:
           target: ${{ matrix.target }}
