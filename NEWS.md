@@ -1,4 +1,4 @@
-## 0.14.0 Not Yet Released
+## 0.14.0 2026-08-16
 
 - Minor version bump due to changes to `ErrorType`
 - Add enumeration-based algorithm specifiers instead of forcing the use of
