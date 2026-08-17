@@ -99,20 +99,39 @@ fn configure(build_dir: &str) {
 }
 
 fn make(build_dir: &str) {
-    let mut cmd = Command::new("make");
-    // Set MAKEFLAGS to the content of CARGO_MAKEFLAGS
-    // to give jobserver (parallel builds) support to the
-    // spawned sub-make.
-    if let Ok(val) = env::var("CARGO_MAKEFLAGS") {
-        cmd.env("MAKEFLAGS", val);
-    } else {
-        eprintln!("Can't set MAKEFLAGS as CARGO_MAKEFLAGS couldn't be read");
-    }
+    // On Windows the Botan Makefile is generated for the MSVC toolchain, whose
+    // standard build tool is `nmake` (ships with Visual Studio and is on PATH
+    // inside a VS developer environment). GNU make is frequently absent from
+    // Windows build images, so use nmake there. nmake does not support GNU
+    // Make's jobserver or parallel target execution, so CARGO_MAKEFLAGS is not
+    // forwarded on Windows.
+    #[cfg(target_os = "windows")]
+    let mut cmd = {
+        let mut cmd = Command::new("nmake");
+        cmd.arg("/NOLOGO")
+            .arg("/F")
+            .arg(format!("{build_dir}/Makefile"))
+            .arg("libs");
+        cmd
+    };
+
+    #[cfg(not(target_os = "windows"))]
+    let mut cmd = {
+        let mut cmd = Command::new("make");
+        // Set MAKEFLAGS to the content of CARGO_MAKEFLAGS to give jobserver
+        // (parallel builds) support to the spawned sub-make.
+        if let Ok(val) = env::var("CARGO_MAKEFLAGS") {
+            cmd.env("MAKEFLAGS", val);
+        } else {
+            eprintln!("Can't set MAKEFLAGS as CARGO_MAKEFLAGS couldn't be read");
+        }
+        cmd.arg("-f")
+            .arg(format!("{build_dir}/Makefile"))
+            .arg("libs");
+        cmd
+    };
 
     let status = cmd
-        .arg("-f")
-        .arg(format!("{build_dir}/Makefile"))
-        .arg("libs")
         .spawn()
         .expect(BUILD_ERROR_MSG)
         .wait()
@@ -121,7 +140,6 @@ fn make(build_dir: &str) {
         panic!("make terminated unsuccessfully");
     }
 }
-
 fn bundled_tarball_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("vendor")
