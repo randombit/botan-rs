@@ -1,0 +1,40 @@
+name: nightly
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/nightly.yml"
+  schedule:
+    - cron: "14 3 * * *"
+
+jobs:
+  nightly:
+    runs-on: ubuntu-26.04
+
+    env:
+      RUST_BACKTRACE: 1
+
+    strategy:
+      fail-fast: false
+      matrix:
+        features: ["git", "git+minimized", "no-std+git"]
+
+    steps:
+      - run: sudo apt-get -qq install ccache
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/ccache
+          key: ubuntu-26.04-stable-${{ matrix.features }}-${{ github.run_id }}
+          restore-keys: |
+            ubuntu-26.04-stable-${{ matrix.features }}
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          target: ${{ matrix.target }}
+          toolchain: stable
+      - run: ./.ci/build.py stable ${{ matrix.features }}
