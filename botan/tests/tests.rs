@@ -1487,6 +1487,12 @@ rWSdD+Aor4KcEQ==
             .verify_with_crl(&[], &[&ca_cert], None, None, None, &[&crl])?
             .success()
     );
+    if botan::Version::current()?.at_least(3, 11) {
+        assert_eq!(crl.authority_key_id()?, ca_cert.subject_key_id()?);
+        assert_eq!(crl.this_update_raw()?, now);
+        assert_eq!(crl.next_update_raw()?, now + 600);
+        assert_eq!(crl.serial_number()?, [1]);
+    }
 
     let to_revoke = botan::CRLEntry::new(&sub2_cert, botan::CRLReason::KeyCompromise)?;
 
@@ -1511,6 +1517,11 @@ rWSdD+Aor4KcEQ==
             .verify_with_crl(&[], &[&ca_cert], None, None, None, &[&crl])?
             .success()
     );
+    if botan::Version::current()?.at_least(3, 11) {
+        assert_eq!(crl.this_update_raw()?, now);
+        assert_eq!(crl.next_update_raw()?, now + 86400);
+        assert_eq!(crl.serial_number()?, [2]);
+    }
 
     let revoked = crl.revoked()?;
     assert_eq!(revoked.len(), 1);

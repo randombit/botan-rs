@@ -143,6 +143,70 @@ impl CRL {
         Ok(entries)
     }
 
+    #[cfg(feature = "std")]
+    /// Return the CRL thisUpdate time as a SystemTime
+    pub fn this_update(&self) -> Result<std::time::SystemTime> {
+        use std::time::{Duration, UNIX_EPOCH};
+        Ok(UNIX_EPOCH + Duration::from_secs(self.this_update_raw()?))
+    }
+
+    /// Get the thisUpdate field from the CRL, as seconds since the UNIX epoch.
+    /// If no value is available an error of type [`ErrorType::NoValueAvailable`](crate::ErrorType::NoValueAvailable) will be returned.
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
+    pub fn this_update_raw(&self) -> Result<u64> {
+        let mut this_update = 0;
+        botan_call!(botan_x509_crl_this_update, self.obj, &mut this_update)?;
+        Ok(this_update)
+    }
+
+    #[cfg(feature = "std")]
+    /// Return the CRL nextUpdate time as a SystemTime
+    pub fn next_update(&self) -> Result<std::time::SystemTime> {
+        use std::time::{Duration, UNIX_EPOCH};
+        Ok(UNIX_EPOCH + Duration::from_secs(self.next_update_raw()?))
+    }
+
+    /// Get the nextUpdate field from the CRL, as seconds since the UNIX epoch.
+    /// If no value is available an error of type [`ErrorType::NoValueAvailable`](crate::ErrorType::NoValueAvailable) will be returned.
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
+    pub fn next_update_raw(&self) -> Result<u64> {
+        let mut next_update = 0;
+        botan_call!(botan_x509_crl_next_update, self.obj, &mut next_update)?;
+        Ok(next_update)
+    }
+
+    /// Get the authority key id of the CRL.
+    /// If no value is available an error of type [`ErrorType::NoValueAvailable`](crate::ErrorType::NoValueAvailable) will be returned.
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
+    pub fn authority_key_id(&self) -> Result<Vec<u8>> {
+        botan_view_vec!(
+            botan_x509_crl_view_binary_values,
+            self.obj,
+            X509ValueType::BOTAN_X509_AUTHORITY_KEY_IDENTIFIER as i32,
+            0
+        )
+    }
+
+    /// Get the serial number of the CRL.
+    /// If no value is available an error of type [`ErrorType::NoValueAvailable`](crate::ErrorType::NoValueAvailable) will be returned.
+    ///
+    /// This requires Botan 3.11 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
+    pub fn serial_number(&self) -> Result<Vec<u8>> {
+        botan_view_vec!(
+            botan_x509_crl_view_binary_values,
+            self.obj,
+            X509ValueType::BOTAN_X509_SERIAL_NUMBER as i32,
+            0
+        )
+    }
+
     /// Verify the signature of this CRL against a public key.
     ///
     /// This requires Botan 3.11 or later; with older versions an error of type
