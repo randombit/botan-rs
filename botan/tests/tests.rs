@@ -1918,6 +1918,37 @@ fn test_x25519() -> Result<(), botan::Error> {
 }
 
 #[test]
+fn test_x448() -> Result<(), botan::Error> {
+    // From RFC 7748 Section 6.2
+    let a_pub_bits = botan::hex_decode(
+        "9b08f7cc31b7e3e67d22d5aea121074a273bd2b83de09c63faa73d2c22c5d9bbc836647241d953d40c5b12da88120d53177f80e532c41fa0",
+    )?;
+    let b_priv_bits = botan::hex_decode(
+        "1c306a7ac2a0e2e0990b294470cba339e6453772b075811d8fad0d1d6927c120bb5ee8972b0d3e21374c9c921b09d1b0366f10b65173992d",
+    )?;
+    let b_pub_bits = botan::hex_decode(
+        "3eb7a829b0cd20f5bcfc0b599b6feccf6da4627107bdb0d4f345b43027d8b972fc3e34fb4232a13ca706dcb57aec3dae07bdc1c67bf33609",
+    )?;
+    let expected_shared = botan::hex_decode(
+        "07fff4181ac6cc95ec1c16a94a0f74d12da232ce40a77552281d282bb60c0b56fd2464c335543936521c24403085d59a449a5037514a879d",
+    )?;
+
+    let a_pub = skip_if_not_implemented!(botan::Pubkey::load_x448(&a_pub_bits));
+    assert_eq!(a_pub.get_x448_key()?, a_pub_bits);
+
+    let b_priv = botan::Privkey::load_x448(&b_priv_bits)?;
+    assert_eq!(b_priv.get_x448_key()?, b_priv_bits);
+
+    assert_eq!(b_priv.key_agreement_key()?, b_pub_bits);
+    assert_eq!(b_priv.pubkey()?.get_x448_key()?, b_pub_bits);
+
+    let shared = b_priv.agree(&a_pub_bits, 0, &[], "Raw")?;
+
+    assert_eq!(shared, expected_shared);
+    Ok(())
+}
+
+#[test]
 fn test_ed25519() -> Result<(), botan::Error> {
     let mut rng = botan::RandomNumberGenerator::new_system()?;
 
@@ -1945,6 +1976,35 @@ fn test_ed25519() -> Result<(), botan::Error> {
     assert_eq!(ed_loaded.get_ed25519_key()?, ed_pub.get_ed25519_key()?);
 
     assert_eq!(signature1, signature2);
+    Ok(())
+}
+
+#[test]
+fn test_ed448() -> Result<(), botan::Error> {
+    let mut rng = botan::RandomNumberGenerator::new_system()?;
+
+    // RFC 8032: Testvector Ed448, 1 octet
+    let priv_bits = botan::hex_decode(
+        "c4eab05d357007c632f3dbb48489924d552b08fe0c353a0d4a1f00acda2c463afbea67c5e8d2877c5e3bc397a659949ef8021e954e0a12274e",
+    )?;
+    let pub_bits = botan::hex_decode(
+        "43ba28f430cdff456ae531545f7ecd0ac834a55d9358c0372bfa0c6c6798c0866aea01eb00742802b8438ea4cb82169c235160627b4c3a9480",
+    )?;
+    let msg = botan::hex_decode("03")?;
+    let sig_bits = botan::hex_decode(
+        "26b8f91727bd62897af15e41eb43c377efb9c610d48f2335cb0bd0087810f4352541b143c4b981b7e18f62de8ccdf633fc1bf037ab7cd779805e0dbcc0aae1cbcee1afb2e027df36bc04dcecbf154336c19f0af7e0a6472905e799f1953d2a0ff3348ab21aa4adafd1d234441cf807c03a00",
+    )?;
+
+    let priv_ = skip_if_not_implemented!(botan::Privkey::load_ed448(&priv_bits));
+    assert_eq!(priv_.get_ed448_key()?, priv_bits);
+
+    let pub_ = botan::Pubkey::load_ed448(&pub_bits)?;
+    assert_eq!(pub_.get_ed448_key()?, pub_bits);
+
+    let sig = priv_.sign(&msg, "Pure", &mut rng)?;
+    assert_eq!(sig, sig_bits);
+
+    assert!(pub_.verify(&msg, &sig_bits, "Pure")?);
     Ok(())
 }
 

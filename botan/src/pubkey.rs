@@ -249,6 +249,15 @@ impl Privkey {
         Ok(Privkey::from_obj(obj))
     }
 
+    /// Load an Ed448 private key
+    ///
+    /// This requires Botan 3.4 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
+    pub fn load_ed448(key: &[u8]) -> Result<Privkey> {
+        let obj = botan_init!(botan_privkey_load_ed448, key.as_ptr())?;
+        Ok(Privkey::from_obj(obj))
+    }
+
     /// Load an X25519 private key
     ///
     /// # Examples
@@ -278,6 +287,21 @@ impl Privkey {
     /// ```
     pub fn load_x448(key: &[u8]) -> Result<Privkey> {
         let obj = botan_init!(botan_privkey_load_x448, key.as_ptr())?;
+        Ok(Privkey::from_obj(obj))
+    }
+
+    /// Load an SM2 private key
+    ///
+    /// This requires Botan 2.2 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
+    pub fn load_sm2(scalar: &EcScalar) -> Result<Privkey> {
+        let mpi = scalar.to_mpi()?;
+        let curve = scalar.get_group()?.oid()?.as_name()?;
+        let obj = botan_init!(
+            botan_privkey_load_sm2,
+            mpi.handle(),
+            make_cstr(&curve)?.as_ptr()
+        )?;
         Ok(Privkey::from_obj(obj))
     }
 
@@ -690,11 +714,29 @@ impl Privkey {
         Ok((pubkey, out))
     }
 
+    /// Get the Ed448 private key
+    pub fn get_ed448_key(&self) -> Result<Vec<u8>> {
+        self.raw_bytes().or_if_unavailable(|| {
+            let mut out = vec![0; 57];
+            botan_call!(botan_privkey_ed448_get_privkey, self.obj, out.as_mut_ptr())?;
+            Ok(out)
+        })
+    }
+
     /// Get the X25519 private key
     pub fn get_x25519_key(&self) -> Result<Vec<u8>> {
         self.raw_bytes().or_if_unavailable(|| {
             let mut out = vec![0; 32];
             botan_call!(botan_privkey_x25519_get_privkey, self.obj, out.as_mut_ptr())?;
+            Ok(out)
+        })
+    }
+
+    /// Get the X448 private key
+    pub fn get_x448_key(&self) -> Result<Vec<u8>> {
+        self.raw_bytes().or_if_unavailable(|| {
+            let mut out = vec![56];
+            botan_call!(botan_privkey_x448_get_privkey, self.obj, out.as_mut_ptr())?;
             Ok(out)
         })
     }
@@ -839,9 +881,43 @@ impl Pubkey {
         Ok(Pubkey::from_handle(obj))
     }
 
+    /// Load an Ed448 public key
+    ///
+    /// This requires Botan 3.4 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
+    pub fn load_ed448(key: &[u8]) -> Result<Pubkey> {
+        let obj = botan_init!(botan_pubkey_load_ed448, key.as_ptr())?;
+        Ok(Pubkey::from_handle(obj))
+    }
+
     /// Load an X25519 key
     pub fn load_x25519(key: &[u8]) -> Result<Pubkey> {
         let obj = botan_init!(botan_pubkey_load_x25519, key.as_ptr())?;
+        Ok(Pubkey::from_handle(obj))
+    }
+
+    /// Load an X448 public key
+    ///
+    /// This requires Botan 3.4 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
+    pub fn load_x448(key: &[u8]) -> Result<Pubkey> {
+        let obj = botan_init!(botan_pubkey_load_x448, key.as_ptr())?;
+        Ok(Pubkey::from_handle(obj))
+    }
+
+    /// Load an SM2 public key
+    ///
+    /// This requires Botan 2.2 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
+    pub fn load_sm2(public_point: &EcPoint) -> Result<Pubkey> {
+        let (x, y) = public_point.to_mpi_xy()?;
+        let curve = public_point.get_group()?.oid()?.as_name()?;
+        let obj = botan_init!(
+            botan_pubkey_load_sm2,
+            x.handle(),
+            y.handle(),
+            make_cstr(&curve)?.as_ptr()
+        )?;
         Ok(Pubkey::from_handle(obj))
     }
 
@@ -993,11 +1069,29 @@ impl Pubkey {
         })
     }
 
+    /// Return the 57-byte Ed448 public key
+    pub fn get_ed448_key(&self) -> Result<Vec<u8>> {
+        self.raw_bytes().or_if_unavailable(|| {
+            let mut out = vec![0; 57];
+            botan_call!(botan_pubkey_ed448_get_pubkey, self.obj, out.as_mut_ptr())?;
+            Ok(out)
+        })
+    }
+
     /// Get the X25519 public key
     pub fn get_x25519_key(&self) -> Result<Vec<u8>> {
         self.raw_bytes().or_if_unavailable(|| {
             let mut out = vec![0; 32];
             botan_call!(botan_pubkey_x25519_get_pubkey, self.obj, out.as_mut_ptr())?;
+            Ok(out)
+        })
+    }
+
+    /// Get the X448 public key
+    pub fn get_x448_key(&self) -> Result<Vec<u8>> {
+        self.raw_bytes().or_if_unavailable(|| {
+            let mut out = vec![0; 56];
+            botan_call!(botan_pubkey_x448_get_pubkey, self.obj, out.as_mut_ptr())?;
             Ok(out)
         })
     }
