@@ -491,6 +491,22 @@ botan_ffi_functions! {
         count: *mut usize,
     ) -> c_int;
 
+    #[cfg(botan_ffi_20261104)]
+    pub fn botan_x509_crl_view_issuer_dn(
+        crl: botan_x509_crl_t,
+        key: *const c_char,
+        index: usize,
+        ctx: botan_view_ctx,
+        view: botan_view_str_fn,
+    ) -> c_int;
+
+    #[cfg(botan_ffi_20261104)]
+    pub fn botan_x509_crl_view_issuer_dn_count(
+        crl: botan_x509_crl_t,
+        key: *const c_char,
+        count: *mut usize,
+    ) -> c_int;
+
     pub fn botan_x509_is_revoked(crl: botan_x509_crl_t, cert: botan_x509_cert_t) -> c_int;
 
     #[cfg(botan_ffi_20260303)]
