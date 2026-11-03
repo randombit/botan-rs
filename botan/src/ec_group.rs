@@ -43,9 +43,9 @@ impl EcGroup {
     }
 
     /// Check if a specific named group is supported
-    pub fn supports_named_group(name: &str) -> Result<bool> {
+    pub fn supports_named_group<G: crate::EcGroupIdentifier>(name: G) -> Result<bool> {
         let mut result = 0;
-        let name = make_cstr(name)?;
+        let name = make_cstr(&name.botan_name())?;
         botan_call!(
             botan_ec_group_supports_named_group,
             name.as_ptr(),
@@ -68,8 +68,11 @@ impl EcGroup {
     }
 
     /// Create a group from a named/well known set of parameters
-    pub fn from_name(name: &str) -> Result<Self> {
-        let obj = botan_init!(botan_ec_group_from_name, make_cstr(name)?.as_ptr())?;
+    pub fn from_name<G: crate::EcGroupIdentifier>(name: G) -> Result<Self> {
+        let obj = botan_init!(
+            botan_ec_group_from_name,
+            make_cstr(&name.botan_name())?.as_ptr()
+        )?;
         Ok(Self { obj })
     }
 
