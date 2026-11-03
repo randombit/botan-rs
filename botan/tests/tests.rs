@@ -2564,6 +2564,7 @@ fn test_ec_group() -> Result<(), botan::Error> {
 
     if supports_secp256r1 {
         let secp256r1 = botan::EcGroup::from_name("secp256r1")?;
+        assert!(botan::EcGroup::from_name(botan::EcGroupId::Secp256r1).is_ok());
 
         let from_pem = botan::EcGroup::from_pem(&secp256r1.pem()?)?;
         let from_der = botan::EcGroup::from_der(&secp256r1.der()?)?;

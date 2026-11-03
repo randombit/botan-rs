@@ -103,6 +103,11 @@ define_identifier_trait!(
     DrbgAlgorithmIdentifier
 );
 
+define_identifier_trait!(
+    /// A type that identifies a Botan EC Group
+    EcGroupIdentifier
+);
+
 /// Hash functions accepted by Botan's hash interface.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum HashAlgorithm {
@@ -907,6 +912,12 @@ impl EcGroupId {
 }
 
 impl KeyGenParamsIdentifier for EcGroupId {
+    fn botan_name(&self) -> String {
+        EcGroupId::botan_name(self)
+    }
+}
+
+impl EcGroupIdentifier for EcGroupId {
     fn botan_name(&self) -> String {
         EcGroupId::botan_name(self)
     }
