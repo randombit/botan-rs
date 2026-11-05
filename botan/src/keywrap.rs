@@ -128,7 +128,7 @@ pub fn rfc3394_key_unwrap(kek: &[u8], wrapped: &[u8]) -> Result<Vec<u8>> {
         ));
     }
 
-    if wrapped.len() % 8 != 0 {
+    if wrapped.len() < 8 || wrapped.len() % 8 != 0 {
         return Err(Error::with_message(
             ErrorType::InvalidInput,
             "Invalid keywrap input length".to_string(),
