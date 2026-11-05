@@ -10,9 +10,24 @@ const INCLUDE_DIR: &str = "build/include/public";
 
 // Pinned upstream release. Single source of truth lives in release.toml;
 // build.rs parses that file and re-exports it via `cargo:rustc-env`.
+
+/// The Botan release this crate bundles.
 pub const BOTAN_VERSION: &str = env!("BOTAN_VERSION");
-pub const BOTAN_TARBALL_SHA256: &str = env!("BOTAN_TARBALL_SHA256");
+/// URL of the upstream release tarball.
 pub const BOTAN_TARBALL_URL: &str = env!("BOTAN_TARBALL_URL");
+/// SHA-256 of the upstream release tarball at [`BOTAN_TARBALL_URL`].
+pub const BOTAN_UPSTREAM_TARBALL_SHA256: &str = env!("BOTAN_UPSTREAM_TARBALL_SHA256");
+/// SHA-256 of the bundled `vendor/Botan-X.Y.Z.tar.xz` after xz decompression,
+/// i.e. of the tar stream that gets extracted at build time.
+///
+/// The bundled tarball is not the upstream release as published but a repack
+/// of it that drops everything not needed to build the library (the test
+/// suite, documentation, CLI, ...). `scripts/fetch.py` produces it
+/// reproducibly from the upstream tarball; see that script for details.
+pub const BOTAN_VENDORED_TAR_SHA256: &str = env!("BOTAN_VENDORED_TAR_SHA256");
+/// Renamed to [`BOTAN_UPSTREAM_TARBALL_SHA256`].
+#[deprecated(note = "renamed to BOTAN_UPSTREAM_TARBALL_SHA256")]
+pub const BOTAN_TARBALL_SHA256: &str = BOTAN_UPSTREAM_TARBALL_SHA256;
 
 macro_rules! pathbuf_to_string {
     ($s: ident) => {
@@ -148,30 +163,37 @@ fn bundled_tarball_path() -> PathBuf {
         .join(format!("Botan-{BOTAN_VERSION}.tar.xz"))
 }
 
-fn verify_sha256(path: &Path) {
+fn sha256_hex(bytes: &[u8]) -> String {
     use sha2::{Digest, Sha256};
-    let bytes = fs::read(path).expect("read tarball");
-    let actual = format!("{:x}", Sha256::digest(&bytes));
-    if actual != BOTAN_TARBALL_SHA256 {
-        panic!(
-            "Botan tarball at {} has unexpected sha256 (expected {}, got {})",
-            path.display(),
-            BOTAN_TARBALL_SHA256,
-            actual,
-        );
-    }
+    format!("{:x}", Sha256::digest(bytes))
 }
 
-fn extract_tarball(tarball: &Path, dest: &Path) {
+/// Decompress `tarball` and unpack it into `dest`. With `expected_tar_sha256`
+/// set, the decompressed tar stream must hash to that value (see
+/// [`BOTAN_VENDORED_TAR_SHA256`]) or nothing is unpacked.
+fn extract_tarball(tarball: &Path, dest: &Path, expected_tar_sha256: Option<&str>) {
     let file = fs::File::open(tarball).expect("open tarball");
     let mut reader = io::BufReader::new(file);
     let mut decompressed = Vec::new();
     lzma_rs::xz_decompress(&mut reader, &mut decompressed).expect("xz decompress");
+
+    if let Some(expected) = expected_tar_sha256 {
+        let actual = sha256_hex(&decompressed);
+        if actual != expected {
+            panic!(
+                "Botan tarball at {} has unexpected contents: sha256 of the decompressed \
+                 tar stream is {actual}, expected {expected}",
+                tarball.display(),
+            );
+        }
+    }
     let mut archive = tar::Archive::new(io::Cursor::new(decompressed));
 
     // Windows without Developer Mode (or admin rights) cannot create symlinks.
-    // The Botan tarball contains a handful of symlinks (e.g. .github/codecov.yml)
-    // that are not needed to build the library. Skip them on Windows only.
+    // The upstream Botan tarball contains a symlink (.github/codecov.yml) that
+    // is not needed to build the library. The bundled repack drops it, but a
+    // BOTAN_SRC_TARBALL may well be a full upstream tarball. Skip them on
+    // Windows only.
     #[cfg(target_os = "windows")]
     {
         for entry in archive.entries().expect("read archive entries") {
@@ -214,8 +236,9 @@ fn find_extracted_root(extract_root: &Path) -> PathBuf {
 ///   checkout or fork.
 /// - `BOTAN_SRC_TARBALL` — extract this `.tar.xz` instead of the bundled
 ///   one. No checksum: the caller is responsible for what they hand us.
-/// - otherwise: extract the bundled `vendor/Botan-X.Y.Z.tar.xz`,
-///   verifying it matches the pinned SHA-256.
+/// - otherwise: extract the bundled `vendor/Botan-X.Y.Z.tar.xz` (the
+///   upstream release minus tests, docs, CLI, ...; see scripts/fetch.py),
+///   verifying the decompressed tar stream matches the pinned SHA-256.
 fn ensure_source(out_dir: &Path) -> PathBuf {
     println!("cargo:rerun-if-env-changed=BOTAN_SRC_DIR");
     println!("cargo:rerun-if-env-changed=BOTAN_SRC_TARBALL");
@@ -235,7 +258,7 @@ fn ensure_source(out_dir: &Path) -> PathBuf {
     let tarball = custom_tarball.clone().unwrap_or_else(bundled_tarball_path);
     let stamp_marker = match &custom_tarball {
         Some(p) => format!("custom:{}", p.display()),
-        None => format!("bundled:{BOTAN_TARBALL_SHA256}"),
+        None => format!("bundled:{BOTAN_VENDORED_TAR_SHA256}"),
     };
 
     let extract_root = out_dir.join("botan-src");
@@ -247,12 +270,12 @@ fn ensure_source(out_dir: &Path) -> PathBuf {
         if !tarball.exists() {
             panic!("Botan source tarball missing at {}", tarball.display());
         }
-        if custom_tarball.is_none() {
-            verify_sha256(&tarball);
-        }
+        let expected_tar_sha256 = custom_tarball
+            .is_none()
+            .then_some(BOTAN_VENDORED_TAR_SHA256);
         let _ = fs::remove_dir_all(&extract_root);
         fs::create_dir_all(&extract_root).expect("mkdir extract root");
-        extract_tarball(&tarball, &extract_root);
+        extract_tarball(&tarball, &extract_root, expected_tar_sha256);
         fs::write(&stamp, &stamp_marker).expect("write stamp");
     }
     find_extracted_root(&extract_root)

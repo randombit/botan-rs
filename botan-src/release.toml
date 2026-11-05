@@ -1,4 +1,14 @@
-# Pinned release, override using BOTAN_SRC_DIR or BOTAN_SRC_TARBALL
-version = "3.13.0"
-sha256 = "12f5a8358890bbee82edfe9d2e7769b0a610b6dd0e0698aea13d20a675d84620"
+# Pinned upstream Botan release. To build against something else, see
+# BOTAN_SRC_DIR / BOTAN_SRC_TARBALL in README.md.
+version = "3.14.1"
 url = "https://botan.randombit.net/releases/Botan-{version}.tar.xz"
+
+# SHA-256 of the upstream release tarball at `url`.
+upstream_sha256 = "5b85cba0f014d344eb8e9919aee0a3bdc31e16acb05816410025be9bee1e0930"
+
+# SHA-256 of the *decompressed* vendor/Botan-{version}.tar.xz: the tar stream
+# that scripts/fetch.py produces from the upstream tarball by dropping
+# everything not needed to build the library. lib.rs verifies this before
+# extracting. To check a published crate:
+#   xz -dc vendor/Botan-{version}.tar.xz | sha256sum
+vendored_tar_sha256 = "354fcc48a8e158769ba3449956f48f1f96e59e24004b335c1c0358ddb623e9b4"

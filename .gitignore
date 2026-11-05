@@ -3,6 +3,7 @@ botan/target
 target
 **/*.rs.bk
 Cargo.lock
+.ci/__pycache__
 
 *~
 \#*\#

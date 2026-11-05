@@ -9,6 +9,19 @@
   from a `Privkey`, all of which share state with the key within the library.
   Previously only the convenience methods on the key objects were covered.
 
+## Not Yet Released botan-src 0.31401.0
+
+- Update to Botan 3.14.1
+- The bundled source tarball is now a repack of the upstream release that
+  contains only what is needed to build the library (`configure.py`, the
+  license, `src/lib/`, `src/build-data/`). This takes the crate from 10 MB,
+  the crates.io upload limit, to about 1.5 MB. `scripts/fetch.py` produces the
+  repack reproducibly from the upstream tarball, and `release.toml` now pins
+  both the upstream tarball's SHA-256 (`upstream_sha256`) and that of the
+  decompressed repack (`vendored_tar_sha256`), which is verified at build time.
+- `botan_src::BOTAN_TARBALL_SHA256` is deprecated; use
+  `BOTAN_UPSTREAM_TARBALL_SHA256` or `BOTAN_VENDORED_TAR_SHA256`
+
 ## 2026-08-17 botan-src 0.31300.1
 
 - On Windows, build the library using `nmake` rather than `make`, since the
