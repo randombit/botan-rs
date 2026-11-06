@@ -44,6 +44,15 @@ impl EcScalar {
         let obj = botan_init_at!(botan_ec_scalar_to_mp, self.obj;)?;
         MPI::from_handle(obj)
     }
+
+    /// Get the group associated with this scalar
+    ///
+    /// /// This requires Botan 3.14.1 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
+    pub fn get_group(&self) -> Result<EcGroup> {
+        let obj = botan_init_at!(botan_ec_scalar_get_group, self.obj;)?;
+        Ok(EcGroup::from_handle(obj))
+    }
 }
 
 #[derive(Debug)]
@@ -151,6 +160,26 @@ impl EcPoint {
     /// Get the fixed length SEC1 compressed encoding
     pub fn to_compressed(&self) -> Result<Vec<u8>> {
         botan_view_vec!(botan_ec_point_view_compressed, self.obj)
+    }
+
+    /// Convert this point to a pair of MPIs (x, y)
+    ///
+    /// This requires Botan 3.14.1 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
+    pub fn to_mpi_xy(&self) -> Result<(MPI, MPI)> {
+        let mut x = core::ptr::null_mut();
+        let mut y = core::ptr::null_mut();
+        botan_call!(botan_ec_point_to_mp_xy, self.obj, &mut x, &mut y)?;
+        Ok((MPI::from_handle(x)?, MPI::from_handle(y)?))
+    }
+
+    /// Get the group associated with this point
+    ///
+    /// This requires Botan 3.14.1 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
+    pub fn get_group(&self) -> Result<EcGroup> {
+        let obj = botan_init_at!(botan_ec_point_get_group, self.obj;)?;
+        Ok(EcGroup::from_handle(obj))
     }
 }
 

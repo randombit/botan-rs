@@ -111,6 +111,9 @@ botan_ffi_functions! {
     #[cfg(botan_ffi_20260506)]
     pub fn botan_ec_scalar_to_mp(ec_scalar: botan_ec_scalar_t, mp: *mut botan_mp_t) -> c_int;
 
+    #[cfg(botan_ffi_20261104)]
+    pub fn botan_ec_scalar_get_group(ec_scalar: botan_ec_scalar_t, group: *mut botan_ec_group_t) -> c_int;
+
     #[cfg(botan_ffi_20260506)]
     pub fn botan_ec_point_destroy(ec_point: botan_ec_point_t) -> c_int;
 
@@ -176,6 +179,13 @@ botan_ffi_functions! {
         ctx: botan_view_ctx,
         view: botan_view_bin_fn,
     ) -> c_int;
+
+
+    #[cfg(botan_ffi_20261104)]
+    pub fn botan_ec_point_to_mp_xy(ec_point: botan_ec_point_t, x: *mut botan_mp_t, y: *mut botan_mp_t) -> c_int;
+
+    #[cfg(botan_ffi_20261104)]
+    pub fn botan_ec_point_get_group(ec_point: botan_ec_point_t, group: *mut botan_ec_group_t) -> c_int;
 
     #[cfg(botan_ffi_20260506)]
     pub fn botan_ec_point_is_identity(ec_point: botan_ec_point_t) -> c_int;
