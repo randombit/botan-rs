@@ -1407,6 +1407,12 @@ ZB6LDkS9rU3WAqYfPzNZ5AR06A==
 
     assert!(crl.is_revoked(&cert)?);
 
+    if botan::Version::current()?.at_least(3, 14) {
+        assert_eq!(crl.issuer_dn("Name")?, vec!["Test Sub CA".to_string()]);
+        assert_eq!(crl.issuer_dn("Country")?, vec!["DE".to_string()]);
+        assert_eq!(crl.issuer_dn("State")?, Vec::<String>::new());
+    }
+
     Ok(())
 }
 

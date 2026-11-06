@@ -207,6 +207,27 @@ impl CRL {
         )
     }
 
+    /// Get a value for a specific issuer distinguished name parameter.
+    ///
+    /// This requires Botan 3.14.1 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
+    pub fn issuer_dn(&self, key: &str) -> Result<Vec<String>> {
+        let mut count = 0;
+        let key = make_cstr(key)?;
+        botan_call!(
+            botan_x509_crl_view_issuer_dn_count,
+            self.obj,
+            key.as_ptr(),
+            &mut count
+        )?;
+        let mut entries = Vec::new();
+        for i in 0..count {
+            let item = botan_view_str!(botan_x509_crl_view_issuer_dn, self.obj, key.as_ptr(), i)?;
+            entries.push(item);
+        }
+        Ok(entries)
+    }
+
     /// Verify the signature of this CRL against a public key.
     ///
     /// This requires Botan 3.11 or later; with older versions an error of type
