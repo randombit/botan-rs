@@ -2433,14 +2433,42 @@ fn test_zfec() -> Result<(), botan::Error> {
     let k = 2;
     let n = 3;
     let input_bytes = b"abcdefghijklmnop";
+    let dummy = [0u8; 8];
 
     // Invalid parameters are rejected regardless of the library version
-    for (bad_k, bad_n) in [(0, 3), (4, 3)] {
+    for (bad_k, bad_n) in [(0, 3), (4, 3), (1, 256), (300, 300)] {
         let e = botan::zfec_encode(bad_k, bad_n, input_bytes).unwrap_err();
         assert_eq!(e.error_type(), botan::ErrorType::BadParameter);
         let e = botan::zfec_decode(bad_k, bad_n, &[], 8).unwrap_err();
         assert_eq!(e.error_type(), botan::ErrorType::BadParameter);
     }
+
+    // The input length must be a multiple of k
+    let e = botan::zfec_encode(k, n, b"abc").unwrap_err();
+    assert_eq!(e.error_type(), botan::ErrorType::BadParameter);
+
+    // Decoding requires exactly k shares
+    let wrong_counts: [&[(usize, &[u8])]; 3] = [
+        &[],
+        &[(0, &dummy)],
+        &[(0, &dummy), (1, &dummy), (2, &dummy)],
+    ];
+    for shares in wrong_counts {
+        let e = botan::zfec_decode(k, n, shares, dummy.len()).unwrap_err();
+        assert_eq!(e.error_type(), botan::ErrorType::BadParameter);
+    }
+
+    // Share indexes must be distinct and less than n
+    let e = botan::zfec_decode(k, n, &[(0, &dummy), (0, &dummy)], dummy.len()).unwrap_err();
+    assert_eq!(e.error_type(), botan::ErrorType::InvalidInput);
+    let e = botan::zfec_decode(k, n, &[(0, &dummy), (3, &dummy)], dummy.len()).unwrap_err();
+    assert_eq!(e.error_type(), botan::ErrorType::InvalidInput);
+
+    // Every share must be share_size bytes long
+    let e = botan::zfec_decode(k, n, &[(0, &dummy), (1, &dummy[1..])], dummy.len()).unwrap_err();
+    assert_eq!(e.error_type(), botan::ErrorType::InvalidInput);
+    let e = botan::zfec_decode(k, n, &[(0, &dummy), (1, &dummy)], dummy.len() - 1).unwrap_err();
+    assert_eq!(e.error_type(), botan::ErrorType::InvalidInput);
 
     let output_shares = skip_if_not_implemented!(botan::zfec_encode(k, n, input_bytes));
 
@@ -2449,15 +2477,21 @@ fn test_zfec() -> Result<(), botan::Error> {
     assert_eq!(output_shares[1], b"ijklmnop");
     assert_eq!(output_shares[2], b"qrstuvwX");
 
-    let shares_for_decoding = [
-        (2, output_shares[2].as_ref()),
-        (0, output_shares[0].as_ref()),
-    ];
     let share_size = output_shares[0].len();
+    let s0 = output_shares[0].as_ref();
+    let s1 = output_shares[1].as_ref();
+    let s2 = output_shares[2].as_ref();
 
-    let recovered = botan::zfec_decode(k, n, &shares_for_decoding, share_size)?;
-
-    assert_eq!(recovered, input_bytes);
+    // Any k shares, in any order, recover the input
+    for shares in [
+        [(0, s0), (1, s1)],
+        [(1, s1), (0, s0)],
+        [(2, s2), (0, s0)],
+        [(1, s1), (2, s2)],
+    ] {
+        let recovered = botan::zfec_decode(k, n, &shares, share_size)?;
+        assert_eq!(recovered, input_bytes);
+    }
 
     Ok(())
 }

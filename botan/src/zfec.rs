@@ -1,13 +1,32 @@
 use crate::utils::*;
 use botan_sys::*;
 
+/// Botan's ZFEC implementation requires `1 <= k <= n < 256`
+const ZFEC_SHARE_LIMIT: usize = 256;
+
+fn check_zfec_params(k: usize, n: usize) -> Result<()> {
+    if k == 0 || k > n || n >= ZFEC_SHARE_LIMIT {
+        return Err(Error::bad_parameter("Invalid ZFEC parameters"));
+    }
+    Ok(())
+}
+
 /// Forward Error Correction Encoding
+///
+/// Splits `input` into `k` shares and produces `n` shares in total, any `k`
+/// of which suffice to recover `input` with [`zfec_decode`]. The parameters
+/// must satisfy `1 <= k <= n < 256`, and the length of `input` must be a
+/// multiple of `k`.
 ///
 /// This requires Botan 3.0 or later; with older versions an error of type
 /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
 pub fn zfec_encode(k: usize, n: usize, input: &[u8]) -> Result<Vec<Vec<u8>>> {
-    if k == 0 || k > n {
-        return Err(Error::bad_parameter("Invalid ZFEC parameters"));
+    check_zfec_params(k, n)?;
+
+    if input.len() % k != 0 {
+        return Err(Error::bad_parameter(
+            "ZFEC encoding requires the input length be a multiple of k",
+        ));
     }
 
     let share_size = input.len() / k;
@@ -35,6 +54,12 @@ pub fn zfec_encode(k: usize, n: usize, input: &[u8]) -> Result<Vec<Vec<u8>>> {
 
 /// Forward Error Correction Decoding
 ///
+/// Recovers the original input from `k` of the `n` shares produced by
+/// [`zfec_encode`] with the same `k` and `n`. `shares` must contain exactly
+/// `k` entries, each pairing a share's index (its position in the output of
+/// [`zfec_encode`], so less than `n`) with its contents. The indexes must be
+/// distinct and every share must be `share_size` bytes long.
+///
 /// This requires Botan 3.0 or later; with older versions an error of type
 /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
 pub fn zfec_decode(
@@ -43,24 +68,49 @@ pub fn zfec_decode(
     shares: &[(usize, &[u8])],
     share_size: usize,
 ) -> Result<Vec<u8>> {
-    if k == 0 || k > n {
-        return Err(Error::bad_parameter("Invalid ZFEC parameters"));
+    check_zfec_params(k, n)?;
+
+    // botan_zfec_decode reads exactly k indexes and k share pointers
+    if shares.len() != k {
+        return Err(Error::bad_parameter(
+            "ZFEC decoding requires exactly k shares",
+        ));
     }
 
-    let mut share_ptrs = Vec::with_capacity(shares.len());
-    let mut indexes = Vec::with_capacity(shares.len());
+    let output_len = k
+        .checked_mul(share_size)
+        .ok_or_else(|| Error::bad_parameter("ZFEC share size is too large"))?;
+
+    let mut seen = [false; ZFEC_SHARE_LIMIT];
+    let mut share_ptrs = Vec::with_capacity(k);
+    let mut indexes = Vec::with_capacity(k);
     for (share_index, share_slice) in shares {
-        indexes.push(*share_index);
-        share_ptrs.push(share_slice.as_ptr());
+        if *share_index >= n {
+            return Err(Error::with_message(
+                ErrorType::InvalidInput,
+                "ZFEC share index must be less than n".to_string(),
+            ));
+        }
+        if seen[*share_index] {
+            return Err(Error::with_message(
+                ErrorType::InvalidInput,
+                "ZFEC decoding requires all share indexes be distinct".to_string(),
+            ));
+        }
+        seen[*share_index] = true;
+
         if share_slice.len() != share_size {
             return Err(Error::with_message(
                 ErrorType::InvalidInput,
                 "ZFEC decoding requires all shares be the same length".to_string(),
             ));
         }
+
+        indexes.push(*share_index);
+        share_ptrs.push(share_slice.as_ptr());
     }
 
-    let mut output_buf = vec![0u8; k * share_size];
+    let mut output_buf = vec![0u8; output_len];
     let output_buf_ptr: *mut u8 = output_buf.as_mut_ptr();
 
     let mut output_ptrs = Vec::with_capacity(k);
