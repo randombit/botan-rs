@@ -86,20 +86,19 @@ fn ec_parameter_encoding() -> Result<(), Error> {
 fn stateful_remaining_operations() -> Result<(), Error> {
     let mut rng = RandomNumberGenerator::new_system()?;
     let key = skip_if_not_implemented!(Privkey::create("HSS-LMS", "SHA-256,HW(5,8)", &mut rng));
-    // Reading stateful counters safely requires Botan 3.11 in all builds.
-    if !botan::Version::supports_version(20260303) {
-        assert_eq!(
-            key.remaining_operations().unwrap_err().error_type(),
-            ErrorType::NotImplemented
-        );
-        return Ok(());
-    }
     let remaining = skip_if_not_implemented!(key.remaining_operations());
     assert!(key.is_stateful()?);
     assert_eq!(remaining, Some(32));
     assert_eq!(key.remaining_operations()?, remaining);
     key.sign(b"consume one operation", None::<SignatureParams>, &mut rng)?;
     assert_eq!(key.remaining_operations()?, Some(31));
+
+    // A standalone Signer consumes operations in the same way
+    let mut signer = botan::Signer::new(&key, None::<SignatureParams>)?;
+    signer.update(b"consume another")?;
+    assert_eq!(key.remaining_operations()?, Some(31));
+    signer.finish(&mut rng)?;
+    assert_eq!(key.remaining_operations()?, Some(30));
     Ok(())
 }
 

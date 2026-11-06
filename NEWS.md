@@ -1,5 +1,14 @@
 # Release notes for the `botan`, `botan-src`, and `botan-sys` crates.
 
+## Not Yet Released botan 0.14.1
+
+- The per-key lock used to work around thread safety bugs in Botan versions
+  prior to 3.11.0 now also covers the operation objects (`Signer`, `Verifier`,
+  `Encryptor`, `Decryptor`, `KeyAgreement`, `KeyEncapsulation`, and
+  `KeyDecapsulation`) created from a key, as well as the `Pubkey` exported
+  from a `Privkey`, all of which share state with the key within the library.
+  Previously only the convenience methods on the key objects were covered.
+
 ## 2026-08-17 botan-src 0.31300.1
 
 - On Windows, build the library using `nmake` rather than `make`, since the

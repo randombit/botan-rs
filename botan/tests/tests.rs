@@ -2553,6 +2553,118 @@ fn test_ml_kem() -> Result<(), botan::Error> {
 }
 
 #[test]
+fn test_concurrent_signatures() -> Result<(), botan::Error> {
+    // Signer and Verifier objects created from a key, and the Pubkey exported
+    // from a Privkey, share state with that key inside the library. Prior to
+    // Botan 3.11 that state was not safe to use from multiple threads for some
+    // algorithms (ML-DSA among them), which the per-key lock works around.
+    let mut rng = botan::RandomNumberGenerator::new_system()?;
+
+    let key = skip_if_not_implemented!(botan::Privkey::create(
+        botan::PublicKeyAlgorithm::MlDsa,
+        botan::MlDsaParams::MlDsa4x4,
+        &mut rng,
+    ));
+    let pubkey = key.pubkey()?;
+
+    // In no_std builds, operations with this key require Botan 3.11; check
+    // that before spawning threads
+    skip_if_not_implemented!(botan::Signer::new(&key, botan::SignatureParams::Randomized));
+
+    let threads = 4;
+    let iterations = 32;
+
+    std::thread::scope(|scope| -> Result<(), botan::Error> {
+        let handles: Vec<_> = (0..threads)
+            .map(|t| {
+                let key = &key;
+                let pubkey = &pubkey;
+                scope.spawn(move || -> Result<(), botan::Error> {
+                    let mut rng = botan::RandomNumberGenerator::new_system()?;
+                    let mut signer = botan::Signer::new(key, botan::SignatureParams::Randomized)?;
+                    let mut verifier = botan::Verifier::new(pubkey, None)?;
+
+                    for i in 0..iterations {
+                        let msg = [t as u8, i as u8];
+
+                        // Alternate between standalone operation objects and
+                        // the convenience methods on the key objects
+                        let sig = if i % 2 == 0 {
+                            signer.update(&msg)?;
+                            signer.finish(&mut rng)?
+                        } else {
+                            key.sign(&msg, botan::SignatureParams::Randomized, &mut rng)?
+                        };
+
+                        verifier.update(&msg)?;
+                        assert!(verifier.finish(&sig)?);
+                        assert!(pubkey.verify(&msg, &sig, None)?);
+                    }
+                    Ok(())
+                })
+            })
+            .collect();
+
+        for handle in handles {
+            handle.join().expect("thread panicked")?;
+        }
+        Ok(())
+    })
+}
+
+#[test]
+fn test_concurrent_kem() -> Result<(), botan::Error> {
+    // As test_concurrent_signatures, but for KEM operations; ML-KEM was also
+    // affected prior to Botan 3.11
+    let mut rng = botan::RandomNumberGenerator::new_system()?;
+
+    let key = skip_if_not_implemented!(botan::Privkey::create(
+        botan::PublicKeyAlgorithm::MlKem,
+        botan::MlKemParams::MlKem512,
+        &mut rng,
+    ));
+    let pubkey = key.pubkey()?;
+    let kdf = "KDF2(SHA-256)";
+    let shared_key_len = 32;
+
+    // KEM operations require Botan 3.0, and in no_std builds operations with
+    // this key require Botan 3.11; check that before spawning threads
+    skip_if_not_implemented!(botan::KeyEncapsulation::new(&pubkey, kdf));
+
+    let threads = 4;
+    let iterations = 32;
+
+    std::thread::scope(|scope| -> Result<(), botan::Error> {
+        let handles: Vec<_> = (0..threads)
+            .map(|t| {
+                let key = &key;
+                let pubkey = &pubkey;
+                scope.spawn(move || -> Result<(), botan::Error> {
+                    let mut rng = botan::RandomNumberGenerator::new_system()?;
+                    let encap = botan::KeyEncapsulation::new(pubkey, kdf)?;
+                    let decap = botan::KeyDecapsulation::new(key, kdf)?;
+
+                    for i in 0..iterations {
+                        let salt = [t as u8, i as u8];
+                        let (shared_key, encap_key) =
+                            encap.create_shared_key(&mut rng, &salt, shared_key_len)?;
+                        let shared_key_d =
+                            decap.decrypt_shared_key(&encap_key, &salt, shared_key_len)?;
+                        assert_eq!(shared_key, shared_key_d);
+                    }
+                    Ok(())
+                })
+            })
+            .collect();
+
+        for handle in handles {
+            handle.join().expect("thread panicked")?;
+        }
+        Ok(())
+    })
+}
+
+#[test]
 fn test_asn1_oid() -> Result<(), botan::Error> {
     let oid = skip_if_not_implemented!(botan::OID::from_str("1.2.840.10045.3.1.7"));
 

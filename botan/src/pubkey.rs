@@ -36,10 +36,17 @@ botan_impl_drop!(Privkey, botan_privkey_destroy);
 // Botan versions before 3.11 have a thread safety issue when performing
 // multiple concurrent operations using the same key object. Only certain
 // algorithms (such as XMSS, HSS-LMS, FrodoKEM, ML-KEM, and ML-DSA) were ever
-// affected. When running against such a version, all operations on a key are
-// serialized using a per-key lock, unless the key uses an algorithm which is
-// known to be unaffected. In no_std builds no lock is available, and instead
-// the affected operations return an error with older versions.
+// affected. When running against such a version, all operations involving a
+// key are serialized using a per-key lock, unless the key uses an algorithm
+// which is known to be unaffected.
+//
+// The operation objects created from a key (`Signer`, `Verifier`,
+// `KeyDecapsulation`, etc) and the `Pubkey` exported from a `Privkey` all
+// share internal state with the key they were derived from, so they share
+// its lock as well, acquiring it around each FFI call that uses that state.
+//
+// In no_std builds no lock is available, and instead the affected operations
+// return an error with older versions.
 
 /// Algorithms known to be unaffected by the thread safety issue in older
 /// versions, and thus which never require the per-key lock
@@ -63,42 +70,40 @@ fn op_lock_required(algo_name: impl FnOnce() -> Result<String>) -> bool {
 }
 
 /// A per-key lock, present only when the library version and key algorithm
-/// require that operations on the key be serialized
+/// require that operations involving the key be serialized
+///
+/// Clones refer to the same underlying lock, so that a key and everything
+/// derived from it are serialized together.
 #[cfg(feature = "std")]
-#[derive(Debug)]
-struct OpLock(Option<std::sync::Mutex<()>>);
+#[derive(Debug, Clone)]
+pub(crate) struct OpLock(Option<std::sync::Arc<std::sync::Mutex<()>>>);
 
 #[cfg(feature = "std")]
 impl OpLock {
     fn new(algo_name: impl FnOnce() -> Result<String>) -> Self {
-        Self(op_lock_required(algo_name).then(|| std::sync::Mutex::new(())))
+        Self(op_lock_required(algo_name).then(|| std::sync::Arc::new(std::sync::Mutex::new(()))))
     }
 
     /// Acquire the lock, if one is required
-    fn guard(&self) -> Result<Option<std::sync::MutexGuard<'_, ()>>> {
-        Ok(self.0.as_ref().map(|m| m.lock().expect("lock poisoned")))
-    }
-
-    /// Check that operations using the key are supported by the library
     ///
-    /// In std builds this always succeeds, since a lock is available whenever
-    /// one is required.
-    fn check_op_supported(&self) -> Result<()> {
-        Ok(())
+    /// The returned guard must be held for the duration of any FFI call
+    /// which uses the key or an object derived from it.
+    pub(crate) fn guard(&self) -> Result<Option<std::sync::MutexGuard<'_, ()>>> {
+        Ok(self.0.as_ref().map(|m| m.lock().expect("lock poisoned")))
     }
 }
 
 /// Placeholder for no_std builds, where no lock is available; instead this
-/// records whether operations on the key can safely be performed at all
+/// records whether operations involving the key can safely be performed at all
 #[cfg(not(feature = "std"))]
-#[derive(Debug)]
-struct OpLock {
+#[derive(Debug, Clone)]
+pub(crate) struct OpLock {
     lock_required: bool,
 }
 
 /// Placeholder guard type for no_std builds, where no locking is performed
 #[cfg(not(feature = "std"))]
-struct OpGuard;
+pub(crate) struct OpGuard;
 
 #[cfg(not(feature = "std"))]
 impl OpLock {
@@ -109,16 +114,10 @@ impl OpLock {
     }
 
     /// Fails if a lock would be required, since none is available
-    fn guard(&self) -> Result<OpGuard> {
-        self.check_op_supported()?;
-        Ok(OpGuard)
-    }
-
-    /// Check that operations using the key are supported by the library
     ///
     /// This fails with versions of Botan prior to 3.11 unless the key uses
     /// an algorithm known to be unaffected by the thread safety issue.
-    fn check_op_supported(&self) -> Result<()> {
+    pub(crate) fn guard(&self) -> Result<OpGuard> {
         if self.lock_required {
             Err(Error::with_message(
                 ErrorType::NotImplemented,
@@ -126,7 +125,7 @@ impl OpLock {
                     .to_owned(),
             ))
         } else {
-            Ok(())
+            Ok(OpGuard)
         }
     }
 }
@@ -149,13 +148,9 @@ impl Privkey {
         Self { obj, op_lock }
     }
 
-    /// Check that operations using this key are supported by the library
-    ///
-    /// In no_std builds this fails with versions of Botan prior to 3.11
-    /// unless the key algorithm is known to be safe; see the comment on
-    /// `OpLock`. In std builds it always succeeds.
-    pub(crate) fn check_op_supported(&self) -> Result<()> {
-        self.op_lock.check_op_supported()
+    /// Return the lock shared by this key and every object derived from it
+    pub(crate) fn op_lock(&self) -> OpLock {
+        self.op_lock.clone()
     }
 
     pub(crate) fn handle(&self) -> botan_privkey_t {
@@ -391,6 +386,8 @@ impl Privkey {
 
     /// Check if the key seems to be valid
     pub fn check_key(&self, rng: &mut RandomNumberGenerator) -> Result<bool> {
+        // Checking a key may perform a round trip of the relevant operation
+        let _lock = self.op_lock.guard()?;
         let flags = 1u32;
         let rc = unsafe { botan_privkey_check_key(self.obj, rng.handle(), flags) };
 
@@ -406,7 +403,12 @@ impl Privkey {
     /// Return the public key associated with this private key
     pub fn pubkey(&self) -> Result<Pubkey> {
         let obj = botan_init!(botan_privkey_export_pubkey, self.obj)?;
-        Ok(Pubkey::from_handle(obj))
+        // The exported public key shares internal state with this key, so
+        // operations using either of them must be serialized together
+        Ok(Pubkey {
+            obj,
+            op_lock: self.op_lock.clone(),
+        })
     }
 
     /// Return the name of the algorithm
@@ -601,20 +603,11 @@ impl Privkey {
     /// Returns `None` if the key has no operation limit, and `Some(0)` if the
     /// key is exhausted. This is a snapshot, not a reservation of operations.
     ///
-    /// This requires Botan 3.8 or later. For stateful keys, Botan 3.11 or later
-    /// is required because older versions do not safely synchronize this query
-    /// with signing. With older versions an error of type
-    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned.
+    /// This requires Botan 3.8 or later; with older versions an error of type
+    /// [`ErrorType::NotImplemented`](crate::ErrorType::NotImplemented) is returned
     pub fn remaining_operations(&self) -> Result<Option<u64>> {
-        // The per-key lock does not cover standalone Signer objects, so it
-        // cannot protect reads of mutable signing state on older libraries.
-        if !crate::Version::supports_version(20260303) && self.is_stateful()? {
-            return Err(Error::with_message(
-                ErrorType::NotImplemented,
-                "Reading remaining operations of stateful keys requires Botan 3.11 or later"
-                    .to_owned(),
-            ));
-        }
+        // Serialize against signing, which modifies the state being read
+        let _lock = self.op_lock.guard()?;
         let mut remaining = 0u64;
         match unsafe { botan_privkey_remaining_operations(self.obj, &mut remaining) } {
             0 => Ok(Some(remaining)),
@@ -713,7 +706,6 @@ impl Privkey {
         padding: P,
         rng: &mut RandomNumberGenerator,
     ) -> Result<Vec<u8>> {
-        let _lock = self.op_lock.guard()?;
         let mut signer = Signer::new(self, padding)?;
         signer.update(message)?;
         signer.finish(rng)
@@ -725,7 +717,6 @@ impl Privkey {
         ctext: &[u8],
         padding: P,
     ) -> Result<Vec<u8>> {
-        let _lock = self.op_lock.guard()?;
         let mut decryptor = Decryptor::new(self, padding)?;
         decryptor.decrypt(ctext)
     }
@@ -738,7 +729,6 @@ impl Privkey {
         salt: &[u8],
         kdf: K,
     ) -> Result<Vec<u8>> {
-        let _lock = self.op_lock.guard()?;
         let mut op = KeyAgreement::new(self, kdf)?;
         op.agree(output_len, other_key, salt)
     }
@@ -750,13 +740,9 @@ impl Pubkey {
         Pubkey { obj, op_lock }
     }
 
-    /// Check that operations using this key are supported by the library
-    ///
-    /// In no_std builds this fails with versions of Botan prior to 3.11
-    /// unless the key algorithm is known to be safe; see the comment on
-    /// `OpLock`. In std builds it always succeeds.
-    pub(crate) fn check_op_supported(&self) -> Result<()> {
-        self.op_lock.check_op_supported()
+    /// Return the lock shared by this key and every object derived from it
+    pub(crate) fn op_lock(&self) -> OpLock {
+        self.op_lock.clone()
     }
 
     pub(crate) fn handle(&self) -> botan_pubkey_t {
@@ -889,6 +875,7 @@ impl Pubkey {
 
     /// Check key for problems
     pub fn check_key(&self, rng: &mut RandomNumberGenerator) -> Result<bool> {
+        let _lock = self.op_lock.guard()?;
         let flags = 1u32;
         let rc = unsafe { botan_pubkey_check_key(self.obj, rng.handle(), flags) };
 
@@ -1022,7 +1009,6 @@ impl Pubkey {
         padding: P,
         rng: &mut RandomNumberGenerator,
     ) -> Result<Vec<u8>> {
-        let _lock = self.op_lock.guard()?;
         let mut op = Encryptor::new(self, padding)?;
         op.encrypt(message, rng)
     }
@@ -1034,7 +1020,6 @@ impl Pubkey {
         signature: &[u8],
         padding: P,
     ) -> Result<bool> {
-        let _lock = self.op_lock.guard()?;
         let mut op = Verifier::new(self, padding)?;
         op.update(message)?;
         op.finish(signature)
