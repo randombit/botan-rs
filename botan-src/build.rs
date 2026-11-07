@@ -46,8 +46,9 @@ fn main() {
 
     let pairs = [
         ("version", "BOTAN_VERSION"),
-        ("sha256", "BOTAN_TARBALL_SHA256"),
         ("url", "BOTAN_TARBALL_URL"),
+        ("upstream_sha256", "BOTAN_UPSTREAM_TARBALL_SHA256"),
+        ("vendored_tar_sha256", "BOTAN_VENDORED_TAR_SHA256"),
     ];
     let mut values = std::collections::HashMap::new();
     for (key, _) in pairs {
@@ -60,6 +61,15 @@ fn main() {
     for v in values.values_mut() {
         for (k, replacement) in &raw {
             *v = v.replace(&format!("{{{k}}}"), replacement);
+        }
+    }
+    for key in ["upstream_sha256", "vendored_tar_sha256"] {
+        let v = &values[key];
+        if v.len() != 64 || !v.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f')) {
+            panic!(
+                "\nrelease.toml `{key}` is not a lowercase SHA-256 hex digest (got `{v}`).\n\
+                 Run `python3 scripts/fetch.py` from botan-src/; it prints the values to pin.\n"
+            );
         }
     }
     for (key, env_var) in pairs {
@@ -90,7 +100,7 @@ fn main() {
     }
 
     // Refuse to build (or publish, via the default `cargo publish` verify
-    // step) without the upstream tarball staged in vendor/. Catches the
+    // step) without the vendored tarball staged in vendor/. Catches the
     // "publish with empty vendor/" footgun.
     let tarball = manifest_dir
         .join("vendor")
@@ -99,9 +109,27 @@ fn main() {
     if !tarball.exists() {
         panic!(
             "\nBotan source tarball missing at {}.\n\
-             Run `python3 scripts/fetch.py` from botan-src/ to download it\n\
-             before building or publishing this crate.\n",
+             Run `python3 scripts/fetch.py` from botan-src/ to download the upstream\n\
+             release and repack it before building or publishing this crate.\n",
             tarball.display()
         );
+    }
+
+    // Cargo.toml includes `vendor/Botan-*.tar.xz`, so a tarball left behind
+    // from a previous version would be published too (and blow the size
+    // limit). scripts/fetch.py removes them; make sure it was run.
+    let vendor_dir = manifest_dir.join("vendor");
+    println!("cargo:rerun-if-changed={}", vendor_dir.display());
+    for entry in fs::read_dir(&vendor_dir).expect("read vendor/").flatten() {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if name.starts_with("Botan-") && name.ends_with(".tar.xz") && entry.path() != tarball {
+            panic!(
+                "\nStale tarball {} in vendor/ would be published along with {}.\n\
+                 Run `python3 scripts/fetch.py` from botan-src/, or delete it.\n",
+                entry.path().display(),
+                tarball.display()
+            );
+        }
     }
 }

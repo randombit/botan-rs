@@ -25,6 +25,6 @@ dynamic-loading = ["dep:libloading"]
 libloading = { version = "0.8", optional = true }
 
 [build-dependencies]
-botan-src = { version = "0.31300.0", optional = true, path = "../botan-src" }
+botan-src = { version = "0.31401.0", optional = true, path = "../botan-src" }
 pkg-config = { version = "0.3.30", optional = true }
 cc = "1"
