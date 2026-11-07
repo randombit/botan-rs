@@ -1,6 +1,6 @@
 [package]
 name = "botan"
-version = "0.14.0"
+version = "0.14.1"
 authors = ["Jack Lloyd <jack@randombit.net>"]
 description = "Rust wrapper for Botan cryptography library"
 license = "MIT"
@@ -14,7 +14,7 @@ edition = "2024"
 rust-version = "1.85"
 
 [dependencies]
-botan-sys = { version = "1.20260811.1", path = "../botan-sys" }
+botan-sys = { version = "1.20261104.0", path = "../botan-sys" }
 rand_core = { version = "0.10", default-features = false, optional = true }
 
 [dev-dependencies]

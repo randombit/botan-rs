@@ -1,7 +1,15 @@
 # Release notes for the `botan`, `botan-src`, and `botan-sys` crates.
 
-## Not Yet Released botan 0.14.1
+## 2026-11-07 botan 0.14.1
 
+- Allow EcGroupId to be used to create a group
+- Add key loaders functions for Ed448, X448, and SM2
+- Add support for DN CRL accessors added in Botan 3.14.1
+- Add XOF interface
+- Add interfaces for DRGBs and custom RNG objects
+- Fix a memory error (stray read) in zfec_decode if called with invalid
+  parameters, eg an insufficient number of shares.
+- Avoid a panic in rfc3394_key_unwrap if called with an empty empty
 - The per-key lock used to work around thread safety bugs in Botan versions
   prior to 3.11.0 now also covers the operation objects (`Signer`, `Verifier`,
   `Encryptor`, `Decryptor`, `KeyAgreement`, `KeyEncapsulation`, and
@@ -9,7 +17,11 @@
   from a `Privkey`, all of which share state with the key within the library.
   Previously only the convenience methods on the key objects were covered.
 
-## Not Yet Released botan-src 0.31401.0
+## 2026-11-07 botan-sys 1.20261104.0
+
+- Add declarations added in Botan 3.14.1
+
+## 2026-11-07 botan-src 0.31401.0
 
 - Update to Botan 3.14.1
 - The bundled source tarball is now a repack of the upstream release that
